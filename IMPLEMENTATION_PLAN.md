@@ -19,7 +19,7 @@
 | 1 | SQL schema export + seed scripts; verify clean setup | DB-01, DB-02, SUB-02 | SQL scripts create fresh DB with valid/invalid rows; no duplicate seed data |
 | 2 | Metadata catalog and API with Hebrew business labels — JSON implementation in progress | DB-03, GEN-03, RULE-02, RULE-05 | UI-ready entity/field/relationship metadata; extensibility demonstrated |
 | 3 | RuleDefinition contract and validation — API implemented and 43 HTTP cases passed; pending user review | RULE-01, RULE-03, EXEC-03 | Nested AND/OR, constants, field comparisons, nulls; invalid input rejected |
-| 4 | Rule persistence and CRUD API | DB-04, RULE-04 | Create, edit, reload, reuse rules |
+| 4 | Rule persistence and CRUD API — implemented; 23 persistence checks passed on isolated DB; pending review/schema upgrade | DB-04, RULE-04 | Create, edit, reload, reuse rules |
 | 5 | Dynamic SQL compiler and read-only executor | EXEC-01..06, TECH-04 | Parameterized SQL, allowed identifiers/joins, safe limits, tested outputs |
 | 6 | Result explanation, counts and filtering API | RESULTS-03..06 | Each violating record has meaningful reason; search/filter works |
 | 7 | Angular RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | End-to-end create/edit/run/review flow in Hebrew |
@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review package 3: custom JSON expression tree and POST /api/rules/validate (D-013, docs/RULE_DEFINITION.md). Then proceed to rule persistence and CRUD (package 4), reusing the same validator. Calculated age and SQL execution remain future work. The metadata API and sample SQL setup were verified separately; full UI/engine demonstrations remain pending.
+Review package 4 (D-014, docs/RULE_PERSISTENCE.md), including migration/SQL script 04, before upgrading the developer database. Then decide date/NULL/missing-relationship semantics and calculated-age handling before package 5 (SQL compiler and read-only executor). No saved-rule execution is implemented yet.

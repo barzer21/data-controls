@@ -1,10 +1,16 @@
 # Data Controls
 
+## Save, open and edit rules
+
+The API now supports create/list/get/update/delete under `/api/rules`. Apply the `AddSavedRules` migration or run `database/04_create_rules.sql` once on a database with InitialCreate before using persistence endpoints. Existing databases are not upgraded automatically. Validation and metadata endpoints continue to work without the Rules table.
+
+See [docs/RULE_PERSISTENCE.md](docs/RULE_PERSISTENCE.md) for API response shapes, schema upgrade paths, limitations and verification. Example requests: `backend/DataControls.Api/SavedRules.http`. The persistence test creates its own database: `powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-RulePersistence.ps1`.
+
 ## Validate a rule definition
 
 `POST http://localhost:5037/api/rules/validate` validates a JSON expression tree against the metadata catalog. It does not save or execute the rule. Example requests are in `backend/DataControls.Api/Rules.http`; the contract, supported operators, limits and response shapes are documented in [docs/RULE_DEFINITION.md](docs/RULE_DEFINITION.md).
 
-After building, run `powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1`. This uses a temporary API and the test database's schema. All 43 rule validation HTTP cases passed on 2026-11-12; persistence, SQL compilation and UI remain future work.
+After building, run `powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1`. This uses a temporary API and the test database's schema. All 43 rule validation HTTP cases passed on 2026-11-12; SQL compilation and UI remain future work.
 
 ## Run the API and inspect metadata
 
@@ -40,14 +46,15 @@ The SQL scripts create the `DataControlsDb` database used by the development con
    - `database/01_create_database.sql`
    - `database/02_create_tables.sql`
    - `database/03_seed_data.sql`
+   - `database/04_create_rules.sql`
 3. Check that each script completes without errors. The first script creates `DataControlsDb` if it does not already exist. The table-creation script is for a fresh database and should be run once.
 4. The seed script may be run again safely; existing sample departments (matched by name) and employees (matched by first and last name) are left unchanged.
 
-The scripts create the schema from the `InitialCreate` EF Core migration. The `__EFMigrationsHistory` row records that migration as applied (EF Core 10.0.0), so later EF Core migration operations do not try to create these tables again. For a fresh installation, use either these SQL scripts or `dotnet ef database update` to create the schema; do not run both schema-creation paths against the same database.
+Scripts 02 and 04 create the schema from the `InitialCreate` and `AddSavedRules` EF Core migrations. Their `__EFMigrationsHistory` rows record those migrations as applied (EF Core 10.0.0), so later EF Core migration operations do not try to create these tables again. For a fresh installation, use either these SQL scripts or `dotnet ef database update` to create the schema; do not run both schema-creation paths for the same migration against the same database.
 
 ## Verify the database in SSMS
 
-After running all three scripts, open a new query window and execute:
+After running all four scripts, open a new query window and execute:
 
 ```sql
 USE [DataControlsDb];
@@ -87,5 +94,7 @@ WHERE [IsActive] = 1 AND [ManagerName] IS NULL;
 ```
 
 On the initial clean setup, the counts should be 5 departments and 20 employees, and each of the six business-rule checks should return at least one row. The migration history query should include `20261112080545_InitialCreate` with product version `10.0.0`.
+
+The migration history should also include `20261112093455_AddSavedRules` after script 04. Rules starts empty; controls are created through the API.
 
 The existing schema represents a department manager as nullable `ManagerName` text; it does not define a manager entity or foreign key. Therefore, the no-manager sample is represented by an active department whose `ManagerName` is `NULL`.

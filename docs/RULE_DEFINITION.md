@@ -89,4 +89,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1
 
 The test uses a temporary API on port 5199 and reads schema from `DataControlsTestDb`; it does not modify business data or the source catalog. Logs remain in the printed temporary directory. Stop a running instance using the Debug output before rebuilding if Windows reports locked binaries.
 
-Verified on 2026-11-12: build succeeded; 43 HTTP cases passed, including both limit boundaries, nested AND/OR, field/constant/related operands, Hebrew semantic errors, malformed JSON, unknown mappings and oversized requests. Full UI authoring, persistence, compilation and execution remain unimplemented.
+Verified on 2026-11-12: build succeeded; 43 HTTP cases passed, including both limit boundaries, nested AND/OR, field/constant/related operands, Hebrew semantic errors, malformed JSON, unknown mappings and oversized requests. Persistence has since been added separately: see [RULE_PERSISTENCE.md](RULE_PERSISTENCE.md). Full UI authoring, compilation and execution remain unimplemented.

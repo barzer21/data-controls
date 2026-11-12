@@ -13,9 +13,17 @@ public class AppDbContext : DbContext
 
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Department> Departments => Set<Department>();
+    public DbSet<SavedRule> Rules => Set<SavedRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<SavedRule>(entity =>
+        {
+            entity.ToTable("Rules", table => table.HasCheckConstraint("CK_Rules_ConditionJson", "ISJSON([ConditionJson]) = 1"));
+            entity.Property(r => r.Name).HasMaxLength(200);
+            entity.Property(r => r.Description).HasMaxLength(2000);
+        });
+
         modelBuilder.Entity<Employee>(entity =>
         {
             entity.Property(e => e.FirstName)

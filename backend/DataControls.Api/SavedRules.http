@@ -1,0 +1,42 @@
+@baseUrl = http://localhost:5037
+@ruleId = 1
+
+### Create a rule (201). Set ruleId above to the returned id before the next requests.
+POST {{baseUrl}}/api/rules
+Content-Type: application/json
+
+{
+  "name": "תאריך סיום העסקה לא תקין",
+  "description": "איתור עובדים שתאריך סיום העסקתם מוקדם מתחילת ההעסקה",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "endDate" },
+    "operator": "lessThan",
+    "right": { "kind": "field", "field": { "fieldId": "startDate" } }
+  }
+}
+
+### List rule summaries (200)
+GET {{baseUrl}}/api/rules?page=1&pageSize=20
+
+### Open the complete saved rule (200 or 404)
+GET {{baseUrl}}/api/rules/{{ruleId}}
+
+### Replace the definition (200). Send the definition only, not the GET response envelope.
+PUT {{baseUrl}}/api/rules/{{ruleId}}
+Content-Type: application/json
+
+{
+  "name": "תאריך תחילת העסקה חסר",
+  "description": "דוגמה לעריכת בקרה קיימת",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "startDate" },
+    "operator": "isNull"
+  }
+}
+
+### Delete this rule permanently (204 or 404); send only when intended.
+DELETE {{baseUrl}}/api/rules/{{ruleId}}

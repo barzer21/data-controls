@@ -91,6 +91,48 @@ namespace DataControls.Api.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("DataControls.Api.Models.SavedRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConditionJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("DefinitionVersion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RootEntityId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Rules", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Rules_ConditionJson", "ISJSON([ConditionJson]) = 1");
+                        });
+                });
+
             modelBuilder.Entity("DataControls.Api.Models.Employee", b =>
                 {
                     b.HasOne("DataControls.Api.Models.Department", "Department")

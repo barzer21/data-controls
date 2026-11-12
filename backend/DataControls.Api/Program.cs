@@ -17,11 +17,20 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IMetadataProvider, JsonMetadataProvider>();
 builder.Services.AddSingleton<SqlServerMetadataValidator>();
 builder.Services.AddSingleton<RuleValidator>();
+builder.Services.AddScoped<RuleService>();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<PersistenceExceptionHandler>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    // Preserve HTTP input errors (notably request-size limits) instead of turning them into 500s.
+    StatusCodeSelector = exception => exception is BadHttpRequestException request
+        ? request.StatusCode : StatusCodes.Status500InternalServerError
+});
 
 // Fail before accepting requests if the catalog is invalid or does not match the database.
 var metadata = app.Services.GetRequiredService<IMetadataProvider>();

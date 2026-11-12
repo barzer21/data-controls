@@ -14,16 +14,16 @@
 | DB-01 | Sample database with multiple related tables | SQL schema and FK relationship(s) | In progress |
 | DB-02 | Sample valid and invalid business data | Seed script and verified sample cases | In progress |
 | DB-03 | Rule engine works generically, not based on table/field names hardcoded in code | JSON metadata provider/API implemented; engine extension demo remains pending | In progress |
-| DB-04 | Store control definitions | Persist, restart, reload control | Not started |
+| DB-04 | Store control definitions | 23 persistence checks passed, including persist/restart/reload on isolated SQL DB; see docs/RULE_PERSISTENCE.md | Verified |
 
 ## Stage A — Rule authoring, execution and results
 
 | ID | Explicit requirement from assignment | Acceptance evidence | Status |
 |---|---|---|---|
-| RULE-01 | Create a control with name and description | RuleDefinition and validation API implemented; UI + persistence remain pending | In progress |
+| RULE-01 | Create a control with name and description | Definition, validation and persisted API values verified; UI pending | In progress |
 | RULE-02 | Select business data to check | Metadata API available; business field selector remains pending | In progress |
 | RULE-03 | Define logical conditions, including combinations | Nested AND/OR validation verified via HTTP; UI + execution demo pending | In progress |
-| RULE-04 | Save, edit and reuse controls | Save/edit/reopen/run demonstration | Not started |
+| RULE-04 | Save, edit and reuse controls | Save/edit/reopen verified via API; execution and UI demonstration pending | In progress |
 | RULE-05 | Display business-friendly data and relationships rather than technical table/column names | Hebrew metadata API available; UI demonstration remains pending | In progress |
 | EXEC-01 | Generic translation of rule definition to dynamic SQL | Different rules compile without dedicated SQL | Not started |
 | EXEC-02 | Support complex conditions and relationships between tables | Nested condition and cross-table example | Not started |
@@ -31,7 +31,7 @@
 | EXEC-04 | Prevent dangerous commands or data modification | Validation + read-only execution tests | Not started |
 | EXEC-05 | Handle errors and display appropriate messages | Invalid rule / DB error demo | Not started |
 | EXEC-06 | Return records violating the control | Compare expected vs actual violations | Not started |
-| RESULTS-01 | Show list of defined controls | List page | Not started |
+| RESULTS-01 | Show list of defined controls | Paginated summaries API implemented; list page pending | In progress |
 | RESULTS-02 | Execute a control from the list | Run action | Not started |
 | RESULTS-03 | Show violation count | Correct count | Not started |
 | RESULTS-04 | Show violating records in a table | Results grid | Not started |
@@ -70,7 +70,7 @@
 | ID | Explicit requirement | Deliverable | Status |
 |---|---|---|---|
 | SUB-01 | Complete frontend and backend source | `frontend/`, `backend/`, Python component | In progress |
-| SUB-02 | Scripts to create DB and load sample data | `database/01_create_database.sql`, `02_create_tables.sql`, `03_seed_data.sql` | In progress |
+| SUB-02 | Scripts to create DB and load sample data | `database/01_create_database.sql`, `02_create_tables.sql`, `03_seed_data.sql`, `04_create_rules.sql`; fresh setup verified by persistence checks | In progress |
 | SUB-03 | Installation and run instructions | `README.md` | In progress |
 | SUB-04 | Short architecture and rule engine description | `docs/ARCHITECTURE.md` | Not started |
 | SUB-05 | Examples of definable/runnable controls | `docs/EXAMPLE_RULES.md` and demo | Not started |
