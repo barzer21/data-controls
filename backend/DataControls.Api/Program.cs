@@ -18,6 +18,9 @@ builder.Services.AddSingleton<IMetadataProvider, JsonMetadataProvider>();
 builder.Services.AddSingleton<SqlServerMetadataValidator>();
 builder.Services.AddSingleton<RuleValidator>();
 builder.Services.AddScoped<RuleService>();
+builder.Services.AddSingleton<RuleSqlCompiler>();
+builder.Services.AddSingleton<RuleExecutor>();
+builder.Services.AddScoped<RuleExecutionService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<PersistenceExceptionHandler>();
 

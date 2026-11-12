@@ -118,6 +118,9 @@ namespace DataControls.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("ResultFieldsJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RootEntityId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -130,6 +133,8 @@ namespace DataControls.Api.Migrations
                     b.ToTable("Rules", null, t =>
                         {
                             t.HasCheckConstraint("CK_Rules_ConditionJson", "ISJSON([ConditionJson]) = 1");
+
+                            t.HasCheckConstraint("CK_Rules_ResultFieldsJson", "[ResultFieldsJson] IS NULL OR ISJSON([ResultFieldsJson]) = 1");
                         });
                 });
 

@@ -6,8 +6,31 @@ namespace DataControls.Api.Controllers;
 
 [ApiController]
 [Route("api/rules")]
-public sealed class RulesController(RuleValidator validator, RuleService rules) : ControllerBase
+public sealed class RulesController(RuleValidator validator, RuleService rules, RuleExecutionService execution) : ControllerBase
 {
+    [HttpPost("execute")]
+    [RequestSizeLimit(64 * 1024)]
+    public async Task<ActionResult<RuleExecutionResponse>> ExecuteDraft(RuleDefinition definition,
+        CancellationToken cancellationToken, [FromQuery] int limit = 100)
+    {
+        if (limit is < 1 or > RuleExecutor.MaxLimit) return InvalidLimit();
+        var result = await execution.ExecuteAsync(definition, limit, cancellationToken);
+        return result.Validation.IsValid ? Ok(result.Result) : BadRequest(result.Validation);
+    }
+
+    [HttpPost("{id:int:min(1)}/execute")]
+    public async Task<ActionResult<RuleExecutionResponse>> ExecuteSaved(int id,
+        CancellationToken cancellationToken, [FromQuery] int limit = 100)
+    {
+        if (limit is < 1 or > RuleExecutor.MaxLimit) return InvalidLimit();
+        var saved = await rules.GetAsync(id, cancellationToken);
+        if (saved is null) return NotFoundRule();
+        var result = await execution.ExecuteAsync(saved.Definition, limit, cancellationToken);
+        return result.Validation.IsValid ? Ok(result.Result) : BadRequest(result.Validation);
+    }
+
+    private ObjectResult InvalidLimit() => Problem(statusCode: 400, title: "מספר הרשומות להצגה חייב להיות בין 1 ל־500.");
+
     [HttpGet]
     public async Task<ActionResult<RuleListResponse>> List(CancellationToken cancellationToken,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20)

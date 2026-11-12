@@ -1,5 +1,13 @@
 # Data Controls
 
+## Execute draft or saved rules
+
+`POST /api/rules/execute` runs an unsaved RuleDefinition; `POST /api/rules/{id}/execute` runs the saved definition. Both validate against the current catalog and share the parameterized compiler and read-only executor. Neither saves a draft or execution history. `?limit=100` controls returned rows (maximum 500); the response includes the total count and a truncation flag.
+
+Provision the read-only SQL user with `database/05_rule_reader.sql` before executing controls. The application identity needs permission to impersonate that user. SQL scripts/migrations alone do not automatically apply this permission setup. See [docs/RULE_EXECUTION.md](docs/RULE_EXECUTION.md) for setup, semantics, limits and tests; examples are in `backend/DataControls.Api/Execution.http`.
+
+Optional `resultFields` selects displayed root/related fields. The first Execution.http example now returns employee names, department name and department active status. Apply `AddRuleResultFields` (or script 06 once) before using the updated persistence API. Selection is stored with a saved rule and supported in both execution routes; omission/null preserves all-root-fields defaults.
+
 ## Save, open and edit rules
 
 The API now supports create/list/get/update/delete under `/api/rules`. Apply the `AddSavedRules` migration or run `database/04_create_rules.sql` once on a database with InitialCreate before using persistence endpoints. Existing databases are not upgraded automatically. Validation and metadata endpoints continue to work without the Rules table.
@@ -10,7 +18,7 @@ See [docs/RULE_PERSISTENCE.md](docs/RULE_PERSISTENCE.md) for API response shapes
 
 `POST http://localhost:5037/api/rules/validate` validates a JSON expression tree against the metadata catalog. It does not save or execute the rule. Example requests are in `backend/DataControls.Api/Rules.http`; the contract, supported operators, limits and response shapes are documented in [docs/RULE_DEFINITION.md](docs/RULE_DEFINITION.md).
 
-After building, run `powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1`. This uses a temporary API and the test database's schema. All 43 rule validation HTTP cases passed on 2026-11-12; SQL compilation and UI remain future work.
+After building, run `powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1`. This uses a temporary API and the test database's schema. All 43 rule validation HTTP cases passed on 2026-11-12; the UI remains future work.
 
 ## Run the API and inspect metadata
 
@@ -25,7 +33,7 @@ Open `http://localhost:5037/api/metadata`. The response contains business IDs, H
 
 The trusted server configuration is `backend/DataControls.Api/Metadata/metadata.json`. At startup the API checks IDs, references, supported types, physical columns, single-column primary keys and enabled/trusted single-column foreign keys. Invalid configuration or an unavailable database prevents startup. Check the server log for details. Changes require restart. Mappings use the exact identifier spelling from the database. No SQL text or expressions are accepted in the catalog.
 
-Version 1 supports direct text/number/date/boolean fields and employee-to-department navigation (many-to-one). Calculated age, reverse collection navigation and rule execution are not implemented yet. Date fields currently map SQL date/datetime values; date/time comparison semantics will be defined with the rule contract.
+Version 1 supports direct text/number/date/boolean fields and employee-to-department navigation (many-to-one). Calculated age and reverse collection navigation are not implemented yet. Execution compares date fields by calendar date, without time or timezone conversion (D-015).
 
 After building, run the repeatable integration checks against the previously created test database:
 
@@ -47,14 +55,16 @@ The SQL scripts create the `DataControlsDb` database used by the development con
    - `database/02_create_tables.sql`
    - `database/03_seed_data.sql`
    - `database/04_create_rules.sql`
+   - `database/05_rule_reader.sql` (security setup for execution; also required after an EF schema install)
+   - `database/06_rule_result_fields.sql`
 3. Check that each script completes without errors. The first script creates `DataControlsDb` if it does not already exist. The table-creation script is for a fresh database and should be run once.
 4. The seed script may be run again safely; existing sample departments (matched by name) and employees (matched by first and last name) are left unchanged.
 
-Scripts 02 and 04 create the schema from the `InitialCreate` and `AddSavedRules` EF Core migrations. Their `__EFMigrationsHistory` rows record those migrations as applied (EF Core 10.0.0), so later EF Core migration operations do not try to create these tables again. For a fresh installation, use either these SQL scripts or `dotnet ef database update` to create the schema; do not run both schema-creation paths for the same migration against the same database.
+Scripts 02, 04 and 06 create the schema from the `InitialCreate`, `AddSavedRules` and `AddRuleResultFields` EF Core migrations. Their `__EFMigrationsHistory` rows record those migrations as applied (EF Core 10.0.0), so later EF Core migration operations do not try to create these tables/columns again. For a fresh installation, use either these SQL scripts or `dotnet ef database update` to create the schema; do not run both schema-creation paths for the same migration against the same database. Script 05 is separate permission setup and remains required for either schema path.
 
 ## Verify the database in SSMS
 
-After running all four scripts, open a new query window and execute:
+After running all six scripts, open a new query window and execute:
 
 ```sql
 USE [DataControlsDb];
@@ -96,5 +106,7 @@ WHERE [IsActive] = 1 AND [ManagerName] IS NULL;
 On the initial clean setup, the counts should be 5 departments and 20 employees, and each of the six business-rule checks should return at least one row. The migration history query should include `20261112080545_InitialCreate` with product version `10.0.0`.
 
 The migration history should also include `20261112093455_AddSavedRules` after script 04. Rules starts empty; controls are created through the API.
+
+After script 06 it should also include `20261112103841_AddRuleResultFields`; existing rules have NULL ResultFieldsJson and retain default result columns.
 
 The existing schema represents a department manager as nullable `ManagerName` text; it does not define a manager entity or foreign key. Therefore, the no-manager sample is represented by an active department whose `ManagerName` is `NULL`.

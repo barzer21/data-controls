@@ -39,6 +39,19 @@ Malformed JSON, unknown properties, missing/unknown `kind`, wrong JSON structure
 - `description`: optional, at most 2,000 characters.
 - `rootEntityId`: an existing business entity ID.
 - `condition`: a comparison or a group. A matching condition describes a **violation** ("אתר רשומות שעונות לתנאים הבאים"), per D-003.
+- `resultFields`: optional ordered list of field references to return, including related fields (D-017). Omitted/null means all root fields, preserving existing definitions. Explicit lists require 1–50 valid fields and unique result IDs; empty lists and null entries are invalid.
+
+For example, to return an employee's first/last name and department name:
+
+```json
+"resultFields": [
+  { "fieldId": "firstName" },
+  { "fieldId": "lastName" },
+  { "fieldId": "name", "relationshipPath": ["employeeDepartment"] }
+]
+```
+
+The response column/value key for the last field is `employeeDepartment.name`; its Hebrew label includes the relationship and field labels. Root fields keep their ordinary IDs. The row ID is always returned separately. Selection does not alter conditions. Both drafts and saved rules support selection; PUT replaces it, and omission/null resets the default.
 
 `kind` may appear anywhere in its object. Business IDs are matched case-insensitively, consistently with the catalog's duplicate checks. Kinds, operators and types use the exact documented spelling. Unknown properties are rejected rather than silently ignored. Adding a new operator remains a code change; adding rules from supported operators does not.
 
@@ -69,10 +82,10 @@ Constant types are strict:
 
 - number: JSON number representable as .NET decimal; quoted numbers, arrays and objects are invalid. Physical-column precision/conversion and query behavior will be addressed by the compiler/executor.
 - boolean: JSON `true` or `false`, not strings or 0/1.
-- date: a valid calendar date string in exact `yyyy-MM-dd` form, without a time or timezone. SQL comparison semantics for date/time columns must be finalized before compiler implementation.
+- date: a valid calendar date string in exact `yyyy-MM-dd` form, without a time or timezone. Execution compares calendar dates and discards the time component of SQL date/time fields (D-015).
 - text: a JSON string up to 4,000 characters. An empty string is permitted; it is not SQL NULL. SQL-looking text remains data and must later be parameterized by the compiler.
 
-NULL literals are not allowed in binary comparisons; use `isNull`/`isNotNull`. The validator checks definitions, not whether actual records contain NULL values. Runtime NULL and missing-relationship behavior will be verified when query execution is implemented.
+NULL literals are not allowed in binary comparisons; use `isNull`/`isNotNull`. The validator checks definitions, not whether actual records contain NULL values. Execution preserves SQL UNKNOWN in ordinary comparisons and uses LEFT JOIN for optional relationships; see [RULE_EXECUTION.md](RULE_EXECUTION.md).
 
 Limits (design choices, not assignment mandates): root condition is depth 1, maximum condition depth 8; maximum 100 nodes including groups; maximum 4 relationships per field path; request body 64 KiB. Validation state is local to each call and the validator has no persistence or execution dependency.
 
@@ -89,4 +102,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1
 
 The test uses a temporary API on port 5199 and reads schema from `DataControlsTestDb`; it does not modify business data or the source catalog. Logs remain in the printed temporary directory. Stop a running instance using the Debug output before rebuilding if Windows reports locked binaries.
 
-Verified on 2026-11-12: build succeeded; 43 HTTP cases passed, including both limit boundaries, nested AND/OR, field/constant/related operands, Hebrew semantic errors, malformed JSON, unknown mappings and oversized requests. Persistence has since been added separately: see [RULE_PERSISTENCE.md](RULE_PERSISTENCE.md). Full UI authoring, compilation and execution remain unimplemented.
+Verified on 2026-11-12: build succeeded; 43 HTTP cases passed, including both limit boundaries, nested AND/OR, field/constant/related operands, Hebrew semantic errors, malformed JSON, unknown mappings and oversized requests. Persistence and execution have since been added separately: see [RULE_PERSISTENCE.md](RULE_PERSISTENCE.md) and [RULE_EXECUTION.md](RULE_EXECUTION.md). Full UI authoring remains unimplemented.

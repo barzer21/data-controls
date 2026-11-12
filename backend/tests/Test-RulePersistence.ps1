@@ -1,4 +1,4 @@
-param([string]$Server = 'localhost', [int]$Port = 5200)
+param([string]$Server = 'localhost', [int]$Port = 5200, [switch]$IncludeExecution)
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Net.Http
@@ -88,6 +88,14 @@ try {
             & sqlcmd -S $Server -E -C -b -l 10
         if ($LASTEXITCODE -ne 0) { throw "Setup failed: $file" }
     }
+    if ($IncludeExecution) {
+        (Get-Content (Join-Path $repositoryRoot 'database/05_rule_reader.sql') -Raw -Encoding UTF8).Replace('DataControlsDb', $testDatabase) |
+            & sqlcmd -S $Server -E -C -b -l 10
+        if ($LASTEXITCODE -ne 0) { throw 'Reader setup failed.' }
+    }
+    (Get-Content (Join-Path $repositoryRoot 'database/06_rule_result_fields.sql') -Raw -Encoding UTF8).Replace('DataControlsDb', $testDatabase) |
+        & sqlcmd -S $Server -E -C -b -l 10
+    if ($LASTEXITCODE -ne 0) { throw 'Result fields schema setup failed.' }
     Assert-Test $true 'freshSqlSetup'
     Start-TestApi
     $list = (Send-Request 'GET' '').Body
@@ -176,6 +184,7 @@ try {
     Assert-Test $true 'deletionSurvivesRestart'
     Invoke-TestSql "SET NOCOUNT ON; IF (SELECT COUNT(*) FROM dbo.Employees)<>20 OR (SELECT COUNT(*) FROM dbo.Departments)<>5 THROW 51000,'Sample data changed',1; IF (SELECT COUNT(*) FROM dbo.Rules)<>2 THROW 51000,'Unexpected rule count',1; IF NOT EXISTS (SELECT 1 FROM dbo.__EFMigrationsHistory WHERE MigrationId LIKE '%_AddSavedRules') THROW 51000,'Missing migration history',1; SELECT DB_NAME() AS TestDatabase,COUNT(*) AS SavedRules FROM dbo.Rules;"
     Assert-Test $true 'sqlPersistenceAndBusinessDataUnchanged'
+    if ($IncludeExecution) { . (Join-Path $PSScriptRoot 'Invoke-RuleExecutionChecks.ps1') }
     Write-Output "All $script:passed persistence checks passed. Test database retained: $testDatabase. Logs: $testRoot"
 } finally {
     Stop-TestApi

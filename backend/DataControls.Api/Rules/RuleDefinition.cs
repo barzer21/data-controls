@@ -5,7 +5,7 @@ namespace DataControls.Api.Rules;
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record RuleDefinition(string? Name, string? Description, string? RootEntityId,
-    RuleCondition? Condition);
+    RuleCondition? Condition, IReadOnlyList<FieldReference?>? ResultFields = null);
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [JsonDerivedType(typeof(RuleGroup), "group")]
