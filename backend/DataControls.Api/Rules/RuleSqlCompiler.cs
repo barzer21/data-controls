@@ -7,7 +7,7 @@ namespace DataControls.Api.Rules;
 public sealed record RuleSqlParameter(string Name, SqlDbType Type, object Value, byte Scale = 0);
 public sealed record RuleResultColumn(string Id, string Label, string Type);
 public sealed record CompiledRule(string Sql, IReadOnlyList<RuleSqlParameter> Parameters,
-    IReadOnlyList<RuleResultColumn> Columns);
+    IReadOnlyList<RuleResultColumn> Columns, CompiledExplanationNode Explanation, int EvidenceColumnCount);
 public sealed record RuleCompilationResult(RuleValidationResult Validation, CompiledRule? Query);
 
 public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator validator)
@@ -28,20 +28,22 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
         private readonly Dictionary<(string, string), string> aliases = [];
         private readonly List<string> joins = [];
         private readonly List<RuleSqlParameter> parameters = [];
+        private readonly List<string> evidenceColumns = [];
 
         public CompiledRule Build()
         {
             var root = entities[definition.RootEntityId!];
-            var predicate = Condition(definition.Condition!);
+            var condition = Condition(definition.Condition!, "condition");
             var references = definition.ResultFields ?? root.Fields.Select(f => new FieldReference(f.Id)).ToArray();
             // Resolve projections before rendering FROM, because a display-only field can add a join.
             var projections = references.Select(reference => Projection(reference!)).ToArray();
             var fields = projections.Select((projection, index) => $"{projection.Sql} AS [c{index}]");
             var sql = $"SELECT TOP (@__limit) COUNT_BIG(*) OVER() AS [__count], " +
-                $"[t0].{Quote(root.KeyColumn)} AS [__id], {string.Join(", ", fields)} " +
+                $"[t0].{Quote(root.KeyColumn)} AS [__id], {string.Join(", ", fields)}, {string.Join(", ", evidenceColumns)} " +
                 $"FROM {Table(root)} AS [t0] {string.Join(" ", joins)} " +
-                $"WHERE {predicate} ORDER BY [t0].{Quote(root.KeyColumn)};";
-            return new(sql, parameters.ToArray(), projections.Select(p => p.Column).ToArray());
+                $"WHERE {condition.Sql} ORDER BY [t0].{Quote(root.KeyColumn)};";
+            return new(sql, parameters.ToArray(), projections.Select(p => p.Column).ToArray(),
+                condition.Explanation, evidenceColumns.Count);
         }
 
         private (string Sql, RuleResultColumn Column) Projection(FieldReference reference)
@@ -53,32 +55,64 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
             return (sql, new(key, label, field.Type));
         }
 
-        private string Condition(RuleCondition condition) => condition switch
+        private (string Sql, CompiledExplanationNode Explanation) Condition(RuleCondition condition, string path)
         {
-            RuleGroup group => "(" + string.Join(group.Operator == "and" ? " AND " : " OR ",
-                group.Children!.Select(child => Condition(child!))) + ")",
-            RuleComparison comparison => Comparison(comparison),
-            _ => throw new InvalidOperationException("Only validated condition nodes can be compiled.")
-        };
+            if (condition is RuleGroup group)
+            {
+                var children = group.Children!.Select((child, index) =>
+                    Condition(child!, $"{path}.children[{index}]")).ToArray();
+                var sql = "(" + string.Join(group.Operator == "and" ? " AND " : " OR ", children.Select(c => c.Sql)) + ")";
+                return (sql, new(path, "group", group.Operator!, Match(sql), null, null,
+                    children.Select(c => c.Explanation).ToArray()));
+            }
+            if (condition is not RuleComparison comparison)
+                throw new InvalidOperationException("Only validated condition nodes can be compiled.");
+            var (predicate, left, right) = Comparison(comparison);
+            return (predicate, new(path, "comparison", comparison.Operator!, Match(predicate), left, right, []));
+        }
 
-        private string Comparison(RuleComparison comparison)
+        private int Evidence(string sql)
+        {
+            var index = evidenceColumns.Count;
+            evidenceColumns.Add($"{sql} AS [__e{index}]");
+            return index;
+        }
+
+        private int Match(string predicate) => Evidence($"CASE WHEN {predicate} THEN 1 ELSE 0 END");
+
+        private CompiledExplanationOperand EvidenceField(FieldReference reference)
+        {
+            var projection = Projection(reference);
+            return new("field", projection.Column.Id, projection.Column.Label,
+                projection.Column.Type, Evidence(projection.Sql), null);
+        }
+
+        private (string Sql, CompiledExplanationOperand Left, CompiledExplanationOperand? Right) Comparison(RuleComparison comparison)
         {
             var (left, field) = Field(comparison.Left!);
-            if (comparison.Operator == "isNull") return $"({left} IS NULL)";
-            if (comparison.Operator == "isNotNull") return $"({left} IS NOT NULL)";
+            var leftEvidence = EvidenceField(comparison.Left!);
+            if (comparison.Operator == "isNull") return ($"({left} IS NULL)", leftEvidence, null);
+            if (comparison.Operator == "isNotNull") return ($"({left} IS NOT NULL)", leftEvidence, null);
             var op = comparison.Operator switch
             {
                 "equals" => "=", "notEquals" => "<>", "greaterThan" => ">",
                 "greaterThanOrEqual" => ">=", "lessThan" => "<", "lessThanOrEqual" => "<=",
                 _ => throw new InvalidOperationException("Only validated operators can be compiled.")
             };
-            var right = comparison.Right switch
+            string right;
+            CompiledExplanationOperand rightEvidence;
+            if (comparison.Right is FieldOperand operand)
             {
-                FieldOperand operand => Field(operand.Field!).Sql,
-                ConstantOperand constant => Parameter(constant, field.Type),
-                _ => throw new InvalidOperationException("Only validated operands can be compiled.")
-            };
-            return $"({left} {op} {right})";
+                right = Field(operand.Field!).Sql;
+                rightEvidence = EvidenceField(operand.Field!);
+            }
+            else if (comparison.Right is ConstantOperand constant)
+            {
+                right = Parameter(constant, field.Type);
+                rightEvidence = new("constant", null, null, field.Type, null, parameters[^1].Value);
+            }
+            else throw new InvalidOperationException("Only validated operands can be compiled.");
+            return ($"({left} {op} {right})", leftEvidence, rightEvidence);
         }
 
         private (string Sql, MetadataField Field) Field(FieldReference reference)

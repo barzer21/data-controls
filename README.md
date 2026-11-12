@@ -8,6 +8,8 @@ Provision the read-only SQL user with `database/05_rule_reader.sql` before execu
 
 Optional `resultFields` selects displayed root/related fields. The first Execution.http example now returns employee names, department name and department active status. Apply `AddRuleResultFields` (or script 06 once) before using the updated persistence API. Selection is stored with a saved rule and supported in both execution routes; omission/null preserves all-root-fields defaults.
 
+Each violating record also contains a Hebrew `failureReason` and structured `explanation` tree with actual/expected values. SQL determines which branches matched, including NULL and nested groups; C# formats the evidence. Selected result columns remain unchanged. No new migration is required. See [docs/RULE_EXPLANATIONS.md](docs/RULE_EXPLANATIONS.md) for the response and tests.
+
 ## Save, open and edit rules
 
 The API now supports create/list/get/update/delete under `/api/rules`. Apply the `AddSavedRules` migration or run `database/04_create_rules.sql` once on a database with InitialCreate before using persistence endpoints. Existing databases are not upgraded automatically. Validation and metadata endpoints continue to work without the Rules table.

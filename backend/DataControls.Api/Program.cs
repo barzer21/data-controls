@@ -20,6 +20,7 @@ builder.Services.AddSingleton<RuleValidator>();
 builder.Services.AddScoped<RuleService>();
 builder.Services.AddSingleton<RuleSqlCompiler>();
 builder.Services.AddSingleton<RuleExecutor>();
+builder.Services.AddSingleton<RuleExplanationService>();
 builder.Services.AddScoped<RuleExecutionService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<PersistenceExceptionHandler>();

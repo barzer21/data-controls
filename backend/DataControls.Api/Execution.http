@@ -51,3 +51,19 @@ Content-Type: application/json
     "operator": "isNull"
   }
 }
+
+### Salary reason includes the actual salary, while visible columns contain only the name.
+POST {{baseUrl}}/api/rules/execute
+Content-Type: application/json
+
+{
+  "name": "שכר מעל הסף",
+  "rootEntityId": "employee",
+  "resultFields": [{ "fieldId": "firstName" }],
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "salary" },
+    "operator": "greaterThan",
+    "right": { "kind": "constant", "value": 15000 }
+  }
+}

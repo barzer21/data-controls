@@ -3,12 +3,13 @@ using Microsoft.Data.SqlClient;
 
 namespace DataControls.Api.Rules;
 
-public sealed record RuleViolation(object Id, IReadOnlyDictionary<string, object?> Values);
+public sealed record RuleViolation(object Id, IReadOnlyDictionary<string, object?> Values,
+    string FailureReason, RuleExplanationNode Explanation);
 public sealed record RuleExecutionResponse(long TotalCount, int ReturnedCount, bool Truncated,
     IReadOnlyList<RuleResultColumn> Columns, IReadOnlyList<RuleViolation> Records);
 public sealed class RuleExecutionTimeoutException : TimeoutException;
 
-public sealed class RuleExecutor(IConfiguration configuration)
+public sealed class RuleExecutor(IConfiguration configuration, RuleExplanationService explanations)
 {
     public const int MaxLimit = 500;
 
@@ -53,7 +54,14 @@ public sealed class RuleExecutor(IConfiguration configuration)
                     if (value is DateTime date && query.Columns[i].Type == "date") value = DateOnly.FromDateTime(date);
                     values.Add(query.Columns[i].Id, value);
                 }
-                records.Add(new(reader.GetValue(1), values));
+                var evidence = new object?[query.EvidenceColumnCount];
+                for (var i = 0; i < evidence.Length; i++)
+                {
+                    var ordinal = 2 + query.Columns.Count + i;
+                    evidence[i] = reader.IsDBNull(ordinal) ? null : reader.GetValue(ordinal);
+                }
+                var reason = explanations.Explain(query.Explanation, evidence);
+                records.Add(new(reader.GetValue(1), values, reason.FailureReason, reason.Explanation));
             }
             return new(totalCount, records.Count, totalCount > records.Count, query.Columns, records);
         }

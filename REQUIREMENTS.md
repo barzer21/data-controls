@@ -35,7 +35,7 @@
 | RESULTS-02 | Execute a control from the list | Saved execution API implemented; list Run action pending UI | In progress |
 | RESULTS-03 | Show violation count | Exact count beyond returned-row limit verified via API; UI display pending | In progress |
 | RESULTS-04 | Show violating records in a table | Selected root/related fields and Hebrew column metadata returned by API; persisted selection verified; grid pending | In progress |
-| RESULTS-05 | Explain why each record failed | Per-record failure reason | Not started |
+| RESULTS-05 | Explain why each record failed | Hebrew failureReason + structured SQL-authoritative explanation verified via API; UI display pending (docs/RULE_EXPLANATIONS.md) | In progress |
 | RESULTS-06 | Search and filter results | Search/filter demonstration | Not started |
 | UX-01 | Clear, convenient, responsive UI | Desktop/mobile viewport review | Not started |
 

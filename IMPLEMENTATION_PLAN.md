@@ -20,8 +20,8 @@
 | 2 | Metadata catalog and API with Hebrew business labels — JSON implementation in progress | DB-03, GEN-03, RULE-02, RULE-05 | UI-ready entity/field/relationship metadata; extensibility demonstrated |
 | 3 | RuleDefinition contract and validation — API implemented and 43 HTTP cases passed; pending user review | RULE-01, RULE-03, EXEC-03 | Nested AND/OR, constants, field comparisons, nulls; invalid input rejected |
 | 4 | Rule persistence and CRUD API — implemented; 23 persistence checks passed on isolated DB; pending review/schema upgrade | DB-04, RULE-04 | Create, edit, reload, reuse rules |
-| 5 | Dynamic SQL compiler and read-only executor — draft/saved APIs and resultFields implemented; 25 compiler and 60 combined persistence/execution checks passed; pending review/deployment | EXEC-01..06, TECH-04 | Parameterized SQL, allowed identifiers/joins, safe limits, tested outputs |
-| 6 | Result explanation, counts and filtering API — count and selected root/related columns available; explanations/search/filter pending | RESULTS-03..06 | Each violating record has meaningful reason; search/filter works |
+| 5 | Dynamic SQL compiler and read-only executor — draft/saved APIs, resultFields and explanation evidence implemented; 34 compiler/formatter and 71 combined checks passed; pending review/deployment | EXEC-01..06, TECH-04 | Parameterized SQL, allowed identifiers/joins, safe limits, tested outputs |
+| 6 | Result explanation, counts and filtering API — Hebrew/structured explanations verified; count and selected columns available; search/filter pending | RESULTS-03..06 | Each violating record has meaningful reason; search/filter works |
 | 7 | Angular RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | End-to-end create/edit/run/review flow in Hebrew |
 | 8 | Python mock AI and approval flow | AI-01..07, TECH-02 | Free text → mock proposal → same rule model → preview/approval → run |
 | 9 | Tests, docs, clean-room verification, demo | SUB-01..08, evaluation criteria | Fresh setup succeeds using README and SQL scripts; full checklist verified |
@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review execution and resultFields support (D-015..017, docs/RULE_EXECUTION.md), including schema script 06 before upgrading existing developer databases. Next implement per-record explanations and results search/filtering (package 6), then the UI. Calculated age still requires its own task.
+Review per-record explanation support (D-018, docs/RULE_EXPLANATIONS.md). Next implement results search/filtering (package 6), then the UI. Existing developer databases still need reviewed schema setup through script 06; this explanation task adds no migration. Calculated age still requires its own task.
