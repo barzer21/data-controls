@@ -47,8 +47,6 @@ public sealed class RuleService(AppDbContext db, RuleValidator validator, IOptio
         rule.Description = definition.Description;
         rule.RootEntityId = definition.RootEntityId!;
         rule.ConditionJson = JsonSerializer.Serialize<RuleCondition>(definition.Condition!, serializerOptions);
-        rule.ResultFieldsJson = definition.ResultFields is null ? null
-            : JsonSerializer.Serialize(definition.ResultFields, serializerOptions);
         rule.UpdatedAtUtc = DateTimeOffset.UtcNow;
         if (!id.HasValue) db.Rules.Add(rule);
         await db.SaveChangesAsync(cancellationToken);
@@ -70,9 +68,7 @@ public sealed class RuleService(AppDbContext db, RuleValidator validator, IOptio
             throw new InvalidOperationException($"Unsupported stored rule version: {rule.DefinitionVersion}.");
         var condition = JsonSerializer.Deserialize<RuleCondition>(rule.ConditionJson, serializerOptions)
             ?? throw new InvalidOperationException($"Stored rule {rule.Id} has an empty condition.");
-        var resultFields = rule.ResultFieldsJson is null ? null
-            : JsonSerializer.Deserialize<IReadOnlyList<FieldReference?>>(rule.ResultFieldsJson, serializerOptions);
-        return new(rule.Id, new(rule.Name, rule.Description, rule.RootEntityId, condition, resultFields),
+        return new(rule.Id, new(rule.Name, rule.Description, rule.RootEntityId, condition),
             rule.DefinitionVersion, rule.CreatedAtUtc, rule.UpdatedAtUtc);
     }
 }

@@ -13,18 +13,18 @@
 
 ## Work packages
 
-| Order | Work package | Requirements | Done when |
+| Order | Work package | Requirements | Current state |
 |---|---|---|---|
-| 0 | Freeze requirement baseline and review metadata approach | DB-03, all SUB | Both docs in repo; decide metadata source and acceptance demo |
-| 1 | SQL schema export + seed scripts; verify clean setup | DB-01, DB-02, SUB-02 | SQL scripts create fresh DB with valid/invalid rows; no duplicate seed data |
-| 2 | Metadata catalog and API with Hebrew business labels — JSON implementation in progress | DB-03, GEN-03, RULE-02, RULE-05 | UI-ready entity/field/relationship metadata; extensibility demonstrated |
-| 3 | RuleDefinition contract and validation — API implemented and 43 HTTP cases passed; pending user review | RULE-01, RULE-03, EXEC-03 | Nested AND/OR, constants, field comparisons, nulls; invalid input rejected |
-| 4 | Rule persistence and CRUD API — implemented; 23 persistence checks passed on isolated DB; pending review/schema upgrade | DB-04, RULE-04 | Create, edit, reload, reuse rules |
-| 5 | Dynamic SQL compiler and read-only executor — draft/saved APIs, resultFields, explanations and options implemented; 45 compiler/formatter and 98 combined checks passed; pending review/deployment | EXEC-01..06, TECH-04 | Parameterized SQL, allowed identifiers/joins, safe limits, tested outputs |
-| 6 | Result explanation, counts and filtering API — implemented and tested via API; UI demonstrations pending | RESULTS-03..06 | Each violating record has meaningful reason; search/filter works |
-| 7 | Angular RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | End-to-end create/edit/run/review flow in Hebrew |
-| 8 | Python mock AI and approval flow | AI-01..07, TECH-02 | Free text → mock proposal → same rule model → preview/approval → run |
-| 9 | Tests, docs, clean-room verification, demo | SUB-01..08, evaluation criteria | Fresh setup succeeds using README and SQL scripts; full checklist verified |
+| 0 | Requirement baseline and metadata approach | DB-03, all SUB | JSON catalog selected; review continues |
+| 1 | SQL schema and seed scripts | DB-01, DB-02, SUB-02 | Clean setup from scripts 01–05 |
+| 2 | Metadata API and Hebrew labels | DB-03, GEN-03, RULE-02, RULE-05 | Implemented and tested |
+| 3 | Rule definition and validation | RULE-01, RULE-03, EXEC-03 | Implemented and tested |
+| 4 | Rule persistence and CRUD | DB-04, RULE-04 | Implemented and tested |
+| 5 | SQL compiler and read-only executor | EXEC-01..06, TECH-04 | Draft/saved execution with full employee and department name |
+| 6 | Explanations, counts, search and filtering | RESULTS-03..06 | Implemented via API; UI pending |
+| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | Not started |
+| 8 | Python AI mock and approval flow | AI-01..07, TECH-02 | Not started |
+| 9 | Documentation and clean setup verification | SUB-01..08 | In progress |
 
 ## Architecture decisions currently proposed (subject to review)
 
@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review search/filter support and the new execution envelopes (D-019, docs/RESULT_FILTERING.md), then plan the UI. Existing developer databases still need reviewed schema setup through script 06; search/filter adds no migration. Calculated age still requires its own task.
+Plan the Angular Hebrew RTL UI, starting with the saved-rule list, execution and results table. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. The project databases were recreated under D-021. Calculated age still requires its own task.

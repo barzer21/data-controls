@@ -37,7 +37,7 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
         {
             var root = entities[definition.RootEntityId!];
             var condition = Condition(definition.Condition!, "condition");
-            var references = definition.ResultFields ?? root.Fields.Select(f => new FieldReference(f.Id)).ToArray();
+            var references = RuleResultSchema.Fields(catalog, root.Id);
             // Resolve projections before rendering FROM, because a display-only field can add a join.
             var projections = references.Select(reference => Projection(reference!)).ToArray();
             var predicates = new List<string> { condition.Sql };

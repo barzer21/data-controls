@@ -17,9 +17,6 @@ Assert-Test ($filtered.records[0].failureReason -eq $sameUnfilteredRecord.failur
     $filtered.records[0].explanation.operator -eq 'isNotNull' -and $filtered.records[0].explanation.children.Count -eq 0) 'filterNeverChangesFailureReason'
 
 $relatedColumns = $allRows | ConvertTo-Json -Depth 100 | ConvertFrom-Json
-$relatedColumns | Add-Member -NotePropertyName resultFields -NotePropertyValue @(
-    @{ fieldId = 'firstName' }, @{ fieldId = 'salary' }, @{ fieldId = 'name'; relationshipPath = @('employeeDepartment') }
-)
 $sales = (Send-Request 'POST' '/execute' @{ definition = $relatedColumns; options = @{ search = 'Sales' } }).Body
 Assert-Test ($sales.totalCount -eq 2 -and $sales.records[0].values.'employeeDepartment.name' -eq 'Sales') 'searchIncludesSelectedRelatedText'
 $combined = (Send-Request 'POST' '/execute' @{
@@ -27,7 +24,7 @@ $combined = (Send-Request 'POST' '/execute' @{
 }).Body
 Assert-Test ($combined.totalCount -eq 1 -and $combined.records[0].values.firstName -eq 'Eden') 'searchAndFilterIntersect'
 $noRelatedSearch = (Send-Request 'POST' '/execute' @{ definition = $allRows; options = @{ search = 'Sales' } }).Body
-Assert-Test ($noRelatedSearch.totalCount -eq 0) 'searchExcludesUnselectedRelatedFields'
+Assert-Test ($noRelatedSearch.totalCount -eq 2) 'searchIncludesDepartmentNameByDefault'
 $missingFiltered = (Send-Request 'POST' '/execute' @{
     definition = $relatedColumns; options = @{ filter = (Execution-Comparison 'name' 'isNull' $null -NoRight -Path @('employeeDepartment')) }
 }).Body
@@ -49,7 +46,7 @@ Assert-Test ((Send-Request 'POST' '/execute' @{ definition = $allRows; options =
 Assert-Test ((Send-Request 'POST' '/execute' @{ definition = $allRows; options = @{ search = 'NoSuchEmployee' } }).Body.totalCount -eq 0) 'searchNoMatches'
 
 $hiddenFilter = (Send-Request 'POST' '/execute' @{
-    definition = $relatedColumns; options = @{ filter = (Execution-Comparison 'isActive' 'equals' $true) }
+    definition = $relatedColumns; options = @{ filter = (Execution-Comparison 'isActive' 'equals' $true -Path @('employeeDepartment')) }
 } 400).Body
 Assert-Test ('filterFieldNotDisplayed' -in $hiddenFilter.errors.code) 'filterRejectsHiddenField'
 $badFilter = (Send-Request 'POST' '/execute' @{
@@ -61,10 +58,6 @@ $unknownFilter = (Send-Request 'POST' '/execute' @{
     definition = $allRows; options = @{ filter = (Execution-Comparison 'unknown' 'equals' 1) }
 } 400).Body
 Assert-Test ('unknownField' -in $unknownFilter.errors.code) 'filterRejectsUnknownField'
-$numericOnly = $allRows | ConvertTo-Json -Depth 100 | ConvertFrom-Json
-$numericOnly | Add-Member -NotePropertyName resultFields -NotePropertyValue @(@{ fieldId = 'salary' })
-$noText = (Send-Request 'POST' '/execute' @{ definition = $numericOnly; options = @{ search = 'Noam' } } 400).Body
-Assert-Test ('noSearchableFields' -in $noText.errors.code) 'searchRequiresVisibleTextField'
 $tooLong = (Send-Request 'POST' '/execute' @{ definition = $allRows; options = @{ search = ('x' * 201) } } 400).Body
 Assert-Test ('searchTooLong' -in $tooLong.errors.code) 'searchLengthBound'
 Send-Request 'POST' '/execute' '{"name":"Old bare definition","rootEntityId":"employee"}' 400 | Out-Null

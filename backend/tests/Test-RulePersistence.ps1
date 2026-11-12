@@ -99,9 +99,6 @@ try {
             & sqlcmd -S $Server -E -C -b -l 10
         if ($LASTEXITCODE -ne 0) { throw 'Reader setup failed.' }
     }
-    (Get-Content (Join-Path $repositoryRoot 'database/06_rule_result_fields.sql') -Raw -Encoding UTF8).Replace('DataControlsDb', $testDatabase) |
-        & sqlcmd -S $Server -E -C -b -l 10
-    if ($LASTEXITCODE -ne 0) { throw 'Result fields schema setup failed.' }
     Assert-Test $true 'freshSqlSetup'
     Start-TestApi
     $list = (Send-Request 'GET' '').Body

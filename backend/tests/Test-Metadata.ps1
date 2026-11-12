@@ -84,6 +84,15 @@ try {
     Test-CatalogCase 'wrongRelationship' { param($c)
         $c.relationships[0].fromColumn = 'Id'
     } 'foreign key not found'
+    Test-CatalogCase 'unknownResultPath' { param($c)
+        $c.entities[0].relatedColumns[0].relationshipPath = @('unknown')
+    } 'Unknown related result relationship'
+    Test-CatalogCase 'unknownResultField' { param($c)
+        $c.entities[0].relatedColumns[0].fieldId = 'unknown'
+    } 'Unknown related result field'
+    Test-CatalogCase 'duplicateRelatedColumn' { param($c)
+        $c.entities[0].relatedColumns += $c.entities[0].relatedColumns[0]
+    } 'Duplicate result column'
     Write-Output "All checks passed. Temporary catalogs and logs: $testRoot"
 } finally {
     if ($null -ne $process) {

@@ -13,7 +13,6 @@ public sealed class RuleValidator(IMetadataProvider metadata)
     public const int MaxNodes = 100;
     public const int MaxRelationshipPath = 4;
     public const int MaxTextLength = 4000;
-    public const int MaxResultFields = 50;
 
     public RuleValidationResult Validate(RuleDefinition rule) => new Validation(metadata.Catalog).Run(rule);
 
@@ -39,31 +38,10 @@ public sealed class RuleValidator(IMetadataProvider metadata)
             if (root is not null)
             {
                 Visit(rule.Condition, root, "condition", 1);
-                ValidateResultFields(rule.ResultFields, root);
             }
             else if (rule.Condition is null)
                 Error("condition", "requiredCondition", "יש להגדיר תנאי לבקרה.");
             return new(errors.Count == 0, errors.ToArray());
-        }
-
-        private void ValidateResultFields(IReadOnlyList<FieldReference?>? fields, MetadataEntity root)
-        {
-            // Omission/null preserves the existing all-root-fields behavior.
-            if (fields is null) return;
-            if (fields.Count is < 1 or > MaxResultFields)
-            {
-                Error("resultFields", "invalidResultFieldCount", $"יש לבחור בין 1 ל־{MaxResultFields} שדות לתצוגה.");
-                return;
-            }
-            var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            for (var i = 0; i < fields.Count; i++)
-            {
-                var reference = fields[i];
-                if (Resolve(reference, root, $"resultFields[{i}]") is null) continue;
-                var key = string.Join(".", (reference!.RelationshipPath ?? []).Append(reference.FieldId));
-                if (!keys.Add(key))
-                    Error($"resultFields[{i}]", "duplicateResultField", "שדה לתצוגה עם אותו מזהה תוצאה כבר נבחר.");
-            }
         }
 
         private void Visit(RuleCondition? condition, MetadataEntity root, string path, int depth)

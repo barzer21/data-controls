@@ -14,7 +14,11 @@
         { "id": "salary", "label": "שכר", "column": "Salary", "type": "number" },
         { "id": "startDate", "label": "תחילת העסקה", "column": "StartDate", "type": "date" },
         { "id": "endDate", "label": "סיום העסקה", "column": "EndDate", "type": "date" },
-        { "id": "isActive", "label": "עובד פעיל", "column": "IsActive", "type": "boolean" }
+        { "id": "isActive", "label": "עובד פעיל", "column": "IsActive", "type": "boolean" },
+        { "id": "departmentId", "label": "מזהה מחלקה", "column": "DepartmentId", "type": "number" }
+      ],
+      "relatedColumns": [
+        { "fieldId": "name", "relationshipPath": ["employeeDepartment"] }
       ]
     },
     {

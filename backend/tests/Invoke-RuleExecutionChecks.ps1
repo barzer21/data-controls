@@ -50,44 +50,26 @@ $missingManager = Execution-Rule (Execution-Comparison 'managerName' 'isNull' $n
 Assert-Test ((Send-Request 'POST' '/execute' $missingManager).Body.totalCount -eq 5) 'missingRelatedFieldOrRelation'
 
 $selectedRule = Execution-Rule (Execution-Comparison 'isActive' 'equals' $true)
-$selectedRule.resultFields = @(
-    @{ fieldId = 'firstName' },
-    @{ fieldId = 'name'; relationshipPath = @('employeeDepartment') }
-)
 $selectedResult = (Send-Request 'POST' '/execute' $selectedRule).Body
-Assert-Test ($selectedResult.totalCount -eq 19 -and $selectedResult.columns.Count -eq 2 -and
-    $selectedResult.columns[1].id -eq 'employeeDepartment.name') 'selectedFieldsAndDisplayOnlyJoin'
+Assert-Test ($selectedResult.totalCount -eq 19 -and $selectedResult.columns.Count -eq 9 -and
+    'departmentId' -in $selectedResult.columns.id -and 'employeeDepartment.name' -in $selectedResult.columns.id) 'allEmployeeFieldsAndDepartmentName'
 $noga = @($selectedResult.records | Where-Object { $_.values.firstName -eq 'Noga' })
 $yael = @($selectedResult.records | Where-Object { $_.values.firstName -eq 'Yael' })
-Assert-Test ($noga.Count -eq 1 -and $null -eq $noga[0].values.'employeeDepartment.name') 'selectedRelatedFieldNullForMissingRelation'
+Assert-Test ($noga.Count -eq 1 -and $null -eq $noga[0].values.'employeeDepartment.name' -and
+    $null -eq $noga[0].values.departmentId) 'missingDepartmentKeepsEmployeeAndNullFields'
 Assert-Test ($yael.Count -eq 1 -and $yael[0].values.'employeeDepartment.name' -eq 'Sales' -and
-    @($yael[0].values.PSObject.Properties).Count -eq 2) 'departmentNameReturnedWithoutUnselectedFields'
+    @($yael[0].values.PSObject.Properties).Count -eq 9 -and $yael[0].values.departmentId -gt 0) 'fullEmployeeReturnedWithoutSelectingColumns'
 $selectedSaved = (Send-Request 'POST' '' $selectedRule 201).Body
 try {
-    Assert-Test ($selectedSaved.definition.resultFields.Count -eq 2) 'selectedFieldsSaved'
     Stop-TestApi
     Start-TestApi
     $reopened = (Send-Request 'GET' "/$($selectedSaved.id)").Body
-    Assert-Test ($reopened.definition.resultFields[1].relationshipPath[0] -eq 'employeeDepartment') 'selectedFieldsSurviveRestart'
+    Assert-Test ($reopened.definition.rootEntityId -eq 'employee') 'reopenedDefinitionKeepsRootEntity'
     $savedSelectedResult = (Send-Request 'POST' "/$($selectedSaved.id)/execute").Body
     Assert-Test (($savedSelectedResult | ConvertTo-Json -Depth 100 -Compress) -eq ($selectedResult | ConvertTo-Json -Depth 100 -Compress)) 'savedProjectionMatchesDraft'
-    $badSelection = $selectedRule | ConvertTo-Json -Depth 100 | ConvertFrom-Json
-    $badSelection.resultFields[1].fieldId = 'Nonexistent'
-    $badResult = (Send-Request 'PUT' "/$($selectedSaved.id)" $badSelection 400).Body
-    Assert-Test ('unknownField' -in $badResult.errors.code -and $badResult.errors[0].path -eq 'resultFields[1].fieldId') 'invalidProjectionUpdateRejected'
-    $selectedRule.resultFields = @(@{ fieldId = 'isActive'; relationshipPath = @('employeeDepartment') })
     Send-Request 'PUT' "/$($selectedSaved.id)" $selectedRule | Out-Null
-    $updatedSelection = (Send-Request 'POST' "/$($selectedSaved.id)/execute").Body
-    Assert-Test ($updatedSelection.columns.Count -eq 1 -and $updatedSelection.columns[0].id -eq 'employeeDepartment.isActive') 'projectionUpdateApplied'
-    $selectedRule.resultFields = $null
-    Send-Request 'PUT' "/$($selectedSaved.id)" $selectedRule | Out-Null
-    $resetSelection = (Send-Request 'POST' "/$($selectedSaved.id)/execute").Body
-    Assert-Test ($resetSelection.columns.Count -eq 7 -and 'salary' -in $resetSelection.columns.id) 'nullProjectionResetsLegacyDefault'
+    Assert-Test ((Send-Request 'POST' "/$($selectedSaved.id)/execute").Body.columns.Count -eq 9) 'updatedRuleReturnsFullRecord'
 } finally { Send-Request 'DELETE' "/$($selectedSaved.id)" $null 204 | Out-Null }
-$badDraftSelection = Execution-Rule (Execution-Comparison 'salary' 'greaterThan' 0)
-$badDraftSelection.resultFields = @(@{ fieldId = 'salary' }, @{ fieldId = 'SALARY' })
-$badDraftResponse = (Send-Request 'POST' '/execute' $badDraftSelection 400).Body
-Assert-Test ('duplicateResultField' -in $badDraftResponse.errors.code) 'duplicateSelectionRejectedByApi'
 
 # Fixtures only in this new isolated test database. Preserve row counts, change test values.
 Invoke-TestSql "UPDATE dbo.Employees SET Salary=NULL,StartDate='2024-01-01T08:00:00',EndDate='2024-01-01T18:00:00' WHERE FirstName=N'Adi'; UPDATE dbo.Employees SET StartDate='2024-01-02T08:00:00',EndDate='2024-01-01T18:00:00' WHERE FirstName=N'Noam';"

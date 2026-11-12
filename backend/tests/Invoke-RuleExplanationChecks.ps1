@@ -1,13 +1,12 @@
 # Dot-sourced after the execution checks; all fixtures belong to the isolated test database.
 $explainDraft = Execution-Rule (Execution-Comparison 'salary' 'greaterThan' 15000)
-$explainDraft.resultFields = @(@{ fieldId = 'firstName' })
 $explainResult = (Send-Request 'POST' '/execute' $explainDraft).Body
 $noamReason = @($explainResult.records | Where-Object { $_.values.firstName -eq 'Noam' })[0]
 Assert-Test ($noamReason.failureReason -match '[\u0590-\u05ff]' -and $noamReason.failureReason.Contains('17,200') -and
     $noamReason.explanation.left.fieldId -eq 'salary' -and $noamReason.explanation.left.value -eq 17200 -and
     $noamReason.explanation.right.value -eq 15000) 'numericExplanationWithActualAndExpected'
-Assert-Test (@($noamReason.values.PSObject.Properties).Count -eq 1 -and $explainResult.columns.Count -eq 1 -and
-    'salary' -notin $noamReason.values.PSObject.Properties.Name) 'explanationEvidenceDoesNotChangeSelectedColumns'
+Assert-Test (@($noamReason.values.PSObject.Properties).Count -eq 9 -and $explainResult.columns.Count -eq 9 -and
+    $noamReason.values.salary -eq 17200 -and $noamReason.values.'employeeDepartment.name' -eq 'Finance') 'explanationKeepsFullEmployeeColumns'
 
 $boolReasonResult = (Send-Request 'POST' '/execute' $related).Body
 Assert-Test ($boolReasonResult.totalCount -eq 2 -and $boolReasonResult.records[0].explanation.operator -eq 'and' -and

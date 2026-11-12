@@ -25,7 +25,7 @@
 | RULE-03 | Define logical conditions, including combinations | Nested AND/OR validation verified via HTTP; UI + execution demo pending | In progress |
 | RULE-04 | Save, edit and reuse controls | Save/edit/reopen/execute verified via API; UI demonstration pending | In progress |
 | RULE-05 | Display business-friendly data and relationships rather than technical table/column names | Hebrew metadata API available; UI demonstration remains pending | In progress |
-| EXEC-01 | Generic translation of rule definition to dynamic SQL | 25 compiler checks; multiple rule types, selected fields and new-table execution verified in docs/RULE_EXECUTION.md | Verified |
+| EXEC-01 | Generic translation of rule definition to dynamic SQL | 42 compiler/formatter checks; full employee results and new-table execution verified in docs/RULE_EXECUTION.md | Verified |
 | EXEC-02 | Support complex conditions and relationships between tables | Nested groups, field comparisons, cross-table and missing-relation checks passed | Verified |
 | EXEC-03 | Separate rule definition from query implementation | Distinct definition, validator, compiler, executor and shared draft/saved orchestration | Implemented |
 | EXEC-04 | Prevent dangerous commands or data modification | Typed parameters, allowlisted/quoted identifiers, real SQL write-denial and no privileged fallback verified | Verified |
@@ -34,7 +34,7 @@
 | RESULTS-01 | Show list of defined controls | Paginated summaries API implemented; list page pending | In progress |
 | RESULTS-02 | Execute a control from the list | Saved execution API implemented; list Run action pending UI | In progress |
 | RESULTS-03 | Show violation count | Exact count beyond returned-row limit verified via API; UI display pending | In progress |
-| RESULTS-04 | Show violating records in a table | Selected root/related fields and Hebrew column metadata returned by API; persisted selection verified; grid pending | In progress |
+| RESULTS-04 | Show violating records in a table | Full employee including departmentId + department name returned without selection; Hebrew columns and missing-department behavior verified; grid pending | In progress |
 | RESULTS-05 | Explain why each record failed | Hebrew failureReason + structured SQL-authoritative explanation verified via API; UI display pending (docs/RULE_EXPLANATIONS.md) | In progress |
 | RESULTS-06 | Search and filter results | Server-side literal text search + typed nested result filters verified for draft/saved runs; UI demonstration pending (docs/RESULT_FILTERING.md) | In progress |
 | UX-01 | Clear, convenient, responsive UI | Desktop/mobile viewport review | Not started |
@@ -70,7 +70,7 @@
 | ID | Explicit requirement | Deliverable | Status |
 |---|---|---|---|
 | SUB-01 | Complete frontend and backend source | `frontend/`, `backend/`, Python component | In progress |
-| SUB-02 | Scripts to create DB and load sample data | SQL scripts 01–06, including result-field persistence and read-only permissions; fresh setup verified by execution checks | In progress |
+| SUB-02 | Scripts to create DB and load sample data | SQL scripts 01–05, including rule persistence and read-only permissions; fresh setup verified by execution checks | In progress |
 | SUB-03 | Installation and run instructions | `README.md` | In progress |
 | SUB-04 | Short architecture and rule engine description | `docs/ARCHITECTURE.md` | Not started |
 | SUB-05 | Examples of definable/runnable controls | `docs/EXAMPLE_RULES.md` and demo | Not started |

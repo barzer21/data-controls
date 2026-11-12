@@ -4,7 +4,10 @@ public sealed record MetadataCatalog(int Version, IReadOnlyList<MetadataEntity> 
     IReadOnlyList<MetadataRelationship> Relationships);
 
 public sealed record MetadataEntity(string Id, string Label, string Schema, string Table,
-    string KeyColumn, IReadOnlyList<MetadataField> Fields);
+    string KeyColumn, IReadOnlyList<MetadataField> Fields,
+    IReadOnlyList<MetadataRelatedColumn>? RelatedColumns = null);
+
+public sealed record MetadataRelatedColumn(string FieldId, IReadOnlyList<string> RelationshipPath);
 
 public sealed record MetadataField(string Id, string Label, string Column, string Type);
 

@@ -107,7 +107,7 @@ try {
     Test-RuleCase 'nullChild' (New-Rule @{ kind = 'group'; operator = 'and'; children = @($null) }) 400 'requiredCondition'
     Test-RuleCase 'invalidGroupOperator' (New-Rule @{ kind = 'group'; operator = 'xor'; children = @($salary) }) 400 'invalidGroupOperator'
     Test-RuleCase 'unknownField' (New-Rule (New-Comparison (New-Field 'Nonexistent') 'equals' (New-Constant 1))) 400 'unknownField' 'condition.left.fieldId'
-    Test-RuleCase 'physicalColumnNotBusinessId' (New-Rule (New-Comparison (New-Field 'DepartmentId') 'equals' (New-Constant 1))) 400 'unknownField'
+    Test-RuleCase 'physicalColumnNotBusinessId' (New-Rule (New-Comparison (New-Field 'Employees.DepartmentId') 'equals' (New-Constant 1))) 400 'unknownField'
     Test-RuleCase 'missingLeft' (New-Rule (New-Comparison $null 'equals' (New-Constant 1))) 400 'requiredField'
     Test-RuleCase 'unknownRelationship' (New-Rule (New-Comparison (New-Field 'isActive' @('unknown')) 'isNull')) 400 'unknownRelationship'
     $rule = New-Rule (New-Comparison (New-Field 'isActive' @('employeeDepartment')) 'isNull'); $rule.rootEntityId = 'department'

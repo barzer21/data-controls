@@ -45,6 +45,32 @@ public static class MetadataValidator
             Require(relationship.ToColumn == entities[relationship.ToEntity].KeyColumn,
                 $"Relationship {relationship.Id} must target the entity key.");
         }
+        var links = catalog.Relationships!.ToDictionary(r => r.Id, StringComparer.OrdinalIgnoreCase);
+        foreach (var root in catalog.Entities!)
+        {
+            var resultIds = root.Fields.Select(f => f.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            Require(root.RelatedColumns is null or { Count: <= 50 }, $"Too many related result fields for {root.Id}.");
+            foreach (var reference in root.RelatedColumns ?? [])
+            {
+                Require(reference is not null, $"Null related result field for {root.Id}.");
+                Text(reference!.FieldId, "Related result field ID");
+                Require(reference.RelationshipPath is { Count: >= 1 and <= 4 }, "Related result path must contain 1 to 4 relationships.");
+                var entity = root;
+                var path = new List<string>();
+                foreach (var id in reference.RelationshipPath!)
+                {
+                    Text(id, "Related result relationship ID");
+                    Require(links.TryGetValue(id, out var link), $"Unknown related result relationship: {id}.");
+                    Require(string.Equals(link!.FromEntity, entity.Id, StringComparison.OrdinalIgnoreCase),
+                        $"Wrong related result direction: {id}.");
+                    path.Add(link.Id);
+                    entity = entities[link.ToEntity];
+                }
+                var field = entity.Fields.SingleOrDefault(f => string.Equals(f.Id, reference.FieldId, StringComparison.OrdinalIgnoreCase));
+                Require(field is not null, $"Unknown related result field: {reference.FieldId}.");
+                Require(resultIds.Add(string.Join(".", path.Append(field!.Id))), $"Duplicate result column for {root.Id}.");
+            }
+        }
     }
 
     private static void Text(string? value, string name) =>

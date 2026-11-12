@@ -47,30 +47,31 @@ query = compiler.Compile(Rule(new RuleGroup("and", [
     Compare("managerName", "isNull", null, "employeeDepartment")]))).Query!;
 Check(query.Sql.Split("LEFT JOIN").Length == 2 && !query.Sql.Contains("INNER JOIN"), "reuseJoinForBothOperands");
 Check(query.Sql.Contains("[t1].[ManagerName] IS NULL"), "relatedNullCheck");
-Check(!compiler.Compile(Rule(Compare("DepartmentId", "equals", Constant(1)))).Validation.IsValid, "rejectPhysicalField");
+Check(!compiler.Compile(Rule(Compare("Employees.DepartmentId", "equals", Constant(1)))).Validation.IsValid, "rejectPhysicalField");
 Check(compiler.Compile(Rule(Compare("salary", "drop", Constant(1)))).Query is null, "rejectOperatorBeforeSql");
 
-var projectionRule = Rule(Compare("salary", "greaterThan", Constant(100))) with
-{
-    ResultFields = [new("firstName"), new("name", ["EMPLOYEEDEPARTMENT"])]
-};
+var projectionRule = Rule(Compare("salary", "greaterThan", Constant(100)));
 query = compiler.Compile(projectionRule).Query!;
-Check(query.Columns.Count == 2 && query.Columns[0].Id == "firstName" &&
-    query.Columns[1].Id == "employeeDepartment.name", "selectedColumnsAndCanonicalPathIds");
-Check(query.Sql.Contains("[t1].[Name] AS [c1]") && query.Sql.Split("LEFT JOIN").Length == 2,
-    "displayOnlyRelatedFieldAddsJoin");
-Check(query.Columns[1].Label.Contains("מחלקת העובד") && query.Columns[1].Label.Contains("שם המחלקה"), "relatedBusinessLabel");
-Check(!query.Columns.Any(c => c.Id == "salary") && query.Sql.Contains("[Salary] > @p0"), "selectionDoesNotChangePredicate");
-Check(!compiler.Compile(projectionRule with { ResultFields = [] }).Validation.IsValid, "rejectEmptyResultFields");
-Check(!compiler.Compile(projectionRule with { ResultFields = [null] }).Validation.IsValid, "rejectNullResultField");
-Check(!compiler.Compile(projectionRule with { ResultFields = [new("salary"), new("SALARY", [])] }).Validation.IsValid, "rejectDuplicateResultFields");
-Check(!compiler.Compile(projectionRule with { ResultFields = [new("name", ["unknown"])] }).Validation.IsValid, "rejectUnknownResultPath");
-Check(!compiler.Compile(projectionRule with { ResultFields = [new("Nonexistent")] }).Validation.IsValid, "rejectUnknownResultField");
-Check(!compiler.Compile(projectionRule with { ResultFields = Enumerable.Repeat<FieldReference?>(new("salary"), 51).ToArray() }).Validation.IsValid, "resultFieldCountLimit");
+Check(query.Columns.Count == 9 && query.Columns.Any(c => c.Id == "departmentId") &&
+    query.Columns[^1].Id == "employeeDepartment.name", "fullEmployeeAndDepartmentName");
+Check(query.Sql.Contains("[t1].[Name] AS [c8]") && query.Sql.Split("LEFT JOIN").Length == 2,
+    "catalogRelatedFieldAddsJoinWithoutCondition");
+Check(query.Columns[^1].Label.Contains("מחלקת העובד") && query.Columns[^1].Label.Contains("שם המחלקה"), "relatedBusinessLabel");
+void InvalidMetadata(MetadataRelatedColumn reference, string name)
+{
+    var changed = catalog with { Entities = [catalog.Entities[0] with { RelatedColumns = [reference] }, catalog.Entities[1]] };
+    try { MetadataValidator.Validate(changed); Check(false, name); }
+    catch (InvalidOperationException) { Check(true, name); }
+}
+MetadataValidator.Validate(catalog);
+Check(true, "fixedResultCatalogValidates");
+InvalidMetadata(new("name", ["unknown"]), "rejectUnknownConfiguredResultPath");
+InvalidMetadata(new("Nonexistent", ["employeeDepartment"]), "rejectUnknownConfiguredResultField");
+InvalidMetadata(new("name", []), "rejectEmptyConfiguredResultPath");
 
 // Another entity/table is a data change, not a new compiler branch. Include ] to verify quoting.
 var other = catalog.Entities[0] with { Id = "account", Schema = "finance", Table = "Led]ger",
-    KeyColumn = "EntryId", Fields = [new("amount", "סכום", "Val]ue", "number")] };
+    KeyColumn = "EntryId", Fields = [new("amount", "סכום", "Val]ue", "number")], RelatedColumns = null };
 var otherProvider = new TestMetadata(new(1, [other], []));
 query = new RuleSqlCompiler(otherProvider, new RuleValidator(otherProvider)).Compile(
     new("Other", null, "account", Compare("amount", "lessThanOrEqual", Constant(10)))).Query!;
@@ -124,10 +125,7 @@ reason = explanations.Explain(query.Explanation, EvidenceFor(query, new Dictiona
 Check(reason.Explanation.Message.Contains("DANA ") && reason.Explanation.Right!.Value is string,
     "sqlTruthIsNotReevaluatedWithDotNetStringEquality");
 
-var searchableRule = Rule(Compare("isActive", "isNotNull")) with
-{
-    ResultFields = [new("firstName"), new("salary"), new("name", ["employeeDepartment"])]
-};
+var searchableRule = Rule(Compare("isActive", "isNotNull"));
 var plain = compiler.Compile(searchableRule).Query!;
 var options = new RuleExecutionOptions(" %_[~ ", Compare("salary", "greaterThan", Constant(15000)));
 query = compiler.Compile(searchableRule, options).Query!;
@@ -143,10 +141,11 @@ Check(query.EvidenceColumnCount == plain.EvidenceColumnCount &&
 Check(compiler.Compile(searchableRule, new("   ")).Query!.Sql == plain.Sql, "blankSearchIgnored");
 Check(compiler.Compile(searchableRule, new(new string('x', 201))).Validation.Errors.Any(e =>
     e.Path == "options.search" && e.Code == "searchTooLong"), "searchLengthValidation");
-Check(!compiler.Compile(searchableRule with { ResultFields = [new("salary")] }, new("Noam")).Validation.IsValid,
+Check(!new RuleSqlCompiler(otherProvider, new RuleValidator(otherProvider)).Compile(
+    new("Numeric", null, "account", Compare("amount", "isNotNull")), new("Noam")).Validation.IsValid,
     "searchNeedsDisplayedTextField");
-Check(compiler.Compile(searchableRule, new(Filter: Compare("isActive", "equals", Constant(true))))
-    .Validation.Errors.Any(e => e.Code == "filterFieldNotDisplayed"), "filterCannotUseHiddenRootField");
+Check(compiler.Compile(searchableRule, new(Filter: Compare("isActive", "equals", Constant(true), "employeeDepartment")))
+    .Validation.Errors.Any(e => e.Code == "filterFieldNotDisplayed"), "filterCannotUseUnreturnedRelatedField");
 Check(compiler.Compile(searchableRule, new(Filter: Compare("missing", "equals", Constant(1))))
     .Validation.Errors.Any(e => e.Path == "options.filter.left.fieldId" && e.Code == "unknownField"), "filterValidationPaths");
 Check(compiler.Compile(searchableRule, new(Filter: Compare("salary", "equals", Constant("15000"))))

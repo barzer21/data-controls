@@ -22,7 +22,6 @@ public class AppDbContext : DbContext
             entity.ToTable("Rules", table =>
             {
                 table.HasCheckConstraint("CK_Rules_ConditionJson", "ISJSON([ConditionJson]) = 1");
-                table.HasCheckConstraint("CK_Rules_ResultFieldsJson", "[ResultFieldsJson] IS NULL OR ISJSON([ResultFieldsJson]) = 1");
             });
             entity.Property(r => r.Name).HasMaxLength(200);
             entity.Property(r => r.Description).HasMaxLength(2000);

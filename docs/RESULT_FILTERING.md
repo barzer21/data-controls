@@ -1,6 +1,6 @@
 # Searching and filtering rule results
 
-Requirement RESULTS-06; decision D-019. These are transient execution options, not changes to the rule or its saved result fields.
+Requirement RESULTS-06; decision D-019. These are transient execution options and do not change the saved rule.
 
 ## Request contracts
 
@@ -36,7 +36,7 @@ Send this to `POST /api/rules/execute?limit=100`. Definition is required; option
 
 ## Search
 
-Search is an optional string, at most 200 UTF-16 code units before trimming. Empty/null/whitespace-only search is ignored. Leading/trailing whitespace is trimmed, and the remaining text is matched as one literal substring against all displayed fields of metadata type text, including selected related fields. Fields omitted from resultFields and non-text fields are not searched. Defaults use all root catalog fields as before.
+Search is optional, at most 200 UTF-16 code units before trimming. Blank search is ignored; otherwise the trimmed value is a literal substring across all returned text columns, including department name for employees. Returned columns are determined by the server, not by each request.
 
 Multiple text columns are combined with OR, inside parentheses. SQL column collation controls case/accent sensitivity. There is no number/date-to-string conversion or search through labels, explanations or hidden evidence. Nonblank search with no displayed text fields is a 400 `noSearchableFields` error, not an ignored restriction.
 
@@ -48,7 +48,7 @@ The compiler creates a Unicode parameter and escapes `~`, `%`, `_` and `[` befor
 
 Filters are independently limited to the same maximum 8 condition levels/100 nodes, with relationship paths up to 4. The original rule has its own limits. Invalid filters return the existing `{ "isValid": false, "errors": [...] }` shape, with paths rooted at `options.filter`; original rule errors retain their original definition-relative paths. Other semantic option errors use `options.search`. Malformed JSON/kinds/shapes are rejected by ASP.NET Core before compilation.
 
-`RuleExecutionOptionsValidator` delegates filter semantics to RuleValidator using the same root/catalog/result selection, then enforces that references are displayed. The compiler uses its existing predicate builder with explanation generation disabled for option filters; there is no second SQL operator implementation.
+`RuleExecutionOptionsValidator` delegates filter semantics to RuleValidator using the same root/catalog, then checks references against the fixed result schema shared with the compiler. The compiler uses its existing predicate builder with explanation generation disabled for option filters; there is no second SQL operator implementation. All employee fields including departmentId and department name are available to filters without selection; other related fields, such as department activity, may be used in the business rule but are not result filters unless configured as result columns.
 
 ## Query and response
 
@@ -68,4 +68,4 @@ dotnet run --project backend/tests/CompilerChecks
 powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-RuleExecution.ps1
 ```
 
-Verified on 2026-11-12: 45 compiler/formatter checks and 98 isolated SQL persistence/execution assertions passed. The suite covers late-row search before TOP, exact filtered counts, combined search/filter, selected related fields, missing relations, numeric/date/boolean/nested filters, invalid/hidden fields and types, strict envelopes, unchanged saved definitions/reasons, literal LIKE metacharacters and SQL-looking input. Database `DataControlsPersistenceTest_cef2b38f` and logs are retained; no existing database was changed. The test helper wraps definition objects only for draft execution calls, while raw JSON strings test HTTP contract rejection directly.
+Verified on 2026-11-12: 42 compiler/formatter checks and 93 isolated SQL persistence/execution assertions passed on the clean schema. Coverage includes search before TOP, exact filtered counts, department-name search, missing relations, numeric/date/boolean/nested filters, invalid fields and types, strict envelopes, unchanged saved definitions/reasons, literal LIKE metacharacters and SQL-looking input. The temporary SQL database was removed after verification; test logs remain in the printed temporary directory.

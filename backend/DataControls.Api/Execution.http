@@ -10,26 +10,6 @@ Content-Type: application/json
     "name": "עובדים פעילים במחלקה לא פעילה",
     "description": "הרצה לניסיון, ללא שמירה",
     "rootEntityId": "employee",
-    "resultFields": [
-      {
-        "fieldId": "firstName"
-      },
-      {
-        "fieldId": "lastName"
-      },
-      {
-        "fieldId": "name",
-        "relationshipPath": [
-          "employeeDepartment"
-        ]
-      },
-      {
-        "fieldId": "isActive",
-        "relationshipPath": [
-          "employeeDepartment"
-        ]
-      }
-    ],
     "condition": {
       "kind": "group",
       "operator": "and",
@@ -85,7 +65,7 @@ Content-Type: application/json
   }
 }
 
-### Salary reason includes the actual salary, while visible columns contain only the name.
+### Salary rule returns the full employee, department name and failure reason.
 POST {{baseUrl}}/api/rules/execute
 Content-Type: application/json
 
@@ -93,11 +73,6 @@ Content-Type: application/json
   "definition": {
     "name": "שכר מעל הסף",
     "rootEntityId": "employee",
-    "resultFields": [
-      {
-        "fieldId": "firstName"
-      }
-    ],
     "condition": {
       "kind": "comparison",
       "left": {

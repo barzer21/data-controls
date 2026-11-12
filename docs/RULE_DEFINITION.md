@@ -37,23 +37,12 @@ Malformed JSON, unknown properties, missing/unknown `kind`, wrong JSON structure
 
 ## Definition
 
+The definition contains business conditions only. Results always include all root catalog fields and server-configured related columns. Employees return their full record plus department name; row.id holds the employee ID. Requests cannot choose output columns.
+
 - `name`: required, non-whitespace, at most 200 characters.
 - `description`: optional, at most 2,000 characters.
 - `rootEntityId`: an existing business entity ID.
 - `condition`: a comparison or a group. A matching condition describes a **violation** ("אתר רשומות שעונות לתנאים הבאים"), per D-003.
-- `resultFields`: optional ordered list of field references to return, including related fields (D-017). Omitted/null means all root fields, preserving existing definitions. Explicit lists require 1–50 valid fields and unique result IDs; empty lists and null entries are invalid.
-
-For example, to return an employee's first/last name and department name:
-
-```json
-"resultFields": [
-  { "fieldId": "firstName" },
-  { "fieldId": "lastName" },
-  { "fieldId": "name", "relationshipPath": ["employeeDepartment"] }
-]
-```
-
-The response column/value key for the last field is `employeeDepartment.name`; its Hebrew label includes the relationship and field labels. Root fields keep their ordinary IDs. The row ID is always returned separately. Selection does not alter conditions. Both drafts and saved rules support selection; PUT replaces it, and omission/null resets the default.
 
 `kind` may appear anywhere in its object. Business IDs are matched case-insensitively, consistently with the catalog's duplicate checks. Kinds, operators and types use the exact documented spelling. Unknown properties are rejected rather than silently ignored. Adding a new operator remains a code change; adding rules from supported operators does not.
 

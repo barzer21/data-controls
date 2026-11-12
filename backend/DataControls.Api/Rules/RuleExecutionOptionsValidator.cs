@@ -6,13 +6,13 @@ public static class RuleExecutionOptionsValidator
 {
     public const int MaxSearchLength = 200;
 
-    // Called only after the definition and its resultFields have passed RuleValidator.
+    // Called only after the definition has passed RuleValidator.
     public static RuleValidationResult Validate(RuleDefinition definition, RuleExecutionOptions options,
         MetadataCatalog catalog, RuleValidator validator)
     {
         var errors = new List<RuleValidationError>();
         var root = catalog.Entities.Single(e => Same(e.Id, definition.RootEntityId));
-        var selected = definition.ResultFields ?? root.Fields.Select(f => new FieldReference(f.Id)).ToArray();
+        var selected = RuleResultSchema.Fields(catalog, root.Id);
         var allowed = selected.Select(f => Key(f!)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (options.Search?.Length > MaxSearchLength)
             errors.Add(new("options.search", "searchTooLong", $"טקסט החיפוש מוגבל ל־{MaxSearchLength} תווים."));
@@ -56,7 +56,7 @@ public static class RuleExecutionOptionsValidator
         void CheckField(FieldReference reference, string path)
         {
             if (!allowed.Contains(Key(reference)))
-                errors.Add(new(path, "filterFieldNotDisplayed", "ניתן לסנן רק לפי שדות שנבחרו לתוצאות."));
+                errors.Add(new(path, "filterFieldNotDisplayed", "ניתן לסנן רק לפי השדות המוחזרים בתוצאות."));
         }
     }
 

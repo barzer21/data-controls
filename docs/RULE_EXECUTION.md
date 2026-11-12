@@ -4,12 +4,14 @@ Requirements: EXEC-01..06, TECH-04; decisions D-003, D-005, D-015 and D-016.
 
 ## Two entry points, one engine
 
+Every employee result contains firstName, lastName, birthDate, salary, startDate, endDate, isActive, departmentId and employeeDepartment.name; record.id is the employee ID. The server-owned catalog supplies these columns and validates relatedColumns. LEFT JOIN preserves employees without a department. No output-column choice is part of a rule or execution request.
+
 - `POST /api/rules/execute?limit=100` accepts `{ "definition": { ... }, "options": { ... } }`, validates and executes the draft without saving it or changing another control. Options are optional; the definition envelope is required.
 - `POST /api/rules/{id}/execute?limit=100` loads the current saved definition, revalidates it against the current metadata, then uses the same execution service. It accepts an optional `{ "options": { ... } }` body; no body means no options. A missing ID returns 404.
 
-The envelope replaces the original bare-definition draft execution body (D-019). CRUD and validation endpoints still take RuleDefinition directly. [RESULT_FILTERING.md](RESULT_FILTERING.md) documents search/filter options, selected-field restrictions and errors.
+The envelope replaces the original bare-definition draft execution body (D-019). CRUD and validation endpoints still take RuleDefinition directly. [RESULT_FILTERING.md](RESULT_FILTERING.md) documents search/filter options, result-schema restrictions and errors.
 
-Both return HTTP 200 with the same shape:
+Both return HTTP 200 with the same shape (abridged below; actual employee responses include all columns and per-record explanations):
 
 ```json
 {
@@ -25,10 +27,6 @@ Both return HTTP 200 with the same shape:
   ]
 }
 ```
-
-The illustration omits other fields and the additive failureReason/explanation for brevity; the latter are documented in [RULE_EXPLANATIONS.md](RULE_EXPLANATIONS.md). By default all root fields approved in the catalog are returned. Optional `resultFields` selects 1–50 root/related fields in the requested order (D-017); SQL mappings and SQL text are not returned. Dates are calendar dates. Records are ordered by the root primary key. The optional limit must be 1–500 (default 100). `totalCount` counts all violations in the same SELECT using COUNT_BIG OVER before TOP is applied. `truncated` explicitly reports when not all rows were returned. Zero matches return count zero and an empty records array.
-
-For a selected `{ "fieldId": "name", "relationshipPath": ["employeeDepartment"] }`, `columns` includes ID `employeeDepartment.name` and label `מחלקת העובד ← שם המחלקה`; records include `values["employeeDepartment.name"]`. IDs use canonical catalog spelling. A missing relationship yields null. Display-only related fields add a LEFT JOIN even if no condition uses that relationship; shared paths reuse joins. The root row ID is always separate. Selection persists with the rule. Invalid selections return 400 rather than silently falling back to root fields.
 
 The API currently has no paging beyond this bounded result. Search/filter options are implemented before COUNT/TOP (D-019), so totalCount counts only violations matching the current options. Per-record explanations still describe only the original rule (D-018). There is no Angular UI yet. Future UI actions are Run draft on the editor and Run saved on the list. AI proposals must still require explicit user approval before invoking either execution route. No AI integration/approval UI is implemented by these endpoints.
 
@@ -60,6 +58,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-RuleExecu
 powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-Rules.ps1
 ```
 
-CompilerChecks is a dependency-free assertion runner (no test framework packages) referencing the API project. It tests SQL generation and explanation formatting without SQL execution. The integration wrapper reuses the persistence harness, creates a unique isolated database from scripts 01–06, and starts a temporary API. Its fixtures change test salaries/dates, add a new table and grant only that table's SELECT to verify metadata-driven extension, briefly revoke a SELECT grant to prove no privileged fallback, and hold a lock to verify the real 15-second timeout. The test restores temporary permissions/catalog settings and rolls back the lock transaction. Test databases/logs are retained, not automatically dropped. Existing databases are not modified.
+CompilerChecks is a dependency-free assertion runner (no test framework packages) referencing the API project. It tests SQL generation and explanation formatting without SQL execution. The integration wrapper reuses the persistence harness, creates a unique isolated database from scripts 01–05, and starts a temporary API. Its fixtures change test salaries/dates, add a new table and grant only that table's SELECT to verify metadata-driven extension, briefly revoke a SELECT grant to prove no privileged fallback, and hold a lock to verify the real 15-second timeout. The test restores temporary permissions/catalog settings and rolls back the lock transaction. The harness retains databases/logs by default and does not modify existing databases.
 
-Verification on 2026-11-12: 45 compiler/formatter checks and 98 combined persistence/execution assertions passed, including 23 preexisting persistence checks, selection round trips, explanations and search/filtering. Full integration test database: `DataControlsPersistenceTest_cef2b38f`. It contains two saved rules, 20 employees, 5 departments and the extra ExecutionAccounts test table. Fixture data differs from the standard seed. Scripts 01–06 were applied; explanations and search/filtering require no additional migration. Earlier test databases were retained for inspection. Dependency vulnerability warnings already documented in README remain unresolved.
+Verification on 2026-11-12: 42 compiler/formatter checks, 93 SQL persistence/execution checks and 43 rule-validation HTTP checks passed. EF reported no pending model changes. The project databases were recreated as authorized in D-021; the isolated verification database was removed after the checks.

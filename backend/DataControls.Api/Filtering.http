@@ -9,27 +9,34 @@ Content-Type: application/json
   "definition": {
     "name": "עובדים פעילים במחלקה לא פעילה",
     "rootEntityId": "employee",
-    "resultFields": [
-      { "fieldId": "firstName" },
-      { "fieldId": "lastName" },
-      { "fieldId": "salary" },
-      { "fieldId": "name", "relationshipPath": ["employeeDepartment"] }
-    ],
     "condition": {
       "kind": "group",
       "operator": "and",
       "children": [
         {
           "kind": "comparison",
-          "left": { "fieldId": "isActive" },
+          "left": {
+            "fieldId": "isActive"
+          },
           "operator": "equals",
-          "right": { "kind": "constant", "value": true }
+          "right": {
+            "kind": "constant",
+            "value": true
+          }
         },
         {
           "kind": "comparison",
-          "left": { "fieldId": "isActive", "relationshipPath": ["employeeDepartment"] },
+          "left": {
+            "fieldId": "isActive",
+            "relationshipPath": [
+              "employeeDepartment"
+            ]
+          },
           "operator": "equals",
-          "right": { "kind": "constant", "value": false }
+          "right": {
+            "kind": "constant",
+            "value": false
+          }
         }
       ]
     }
@@ -38,9 +45,14 @@ Content-Type: application/json
     "search": "Sales",
     "filter": {
       "kind": "comparison",
-      "left": { "fieldId": "salary" },
+      "left": {
+        "fieldId": "salary"
+      },
       "operator": "greaterThan",
-      "right": { "kind": "constant", "value": 12000 }
+      "right": {
+        "kind": "constant",
+        "value": 12000
+      }
     }
   }
 }
@@ -54,9 +66,14 @@ Content-Type: application/json
     "search": "Roni",
     "filter": {
       "kind": "comparison",
-      "left": { "fieldId": "salary" },
+      "left": {
+        "fieldId": "salary"
+      },
       "operator": "greaterThan",
-      "right": { "kind": "constant", "value": 20000 }
+      "right": {
+        "kind": "constant",
+        "value": 20000
+      }
     }
   }
 }
@@ -69,21 +86,27 @@ Content-Type: application/json
   "definition": {
     "name": "עובדים פעילים",
     "rootEntityId": "employee",
-    "resultFields": [
-      { "fieldId": "firstName" },
-      { "fieldId": "name", "relationshipPath": ["employeeDepartment"] }
-    ],
     "condition": {
       "kind": "comparison",
-      "left": { "fieldId": "isActive" },
+      "left": {
+        "fieldId": "isActive"
+      },
       "operator": "equals",
-      "right": { "kind": "constant", "value": true }
+      "right": {
+        "kind": "constant",
+        "value": true
+      }
     }
   },
   "options": {
     "filter": {
       "kind": "comparison",
-      "left": { "fieldId": "name", "relationshipPath": ["employeeDepartment"] },
+      "left": {
+        "fieldId": "name",
+        "relationshipPath": [
+          "employeeDepartment"
+        ]
+      },
       "operator": "isNull"
     }
   }
