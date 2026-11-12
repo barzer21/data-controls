@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { MetadataResponse, RuleSummary } from '../../../core/api/api.models';
 import { SavedRulesPageComponent } from './saved-rules-page.component';
 
@@ -29,7 +30,7 @@ describe('Saved rules page with API services', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SavedRulesPageComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(SavedRulesPageComponent);
@@ -59,6 +60,52 @@ describe('Saved rules page with API services', () => {
       fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
     ).find((element) => element.textContent?.trim() === text)!;
   }
+
+  it('refreshes the final list page after creating a rule and reports success', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)], 46);
+    const page = fixture.componentInstance;
+    page.openEditor(null);
+    page.onSaved({
+      id: 47,
+      definition: {
+        name: 'בקרה חדשה',
+        description: null,
+        rootEntityId: 'customEntity',
+        condition: { kind: 'comparison', left: { fieldId: 'any' }, operator: 'isNull' },
+      },
+      definitionVersion: 1,
+      createdAtUtc: '',
+      updatedAtUtc: '',
+    });
+    finishList([rule(47)], 47, 3);
+    expect(page.editor()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('נשמרה בהצלחה');
+    expect(fixture.nativeElement.textContent).toContain('עמוד 3 מתוך 3');
+  });
+
+  it('refreshes the current page after editing an existing rule', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)], 46);
+    button('הבא').click();
+    finishList([rule(21)], 46, 2);
+    const page = fixture.componentInstance;
+    page.openEditor(21);
+    page.onSaved({
+      id: 21,
+      definition: {
+        name: 'בקרה מעודכנת',
+        description: null,
+        rootEntityId: 'customEntity',
+        condition: { kind: 'comparison', left: { fieldId: 'any' }, operator: 'isNull' },
+      },
+      definitionVersion: 1,
+      createdAtUtc: '',
+      updatedAtUtc: '',
+    });
+    finishList([rule(21)], 46, 2);
+    expect(fixture.nativeElement.textContent).toContain('עמוד 2 מתוך 3');
+  });
 
   it('shows loading until both the list and business metadata arrive', () => {
     expect(fixture.nativeElement.textContent).toContain('טוען את הבקרות');

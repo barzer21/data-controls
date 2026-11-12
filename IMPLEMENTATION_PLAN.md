@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review the first Angular increment (setup, API services and saved-rule list). The next scoped increment adds saved-rule execution and a results table based on server columns, with violation count and failure reasons. Editing, search/filter UI and deletion follow separately. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. The project databases were recreated under D-021. Calculated age still requires its own task.
+Review the results page and generic modal editor increments (docs/UI_RESULTS.md, docs/UI_EDITOR.md). Create/edit, nested conditions, explicit save and unsaved execution are implemented; 38 frontend tests pass. Next increments add server-backed search/filter UI, true backend result pagination and rule deletion. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. Calculated age and Python AI mock remain separate tasks.

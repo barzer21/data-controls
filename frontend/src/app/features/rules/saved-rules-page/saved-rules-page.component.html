@@ -5,10 +5,32 @@
 </header>
 <main id="main-content">
   <div class="page-heading">
-    <p class="eyebrow">איכות נתונים</p>
     <h1>בקרות שמורות</h1>
     <p class="intro">כל הבקרות שהוגדרו לבדיקת הנתונים העסקיים, במקום אחד.</p>
+    <button
+      type="button"
+      class="primary new-rule"
+      [disabled]="state().status !== 'loaded'"
+      (click)="openEditor(null)"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      בקרה חדשה
+    </button>
   </div>
+  @if (saveNotice()) {
+    <p class="save-notice" role="status">{{ saveNotice() }}</p>
+  }
   @let current = state();
   <section
     class="panel"
@@ -42,6 +64,8 @@
         <app-saved-rules-list
           [rules]="current.result.items"
           [entities]="current.metadata.entities"
+          (runRule)="runRule($event)"
+          (editRule)="openEditor($event)"
         />
         <footer class="list-footer">
           <app-pagination
@@ -55,3 +79,11 @@
     }
   </section>
 </main>
+@if (editor(); as activeEditor) {
+  <app-rule-editor-dialog
+    [ruleId]="activeEditor.id"
+    [metadata]="activeEditor.metadata"
+    (closed)="editor.set(null)"
+    (saved)="onSaved($event)"
+  />
+}

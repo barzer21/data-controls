@@ -1,0 +1,54 @@
+@let data = result();
+<div class="result-summary" role="status">
+  <strong>מספר החריגות: {{ data.totalCount | businessValue }}</strong>
+  @if (data.truncated) {
+    <span
+      >מוצגות {{ data.returnedCount | businessValue }} מתוך
+      {{ data.totalCount | businessValue }} חריגות. קיימת מגבלת תוצאות; דפדוף בתוצאות עדיין אינו
+      זמין.</span
+    >
+  }
+</div>
+@if (data.totalCount === 0) {
+  <div class="empty" role="status">
+    <h2>לא נמצאו חריגות</h2>
+    <p>אף רשומה אינה מקיימת את תנאי החריגה בבקרה שהורצה.</p>
+  </div>
+} @else {
+  <div
+    class="table-scroll"
+    tabindex="0"
+    role="region"
+    aria-label="טבלת חריגות — ניתן לגלול לאורך ולרוחב"
+  >
+    <table>
+      <caption class="sr-only">
+        הרשומות החריגות והסיבה לחריגה בכל רשומה
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">מזהה רשומה</th>
+          @for (column of data.columns; track column.id) {
+            <th scope="col">{{ column.label }}</th>
+          }
+          <th scope="col">הסיבה לחריגה</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (record of data.records; track record.id) {
+          <tr>
+            <td>
+              <bdi>{{ record.id }}</bdi>
+            </td>
+            @for (column of data.columns; track column.id) {
+              <td>
+                <bdi>{{ record.values[column.id] | businessValue: column.type }}</bdi>
+              </td>
+            }
+            <td class="failure-reason">{{ record.failureReason }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

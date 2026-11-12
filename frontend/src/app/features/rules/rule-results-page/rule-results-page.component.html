@@ -1,0 +1,45 @@
+@let current = state();
+<main class="results-page">
+  <header class="context">
+    <a routerLink="/rules" [queryParams]="{ page: returnPage }">חזרה לרשימת הבקרות</a>
+    @if (current.status === 'loading') {
+      <h1>טעינת הבקרה</h1>
+      <p role="status">טוען את פרטי הבקרה…</p>
+    } @else if (current.status === 'loadError') {
+      <h1>לא ניתן לפתוח את הבקרה</h1>
+    } @else {
+      <div class="context-heading">
+        <div>
+          <h1>{{ current.saved.definition.name }}</h1>
+          @if (current.saved.definition.description) {
+            <p class="description">{{ current.saved.definition.description }}</p>
+          }
+        </div>
+      </div>
+      <section class="conditions" aria-label="תנאי הבקרה שהורצה">
+        <h2>רשומה נחשבת חריגה כאשר:</h2>
+        <app-rule-condition
+          [condition]="current.saved.definition.condition"
+          [rootEntityId]="current.saved.definition.rootEntityId"
+          [metadata]="current.metadata"
+        />
+      </section>
+    }
+  </header>
+  <section
+    class="results-panel"
+    aria-label="תוצאות הבקרה"
+    [attr.aria-busy]="current.status === 'loading' || current.status === 'running'"
+  >
+    @if (current.status === 'ready') {
+      <app-execution-results [result]="current.result" />
+    } @else if (current.status === 'loadError' || current.status === 'executionError') {
+      <div class="state">
+        <p role="alert">{{ current.message }}</p>
+        <button type="button" class="primary" (click)="retry()">ניסיון חוזר</button>
+      </div>
+    } @else if (current.status === 'running') {
+      <div class="state" role="status">הבקרה מתבצעת. התוצאות יוצגו כאן בסיום…</div>
+    }
+  </section>
+</main>

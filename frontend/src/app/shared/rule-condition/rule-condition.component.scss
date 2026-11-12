@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+ul {
+  margin-block: 0.3rem;
+  padding-inline-start: 1.5rem;
+}
+.group {
+  border-inline-start: 2px solid var(--border);
+  padding-inline-start: 0.75rem;
+}

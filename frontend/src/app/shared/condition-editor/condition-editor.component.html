@@ -1,0 +1,157 @@
+@let node = condition();
+@if (node.kind === 'group') {
+  <div class="condition-group">
+    <label class="group-operator"
+      >קבוצת תנאים
+      <select
+        [ngModel]="node.operator"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="changeGroup($event)"
+      >
+        <option value="and">כל התנאים מתקיימים — וגם</option>
+        <option value="or">לפחות תנאי אחד מתקיים — או</option>
+      </select>
+    </label>
+    <ol>
+      @for (child of node.children; track $index) {
+        <li>
+          <div class="child-heading">
+            <span>תנאי {{ $index + 1 }}</span
+            ><button
+              type="button"
+              [disabled]="node.children.length <= 1"
+              (click)="removeChild($index)"
+              [attr.aria-label]="'הסר תנאי ' + ($index + 1)"
+            >
+              הסר
+            </button>
+          </div>
+          <app-condition-editor
+            [condition]="child"
+            [metadata]="metadata()"
+            [rootEntityId]="rootEntityId()"
+            [depth]="depth() + 1"
+            (conditionChange)="replaceChild($index, $event)"
+          />
+        </li>
+      }
+    </ol>
+    <div class="group-actions">
+      <button type="button" [disabled]="depth() >= 8" (click)="addChild(false)">הוסף תנאי</button>
+      <button type="button" [disabled]="depth() >= 7" (click)="addChild(true)">
+        הוסף קבוצת תנאים
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="comparison">
+    <label
+      >שדה עסקי
+      <select
+        [ngModel]="leftField()?.key ?? ''"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="changeLeft($event)"
+      >
+        @if (!leftField()) {
+          <option value="" disabled>יש לבחור שדה זמין</option>
+        }
+        @for (field of fields(); track field.key) {
+          <option [value]="field.key">{{ field.label }}</option>
+        }
+      </select>
+    </label>
+    <label
+      >השוואה
+      <select
+        [ngModel]="node.operator"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="changeOperator($event)"
+      >
+        @if (!operatorAvailable(node.operator)) {
+          <option [value]="node.operator" disabled>יש לבחור השוואה זמינה</option>
+        }
+        @for (op of operators(); track op.id) {
+          <option [value]="op.id">{{ op.label }}</option>
+        }
+      </select>
+    </label>
+    @if (node.operator !== 'isNull' && node.operator !== 'isNotNull') {
+      <label
+        >להשוות אל
+        <select
+          [ngModel]="node.right?.kind ?? 'constant'"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="changeOperand($event)"
+        >
+          <option value="constant">ערך קבוע</option>
+          <option value="field">שדה אחר</option>
+        </select>
+      </label>
+      @if (node.right; as right) {
+        @if (right.kind === 'field') {
+          <label
+            >שדה להשוואה
+            <select
+              [ngModel]="fieldKey(right.field)"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="changeRightField($event)"
+            >
+              @if (!rightFieldAvailable(fieldKey(right.field))) {
+                <option [value]="fieldKey(right.field)" disabled>
+                  יש לבחור שדה זמין מאותו סוג
+                </option>
+              }
+              @for (field of compatibleFields(); track field.key) {
+                <option [value]="field.key">{{ field.label }}</option>
+              }
+            </select>
+          </label>
+        } @else {
+          <label
+            >ערך להשוואה
+            @switch (leftField()?.type) {
+              @case ('boolean') {
+                <select
+                  [ngModel]="right.value === true ? 'true' : 'false'"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="changeConstant($event)"
+                >
+                  <option value="true">כן</option>
+                  <option value="false">לא</option>
+                </select>
+              }
+              @case ('number') {
+                <input
+                  type="number"
+                  step="any"
+                  [value]="right.value ?? ''"
+                  (input)="changeConstant(value($event))"
+                  required
+                />
+              }
+              @case ('date') {
+                <input
+                  type="date"
+                  [value]="right.value ?? ''"
+                  (input)="changeConstant(value($event))"
+                  required
+                />
+              }
+              @default {
+                <input
+                  type="text"
+                  maxlength="4000"
+                  [value]="right.value ?? ''"
+                  (input)="changeConstant(value($event))"
+                />
+              }
+            }
+          </label>
+        }
+      }
+    }
+  </div>
+  <button class="wrap-group" type="button" [disabled]="depth() >= 8" (click)="wrapInGroup()">
+    שלב עם תנאים נוספים
+  </button>
+}

@@ -7,6 +7,21 @@
       </div>
       <div class="entity-field">
         <span class="entity">{{ entityLabel(rule.rootEntityId) }}</span>
+        <button
+          type="button"
+          [attr.aria-label]="'עריכה: ' + rule.name"
+          (click)="editRule.emit(rule.id)"
+        >
+          עריכה
+        </button>
+        <button
+          type="button"
+          class="primary"
+          [attr.aria-label]="'הרץ בקרה: ' + rule.name"
+          (click)="runRule.emit(rule.id)"
+        >
+          הרץ בקרה
+        </button>
       </div>
     </li>
   }

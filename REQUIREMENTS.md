@@ -9,8 +9,8 @@
 | ID | Explicit requirement from assignment | Acceptance evidence | Status |
 |---|---|---|---|
 | GEN-01 | Build a web application with frontend, backend and database | UI, API and database run together | Not started |
-| GEN-02 | Generic controls: add/change controls without dedicated code per rule | Create two different controls from UI without code edits | Not started |
-| GEN-03 | Business users need no SQL/schema/relationship knowledge | Business metadata API implemented; UI create/run demonstration remains pending | In progress |
+| GEN-02 | Generic controls: add/change controls without dedicated code per rule | Metadata-driven modal editor implemented with generic comparisons/groups; docs/UI_EDITOR.md | Implemented |
+| GEN-03 | Business users need no SQL/schema/relationship knowledge | Business labels, related field selection and create/edit/run UI; docs/UI_EDITOR.md | Implemented |
 | DB-01 | Sample database with multiple related tables | SQL schema and FK relationship(s) | In progress |
 | DB-02 | Sample valid and invalid business data | Seed script and verified sample cases | In progress |
 | DB-03 | Rule engine works generically, not based on table/field names hardcoded in code | New table + catalog entity/field executed without code changes; see docs/RULE_EXECUTION.md | Verified |
@@ -20,11 +20,11 @@
 
 | ID | Explicit requirement from assignment | Acceptance evidence | Status |
 |---|---|---|---|
-| RULE-01 | Create a control with name and description | Definition, validation and persisted API values verified; UI pending | In progress |
-| RULE-02 | Select business data to check | Metadata API available; business field selector remains pending | In progress |
-| RULE-03 | Define logical conditions, including combinations | Nested AND/OR validation verified via HTTP; UI + execution demo pending | In progress |
-| RULE-04 | Save, edit and reuse controls | Save/edit/reopen/execute verified via API; UI demonstration pending | In progress |
-| RULE-05 | Display business-friendly data and relationships rather than technical table/column names | Hebrew metadata API available; UI demonstration remains pending | In progress |
+| RULE-01 | Create a control with name and description | Modal name/description fields, server validation and live create/edit QA; docs/UI_EDITOR.md | Implemented |
+| RULE-02 | Select business data to check | Metadata-based entity and field selectors, including relationship labels; docs/UI_EDITOR.md | Implemented |
+| RULE-03 | Define logical conditions, including combinations | Recursive AND/OR editor, typed comparisons and nested-tree tests; docs/UI_EDITOR.md | Implemented |
+| RULE-04 | Save, edit and reuse controls | Explicit save/edit, reopen and separate unsaved execution checked in browser; docs/UI_EDITOR.md | Implemented |
+| RULE-05 | Display business-friendly data and relationships rather than technical table/column names | Metadata business labels used in list, editor and executed-condition summary; docs/UI_EDITOR.md | Implemented |
 | EXEC-01 | Generic translation of rule definition to dynamic SQL | 42 compiler/formatter checks; full employee results and new-table execution verified in docs/RULE_EXECUTION.md | Verified |
 | EXEC-02 | Support complex conditions and relationships between tables | Nested groups, field comparisons, cross-table and missing-relation checks passed | Verified |
 | EXEC-03 | Separate rule definition from query implementation | Distinct definition, validator, compiler, executor and shared draft/saved orchestration | Implemented |
@@ -32,10 +32,10 @@
 | EXEC-05 | Handle errors and display appropriate messages | Invalid definitions, missing ID, denied SELECT and real timeout verified via API; UI display pending | In progress |
 | EXEC-06 | Return records violating the control | Expected sample counts/records, dates, NULL and joins verified via execution tests | Verified |
 | RESULTS-01 | Show list of defined controls | Angular list implemented; 10 UI/HTTP tests and live proxy + Edge checks; see docs/FRONTEND_LIST.md | Implemented |
-| RESULTS-02 | Execute a control from the list | Saved execution API implemented; list Run action pending UI | In progress |
-| RESULTS-03 | Show violation count | Exact count beyond returned-row limit verified via API; UI display pending | In progress |
-| RESULTS-04 | Show violating records in a table | Full employee including departmentId + department name returned without selection; Hebrew columns and missing-department behavior verified; grid pending | In progress |
-| RESULTS-05 | Explain why each record failed | Hebrew failureReason + structured SQL-authoritative explanation verified via API; UI display pending (docs/RULE_EXPLANATIONS.md) | In progress |
+| RESULTS-02 | Execute a control from the list | Run action opens dedicated results route; executes displayed saved snapshot without saving; docs/UI_RESULTS.md | Implemented |
+| RESULTS-03 | Show violation count | Results page displays total count, zero state and explicit truncation; docs/UI_RESULTS.md | Implemented |
+| RESULTS-04 | Show violating records in a table | Generic table uses server columns, IDs and typed values; live desktop Edge check; docs/UI_RESULTS.md | Implemented |
+| RESULTS-05 | Explain why each record failed | Per-row Hebrew failureReason displayed; structured explanation remains available in response; docs/UI_RESULTS.md | Implemented |
 | RESULTS-06 | Search and filter results | Server-side literal text search + typed nested result filters verified for draft/saved runs; UI demonstration pending (docs/RESULT_FILTERING.md) | In progress |
 | UX-01 | Clear, convenient, responsive UI | Saved-list desktop/mobile Edge review completed; other screens pending; docs/FRONTEND_LIST.md | In progress |
 
@@ -62,7 +62,7 @@
 | TECH-04 | Secure dynamic SQL mechanisms | Parameterization/identifier quoting and real restricted-SQL-identity tests passed; docs/RULE_EXECUTION.md | Verified |
 | TECH-05 | Angular | Angular 22 builds and runs against local API; docs/FRONTEND_LIST.md | Implemented |
 | TECH-06 | Hebrew UI and RTL | Saved list rendered in Hebrew/RTL at 1440/390; other screens pending | In progress |
-| TECH-07 | Reusable frontend components | Separate list and shared pagination implemented; rule builder pending | In progress |
+| TECH-07 | Reusable frontend components | Shared recursive condition editor, modal, summary, result table and pagination; docs/UI_EDITOR.md | Implemented |
 | TECH-08 | Organized architecture and separation of responsibilities | Architecture document and code review | Not started |
 
 ## Mandatory submission artifacts

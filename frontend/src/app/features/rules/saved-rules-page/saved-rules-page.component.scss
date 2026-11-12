@@ -28,6 +28,18 @@ main {
 .page-heading {
   margin-block-end: 2rem;
 }
+.new-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block-start: 1.2rem;
+}
+.save-notice {
+  padding: 1rem;
+  background: var(--accent-soft);
+  border-radius: 6px;
+  color: var(--accent);
+}
 .eyebrow {
   color: var(--accent);
   font-size: 0.85rem;

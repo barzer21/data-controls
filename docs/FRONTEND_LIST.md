@@ -21,6 +21,8 @@ Implemented on 2026-11-12. Scope: RESULTS-01; partial TECH-05..07, RULE-05, EXEC
 
 ## Remaining scope
 
+Historical scope below describes the first increment. Dedicated execution results have since been implemented; see [UI_RESULTS.md](UI_RESULTS.md) for current behavior and verification.
+
 The final reviewed list template displays each rule name as a heading, followed by its description and business entity badge, without repeated field labels.
 
 Follow-up on 2026-11-12: at the user's request all source styles were moved to SCSS, including global styles and pagination. Angular CLI component defaults and inline style language now use SCSS. Production build and all 10 existing tests passed again; emitted production bundle hashes remained unchanged.

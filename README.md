@@ -1,6 +1,6 @@
 # Data Controls
 
-## Angular frontend — saved rules list
+## Angular frontend — saved rules and execution results
 
 Requires Node.js `^22.22.3 || ^24.15.0 || ^26.0.0` and npm. Angular 22 compatibility: [official version table](https://angular.dev/reference/versions).
 
@@ -20,7 +20,11 @@ npm.cmd start
 
 Open `http://localhost:4200`. The development proxy in `frontend/proxy.conf.json` forwards `/api/**` to `http://localhost:5037`; API services use relative URLs. Restart `npm.cmd start` after changing the proxy. No backend CORS change is required for this development setup. Production hosting must separately route `/api` to the backend; the development proxy is not part of the production build.
 
-The first UI increment displays saved rule names, descriptions and metadata-based business entity labels, with server pagination (20 per page), loading, empty and retry states. Execution, results and editing are subsequent increments. An empty database correctly shows an empty list; if needed, explicitly create a sample rule using `backend/DataControls.Api/SavedRules.http`. The frontend never creates sample data automatically.
+The saved rules page (`/rules?page=1`) displays names, descriptions and metadata-based business entity labels, with server pagination (20 per page), loading, empty and retry states. New Rule (plus icon) and per-rule Edit open a shared modal editor for name/description, business data and nested AND/OR conditions. Fields and relationships come from metadata; comparisons support typed constants or other fields of the same type. Saving is explicit; running a draft does not save it and displays its results within the modal. See [docs/UI_EDITOR.md](docs/UI_EDITOR.md).
+
+Each rule also has a Run action opening `/rules/{id}/results?page={listPage}`. Results show the exact executed definition in Hebrew above a scrollable table, total violation count, server-defined columns and per-row failure reasons. Back returns to the same list page. The desktop results view keeps the rule context and table headers visible while scrolling. Search/filter UI, result pagination and deletion remain future increments. An empty database correctly shows an empty list; rules can be created using the New Rule button. The frontend never creates sample data automatically.
+
+To keep the displayed conditions consistent with execution, the UI loads the saved definition by ID and submits that snapshot to the existing draft execution endpoint. This does not save or edit the rule. Results are capped at 100 rows with an explicit truncation notice. See [docs/UI_RESULTS.md](docs/UI_RESULTS.md) for behavior, verification and limits.
 
 ```powershell
 # From frontend/

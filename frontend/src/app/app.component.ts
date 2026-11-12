@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { SavedRulesPageComponent } from './features/rules/saved-rules-page/saved-rules-page.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [SavedRulesPageComponent],
+  imports: [RouterOutlet],
   selector: 'app-root',
-  template: `<app-saved-rules-page />`,
+  template: `<router-outlet />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {}

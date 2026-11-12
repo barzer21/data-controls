@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+.results-page {
+  height: 100dvh;
+  padding: 1.5rem 2rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1.25rem;
+}
+.context {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  max-height: 45dvh;
+  overflow: auto;
+}
+a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+h1 {
+  font-size: 1.5rem;
+  margin-block: 1rem 0.5rem;
+  overflow-wrap: anywhere;
+}
+.description {
+  color: var(--text-muted);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  margin-block: 0.5rem;
+}
+.conditions {
+  border-block-start: 1px solid var(--border);
+  margin-block-start: 1rem;
+  padding-block-start: 0.75rem;
+}
+h2 {
+  font-size: 0.95rem;
+  margin-block: 0 0.5rem;
+}
+.results-panel {
+  min-height: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
