@@ -1,6 +1,9 @@
 @let data = result();
 <div class="result-summary" role="status">
-  <strong>מספר החריגות: {{ data.totalCount | businessValue }}</strong>
+  <strong
+    >{{ filtered() ? 'חריגות התואמות לחיפוש ולסינון:' : 'מספר החריגות:' }}
+    {{ data.totalCount | businessValue }}</strong
+  >
   @if (data.truncated) {
     <span
       >מוצגות {{ data.returnedCount | businessValue }} מתוך
@@ -9,7 +12,7 @@
     >
   }
 </div>
-@if (data.totalCount === 0) {
+@if (data.totalCount === 0 && !enableFilters()) {
   <div class="empty" role="status">
     <h2>לא נמצאו חריגות</h2>
     <p>אף רשומה אינה מקיימת את תנאי החריגה בבקרה שהורצה.</p>
@@ -29,12 +32,53 @@
         <tr>
           <th scope="col">מזהה רשומה</th>
           @for (column of data.columns; track column.id) {
-            <th scope="col">{{ column.label }}</th>
+            <th scope="col">
+              <span>{{ column.label }}</span>
+              @if (enableFilters() && filterableColumnIds().includes(column.id)) {
+                <button
+                  type="button"
+                  class="column-filter-button"
+                  [class.active]="filteredColumnIds().includes(column.id)"
+                  [attr.aria-label]="'סינון לפי ' + column.label"
+                  [attr.aria-pressed]="filteredColumnIds().includes(column.id)"
+                  (click)="filterColumn.emit(column.id)"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M3 4h18l-7 8v7l-4 2v-9z" />
+                  </svg>
+                </button>
+              }
+            </th>
           }
           <th scope="col">הסיבה לחריגה</th>
         </tr>
       </thead>
       <tbody>
+        @if (data.totalCount === 0) {
+          <tr>
+            <td [attr.colspan]="data.columns.length + 2" class="empty" role="status">
+              <h2>
+                {{ filtered() ? 'לא נמצאו תוצאות התואמות לחיפוש ולסינון' : 'לא נמצאו חריגות' }}
+              </h2>
+              <p>
+                {{
+                  filtered()
+                    ? 'אפשר לשנות או לנקות את אפשרויות הסינון כדי לראות תוצאות נוספות.'
+                    : 'אף רשומה אינה מקיימת את תנאי החריגה בבקרה שהורצה.'
+                }}
+              </p>
+            </td>
+          </tr>
+        }
         @for (record of data.records; track record.id) {
           <tr>
             <td>

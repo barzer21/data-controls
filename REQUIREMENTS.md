@@ -36,7 +36,7 @@
 | RESULTS-03 | Show violation count | Results page displays total count, zero state and explicit truncation; docs/UI_RESULTS.md | Implemented |
 | RESULTS-04 | Show violating records in a table | Generic table uses server columns, IDs and typed values; live desktop Edge check; docs/UI_RESULTS.md | Implemented |
 | RESULTS-05 | Explain why each record failed | Per-row Hebrew failureReason displayed; structured explanation remains available in response; docs/UI_RESULTS.md | Implemented |
-| RESULTS-06 | Search and filter results | Server-side literal text search + typed nested result filters verified for draft/saved runs; UI demonstration pending (docs/RESULT_FILTERING.md) | In progress |
+| RESULTS-06 | Search and filter results | Server-backed search and typed column filters in results page; active chips/reset, 54 UI tests and live Edge QA; docs/UI_RESULT_FILTERS.md | Implemented |
 | UX-01 | Clear, convenient, responsive UI | Saved-list desktop/mobile Edge review completed; other screens pending; docs/FRONTEND_LIST.md | In progress |
 
 ## Stage B — AI readiness (mock)

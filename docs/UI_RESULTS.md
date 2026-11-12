@@ -23,7 +23,7 @@ Loading, execution, zero violations, deleted rule, invalid ID, timeout and gener
 
 ## Limits and next increments
 
-- Search and filter controls are not implemented in this increment; the backend options remain available for the next task. Generic creation/editing has since been added in the shared modal; see [UI_EDITOR.md](UI_EDITOR.md).
+- Search and column filters have since been implemented in the dedicated results page; see [UI_RESULT_FILTERS.md](UI_RESULT_FILTERS.md). Generic creation/editing is available in the shared modal; see [UI_EDITOR.md](UI_EDITOR.md).
 - The response returns at most 100 rows. Truncation is explicit; no client-side pagination pretends to expose unreturned rows. True large-data browsing requires backend result pagination.
 - The results page is designed and checked for desktop, per user preference. Broader responsive results UX remains an assignment item to revisit.
 - Direct links/reload execute a new read-only snapshot. Production hosting must support SPA fallback for Angular paths and route `/api` separately. No backend CORS changes are required by the local development proxy.

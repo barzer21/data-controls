@@ -121,3 +121,8 @@ export interface RuleExecutionResponse {
     readonly explanation: RuleExplanationNode;
   }[];
 }
+
+export interface RuleExecutionOptions {
+  readonly search?: string;
+  readonly filter?: RuleCondition;
+}

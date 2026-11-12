@@ -46,11 +46,18 @@ h2 {
   margin-block: 0 0.5rem;
 }
 .results-panel {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   background: white;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
+}
+.results-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 .state {
   padding: 2rem;

@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review the results page and generic modal editor increments (docs/UI_RESULTS.md, docs/UI_EDITOR.md). Create/edit, nested conditions, explicit save and unsaved execution are implemented; 38 frontend tests pass. Next increments add server-backed search/filter UI, true backend result pagination and rule deletion. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. Calculated age and Python AI mock remain separate tasks.
+Review the results, generic modal editor and result search/filter increments (docs/UI_RESULTS.md, docs/UI_EDITOR.md, docs/UI_RESULT_FILTERS.md). Create/edit, nested conditions, explicit save, unsaved execution and temporary server-side column filtering/search are implemented; 54 frontend tests pass. Next increments add true backend result pagination and rule deletion. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. Calculated age and Python AI mock remain separate tasks.

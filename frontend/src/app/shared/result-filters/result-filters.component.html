@@ -1,0 +1,142 @@
+<div class="filter-toolbar">
+  <form class="search-form" (ngSubmit)="applySearch()">
+    <label
+      ><span class="sr-only">חיפוש בתוצאות</span
+      ><input
+        type="search"
+        name="search"
+        placeholder="חיפוש בשדות הטקסט…"
+        maxlength="200"
+        [disabled]="!searchable()"
+        [ngModel]="searchDraft()"
+        (ngModelChange)="searchDraft.set($event)"
+    /></label>
+    <button type="submit" [disabled]="!searchable()">חיפוש</button>
+  </form>
+  <label class="column-picker"
+    ><span class="sr-only">סינון לפי עמודה</span>
+    <select
+      aria-label="סינון לפי עמודה"
+      [ngModel]="selectedColumnId() ?? ''"
+      (ngModelChange)="openColumn($event)"
+    >
+      <option value="" disabled>סינון לפי עמודה…</option>
+      @for (column of columns(); track column.id) {
+        <option [value]="column.id">{{ column.label }}</option>
+      }
+    </select>
+  </label>
+  <button
+    type="button"
+    (click)="clear()"
+    [disabled]="!selection().search && !selection().filters.length && !searchDraft()"
+  >
+    נקה הכל
+  </button>
+</div>
+@if (selection().search || selection().filters.length) {
+  <div class="active-filters" aria-label="חיפוש ומסננים פעילים">
+    <span>סינון זמני:</span>
+    @if (selection().search) {
+      <button type="button" class="chip" (click)="removeSearch()" aria-label="הסר חיפוש">
+        חיפוש: <bdi>{{ selection().search }}</bdi> ×
+      </button>
+    }
+    @for (filter of selection().filters; track filter.columnId) {
+      <button
+        type="button"
+        class="chip"
+        (click)="removeColumn(filter.columnId)"
+        [attr.aria-label]="'הסר סינון לפי ' + columnLabel(filter.columnId)"
+      >
+        {{ columnLabel(filter.columnId) }} {{ operatorLabel(filter) }}
+        @if (filter.value !== undefined) {
+          <bdi>{{ filter.value | businessValue: columnType(filter.columnId) }}</bdi>
+        }
+        ×
+      </button>
+    }
+  </div>
+}
+@if (column(); as field) {
+  <form
+    #panel
+    class="column-panel"
+    tabindex="-1"
+    (ngSubmit)="applyColumn()"
+    [attr.aria-label]="'מסנן לעמודה ' + field.label"
+  >
+    <strong>סינון לפי {{ field.label }}</strong>
+    <label
+      ><span class="sr-only">תנאי סינון</span
+      ><select
+        aria-label="תנאי סינון"
+        name="operator"
+        [ngModel]="operator()"
+        (ngModelChange)="operator.set($event)"
+      >
+        @for (op of operators(); track op.id) {
+          <option [value]="op.id">{{ op.label }}</option>
+        }
+      </select></label
+    >
+    @if (operator() !== 'isNull' && operator() !== 'isNotNull') {
+      <label
+        ><span class="sr-only">ערך לסינון</span>
+        @switch (field.type) {
+          @case ('boolean') {
+            <select
+              aria-label="ערך לסינון"
+              name="value"
+              [ngModel]="value()"
+              (ngModelChange)="value.set($event)"
+            >
+              <option value="true">כן</option>
+              <option value="false">לא</option>
+            </select>
+          }
+          @case ('number') {
+            <input
+              aria-label="ערך לסינון"
+              type="number"
+              name="value"
+              step="any"
+              required
+              [ngModel]="value()"
+              (ngModelChange)="value.set($event === null ? '' : '' + $event)"
+            />
+          }
+          @case ('date') {
+            <input
+              aria-label="ערך לסינון"
+              type="date"
+              name="value"
+              required
+              [ngModel]="value()"
+              (ngModelChange)="value.set($event)"
+            />
+          }
+          @default {
+            <input
+              aria-label="ערך לסינון — התאמה מדויקת"
+              type="text"
+              name="value"
+              maxlength="4000"
+              placeholder="טקסט מדויק"
+              [ngModel]="value()"
+              (ngModelChange)="value.set($event)"
+            />
+          }
+        }
+      </label>
+    }
+    <button type="submit" class="primary">החל סינון</button>
+    <button type="button" (click)="selectedColumnId.set(null); error.set('')">ביטול</button>
+  </form>
+}
+@if (error()) {
+  <p class="filter-error" role="alert">{{ error() }}</p>
+}
+<p class="filter-hint">
+  החיפוש חל על שדות הטקסט; מסנני העמודות מחוברים ב„וגם”. הסינון אינו משנה את הבקרה.
+</p>

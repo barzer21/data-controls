@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import {
   RuleDefinition,
   RuleExecutionResponse,
+  RuleExecutionOptions,
   RuleListResponse,
   SavedRuleResponse,
   RuleValidationResult,
@@ -30,11 +31,11 @@ export class RulesApiService {
       : this.http.put<SavedRuleResponse>(`/api/rules/${id}`, definition);
   }
 
-  execute(definition: RuleDefinition) {
+  execute(definition: RuleDefinition, options?: RuleExecutionOptions) {
     // Execute the exact saved snapshot displayed in the results header. This never saves it.
     return this.http.post<RuleExecutionResponse>(
       '/api/rules/execute',
-      { definition },
+      { definition, ...(options && Object.keys(options).length ? { options } : {}) },
       { params: { limit: 100 } },
     );
   }

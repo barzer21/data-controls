@@ -68,3 +68,17 @@ tbody tr:nth-child(even) {
   color: var(--text);
   font-size: 1.2rem;
 }
+.column-filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0.3rem;
+  margin-inline-start: 0.5rem;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+.column-filter-button.active {
+  background: var(--accent);
+  color: white;
+}

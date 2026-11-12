@@ -27,6 +27,6 @@ Both actions first POST the current definition to `/api/rules/validate`. The ser
 
 ## Remaining work
 
-Search/filter UI, backend result pagination, deletion, calculated age and the Python AI mock remain separate tasks. Results retain the current 100-row cap. Concurrent edit conflict detection is not provided by the existing PUT contract. There is no draft persistence across full reload or application navigation; users should explicitly save work they want to retain. Desktop UI was reviewed; broader responsive authoring remains for the final assignment review.
+Search/filter UI has since been added to the dedicated results page (docs/UI_RESULT_FILTERS.md). The inline draft preview remains unchanged. Backend result pagination, deletion, calculated age and the Python AI mock remain separate tasks. Results retain the current 100-row cap. Concurrent edit conflict detection is not provided by the existing PUT contract. There is no draft persistence across full reload or application navigation; users should explicitly save work they want to retain. Desktop UI was reviewed; broader responsive authoring remains for the final assignment review.
 
 Codex assisted with design, implementation, automated tests, browser QA and documentation; this supplements the previous increment disclosures.
