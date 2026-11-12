@@ -1,0 +1,103 @@
+@baseUrl = http://localhost:5037
+
+### Valid: active employees with salary above 15,000 (validation only)
+POST {{baseUrl}}/api/rules/validate
+Content-Type: application/json
+
+{
+  "name": "עובדים פעילים בשכר גבוה",
+  "description": "איתור עובדים פעילים ששכרם מעל 15,000",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "group",
+    "operator": "and",
+    "children": [
+      {
+        "kind": "comparison",
+        "left": { "fieldId": "isActive" },
+        "operator": "equals",
+        "right": { "kind": "constant", "value": true }
+      },
+      {
+        "kind": "comparison",
+        "left": { "fieldId": "salary" },
+        "operator": "greaterThan",
+        "right": { "kind": "constant", "value": 15000 }
+      }
+    ]
+  }
+}
+
+### Valid: end date before start date
+POST {{baseUrl}}/api/rules/validate
+Content-Type: application/json
+
+{
+  "name": "סיום העסקה לפני תחילתה",
+  "description": "השוואה בין שני שדות תאריך",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "endDate" },
+    "operator": "lessThan",
+    "right": { "kind": "field", "field": { "fieldId": "startDate" } }
+  }
+}
+
+### Valid: active employee in an inactive department
+POST {{baseUrl}}/api/rules/validate
+Content-Type: application/json
+
+{
+  "name": "עובדים פעילים במחלקה לא פעילה",
+  "description": "בדיקת שדה דרך קשר מאושר בקטלוג",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "group",
+    "operator": "and",
+    "children": [
+      {
+        "kind": "comparison",
+        "left": { "fieldId": "isActive" },
+        "operator": "equals",
+        "right": { "kind": "constant", "value": true }
+      },
+      {
+        "kind": "comparison",
+        "left": { "fieldId": "isActive", "relationshipPath": ["employeeDepartment"] },
+        "operator": "equals",
+        "right": { "kind": "constant", "value": false }
+      }
+    ]
+  }
+}
+
+### Valid: missing start date (omit right)
+POST {{baseUrl}}/api/rules/validate
+Content-Type: application/json
+
+{
+  "name": "תאריך תחילת העסקה חסר",
+  "description": "איתור ערך NULL",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "startDate" },
+    "operator": "isNull"
+  }
+}
+
+### Invalid: salary must be a JSON number, not text (HTTP 400)
+POST {{baseUrl}}/api/rules/validate
+Content-Type: application/json
+
+{
+  "name": "דוגמה לערך לא תקין",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "salary" },
+    "operator": "greaterThan",
+    "right": { "kind": "constant", "value": "15000" }
+  }
+}

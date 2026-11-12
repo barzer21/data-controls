@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "entities": [
+    {
+      "id": "employee",
+      "label": "עובדים",
+      "schema": "dbo",
+      "table": "Employees",
+      "keyColumn": "Id",
+      "fields": [
+        { "id": "firstName", "label": "שם פרטי", "column": "FirstName", "type": "text" },
+        { "id": "lastName", "label": "שם משפחה", "column": "LastName", "type": "text" },
+        { "id": "birthDate", "label": "תאריך לידה", "column": "BirthDate", "type": "date" },
+        { "id": "salary", "label": "שכר", "column": "Salary", "type": "number" },
+        { "id": "startDate", "label": "תחילת העסקה", "column": "StartDate", "type": "date" },
+        { "id": "endDate", "label": "סיום העסקה", "column": "EndDate", "type": "date" },
+        { "id": "isActive", "label": "עובד פעיל", "column": "IsActive", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "department",
+      "label": "מחלקות",
+      "schema": "dbo",
+      "table": "Departments",
+      "keyColumn": "Id",
+      "fields": [
+        { "id": "name", "label": "שם המחלקה", "column": "Name", "type": "text" },
+        { "id": "isActive", "label": "מחלקה פעילה", "column": "IsActive", "type": "boolean" },
+        { "id": "managerName", "label": "שם מנהל המחלקה", "column": "ManagerName", "type": "text" }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "employeeDepartment",
+      "label": "מחלקת העובד",
+      "fromEntity": "employee",
+      "fromColumn": "DepartmentId",
+      "toEntity": "department",
+      "toColumn": "Id",
+      "cardinality": "manyToOne"
+    }
+  ]
+}
