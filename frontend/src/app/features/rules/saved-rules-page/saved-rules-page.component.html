@@ -1,0 +1,57 @@
+<header class="app-header">
+  <div class="header-content">
+    <span class="brand" lang="en" dir="ltr">Data Controls</span><span>בקרות נתונים</span>
+  </div>
+</header>
+<main id="main-content">
+  <div class="page-heading">
+    <p class="eyebrow">איכות נתונים</p>
+    <h1>בקרות שמורות</h1>
+    <p class="intro">כל הבקרות שהוגדרו לבדיקת הנתונים העסקיים, במקום אחד.</p>
+  </div>
+  @let current = state();
+  <section
+    class="panel"
+    aria-label="רשימת בקרות שמורות"
+    [attr.aria-busy]="current.status === 'loading'"
+  >
+    @if (current.status === 'loading') {
+      <div class="state" role="status">
+        <span class="loading-mark" aria-hidden="true"></span>
+        <p>טוען את הבקרות…</p>
+      </div>
+    } @else if (current.status === 'error') {
+      <div class="state">
+        <div role="alert">
+          <h2>לא ניתן לטעון את רשימת הבקרות</h2>
+          <p>ייתכן שיש בעיית חיבור או שהשרת אינו זמין. אפשר לנסות שוב.</p>
+        </div>
+        <button type="button" class="primary" (click)="loadPage(current.page)">ניסיון חוזר</button>
+      </div>
+    } @else {
+      <div class="list-heading">
+        <span>רשימת הבקרות</span
+        ><span class="count">סה״כ בקרות: {{ current.result.totalCount }}</span>
+      </div>
+      @if (current.result.totalCount === 0) {
+        <div class="state" role="status">
+          <h2>עדיין אין בקרות שמורות</h2>
+          <p>בקרות שיישמרו במערכת יופיעו כאן.</p>
+        </div>
+      } @else {
+        <app-saved-rules-list
+          [rules]="current.result.items"
+          [entities]="current.metadata.entities"
+        />
+        <footer class="list-footer">
+          <app-pagination
+            [page]="current.result.page"
+            [pageSize]="current.result.pageSize"
+            [totalCount]="current.result.totalCount"
+            (pageChange)="loadPage($event)"
+          />
+        </footer>
+      }
+    }
+  </section>
+</main>

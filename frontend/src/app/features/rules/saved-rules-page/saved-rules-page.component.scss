@@ -1,0 +1,109 @@
+.app-header {
+  background: white;
+  border-block-end: 1px solid var(--border);
+}
+.header-content {
+  max-width: 1080px;
+  margin: auto;
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+.brand {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 750;
+  border-inline-end: 1px solid var(--border);
+  padding-inline-end: 1rem;
+}
+main {
+  max-width: 1080px;
+  margin: auto;
+  padding: 3rem 2rem;
+}
+.page-heading {
+  margin-block-end: 2rem;
+}
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.25rem);
+  letter-spacing: -0.04em;
+}
+.intro {
+  color: var(--text-muted);
+  margin-block: 0.8rem 0;
+  line-height: 1.7;
+}
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px #1c344005;
+}
+.list-heading {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.75rem;
+  background: #fafbfd;
+  border-block-end: 1px solid var(--border);
+  font-weight: 600;
+}
+.count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+.state {
+  min-height: 250px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.state h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.state p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-block: 0.7rem 1rem;
+}
+.loading-mark {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--accent-soft);
+  border-block-start-color: var(--accent);
+  border-radius: 50%;
+}
+.list-footer {
+  padding: 1.25rem;
+  border-block-start: 1px solid var(--border);
+}
+@media (max-width: 600px) {
+  main {
+    padding: 2rem 1rem;
+  }
+  .header-content {
+    padding: 1rem;
+  }
+  .list-heading {
+    padding: 1rem 1.25rem;
+  }
+}

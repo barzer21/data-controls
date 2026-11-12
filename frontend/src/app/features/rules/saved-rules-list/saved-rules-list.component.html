@@ -1,0 +1,13 @@
+<ul class="rule-list" aria-label="בקרות שמורות">
+  @for (rule of rules(); track rule.id) {
+    <li class="rule">
+      <div class="rule-details">
+        <h2>{{ rule.name }}</h2>
+        <p>{{ rule.description || 'לא נוסף תיאור לבקרה זו.' }}</p>
+      </div>
+      <div class="entity-field">
+        <span class="entity">{{ entityLabel(rule.rootEntityId) }}</span>
+      </div>
+    </li>
+  }
+</ul>

@@ -22,7 +22,7 @@
 | 4 | Rule persistence and CRUD | DB-04, RULE-04 | Implemented and tested |
 | 5 | SQL compiler and read-only executor | EXEC-01..06, TECH-04 | Draft/saved execution with full employee and department name |
 | 6 | Explanations, counts, search and filtering | RESULTS-03..06 | Implemented via API; UI pending |
-| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | Not started |
+| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | First increment: Angular setup + saved list with server pagination; 10 tests, live proxy and Edge checks (docs/FRONTEND_LIST.md) |
 | 8 | Python AI mock and approval flow | AI-01..07, TECH-02 | Not started |
 | 9 | Documentation and clean setup verification | SUB-01..08 | In progress |
 
@@ -62,4 +62,4 @@
 
 ## First next action
 
-Plan the Angular Hebrew RTL UI, starting with the saved-rule list, execution and results table. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. The project databases were recreated under D-021. Calculated age still requires its own task.
+Review the first Angular increment (setup, API services and saved-rule list). The next scoped increment adds saved-rule execution and a results table based on server columns, with violation count and failure reasons. Editing, search/filter UI and deletion follow separately. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. The project databases were recreated under D-021. Calculated age still requires its own task.

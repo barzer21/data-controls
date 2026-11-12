@@ -4,6 +4,10 @@
 
 # VS Code
 .vscode/
+.history/
+
+# Other IDEs
+.idea/
 
 # Visual Studio
 .vs/
@@ -13,6 +17,19 @@
 **/node_modules/
 **/dist/
 **/.angular/
+*.tsbuildinfo
+
+# Generated test reports
+**/coverage/
+**/test-results/
+**/TestResults/
+
+# Local logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
 
 # Python
 **/__pycache__/

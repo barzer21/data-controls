@@ -1,5 +1,35 @@
 # Data Controls
 
+## Angular frontend — saved rules list
+
+Requires Node.js `^22.22.3 || ^24.15.0 || ^26.0.0` and npm. Angular 22 compatibility: [official version table](https://angular.dev/reference/versions).
+
+Start the backend from the repository root:
+
+```powershell
+dotnet run --project backend/DataControls.Api --launch-profile http
+```
+
+In a second terminal:
+
+```powershell
+cd frontend
+npm.cmd ci
+npm.cmd start
+```
+
+Open `http://localhost:4200`. The development proxy in `frontend/proxy.conf.json` forwards `/api/**` to `http://localhost:5037`; API services use relative URLs. Restart `npm.cmd start` after changing the proxy. No backend CORS change is required for this development setup. Production hosting must separately route `/api` to the backend; the development proxy is not part of the production build.
+
+The first UI increment displays saved rule names, descriptions and metadata-based business entity labels, with server pagination (20 per page), loading, empty and retry states. Execution, results and editing are subsequent increments. An empty database correctly shows an empty list; if needed, explicitly create a sample rule using `backend/DataControls.Api/SavedRules.http`. The frontend never creates sample data automatically.
+
+```powershell
+# From frontend/
+npm.cmd run build
+npm.cmd test -- --watch=false
+```
+
+`npm.cmd` avoids PowerShell execution-policy issues with `npm.ps1`. See [frontend/README.md](frontend/README.md) for component responsibilities and [docs/FRONTEND_LIST.md](docs/FRONTEND_LIST.md) for verification evidence.
+
 ## Execute draft or saved rules
 
 `POST /api/rules/execute` runs an unsaved rule using `{ "definition": { ... }, "options": { ... } }`; `POST /api/rules/{id}/execute` runs the saved definition with an optional `{ "options": { ... } }` body. Both validate against the current catalog and share the parameterized compiler and read-only executor. Neither saves a draft or execution history. `?limit=100` controls returned rows (maximum 500); the response includes the total count and a truncation flag. Old bare-definition draft execution bodies must now be wrapped; CRUD/validation request bodies are unchanged.

@@ -31,13 +31,13 @@
 | EXEC-04 | Prevent dangerous commands or data modification | Typed parameters, allowlisted/quoted identifiers, real SQL write-denial and no privileged fallback verified | Verified |
 | EXEC-05 | Handle errors and display appropriate messages | Invalid definitions, missing ID, denied SELECT and real timeout verified via API; UI display pending | In progress |
 | EXEC-06 | Return records violating the control | Expected sample counts/records, dates, NULL and joins verified via execution tests | Verified |
-| RESULTS-01 | Show list of defined controls | Paginated summaries API implemented; list page pending | In progress |
+| RESULTS-01 | Show list of defined controls | Angular list implemented; 10 UI/HTTP tests and live proxy + Edge checks; see docs/FRONTEND_LIST.md | Implemented |
 | RESULTS-02 | Execute a control from the list | Saved execution API implemented; list Run action pending UI | In progress |
 | RESULTS-03 | Show violation count | Exact count beyond returned-row limit verified via API; UI display pending | In progress |
 | RESULTS-04 | Show violating records in a table | Full employee including departmentId + department name returned without selection; Hebrew columns and missing-department behavior verified; grid pending | In progress |
 | RESULTS-05 | Explain why each record failed | Hebrew failureReason + structured SQL-authoritative explanation verified via API; UI display pending (docs/RULE_EXPLANATIONS.md) | In progress |
 | RESULTS-06 | Search and filter results | Server-side literal text search + typed nested result filters verified for draft/saved runs; UI demonstration pending (docs/RESULT_FILTERING.md) | In progress |
-| UX-01 | Clear, convenient, responsive UI | Desktop/mobile viewport review | Not started |
+| UX-01 | Clear, convenient, responsive UI | Saved-list desktop/mobile Edge review completed; other screens pending; docs/FRONTEND_LIST.md | In progress |
 
 ## Stage B — AI readiness (mock)
 
@@ -60,9 +60,9 @@
 | TECH-02 | Python | Python component included and documented | Not started |
 | TECH-03 | SQL Server | Running DB and scripts | In progress |
 | TECH-04 | Secure dynamic SQL mechanisms | Parameterization/identifier quoting and real restricted-SQL-identity tests passed; docs/RULE_EXECUTION.md | Verified |
-| TECH-05 | Angular | Running frontend | Not started |
-| TECH-06 | Hebrew UI and RTL | Visible Hebrew + RTL layout | Not started |
-| TECH-07 | Reusable frontend components | Shared rule-building components | Not started |
+| TECH-05 | Angular | Angular 22 builds and runs against local API; docs/FRONTEND_LIST.md | Implemented |
+| TECH-06 | Hebrew UI and RTL | Saved list rendered in Hebrew/RTL at 1440/390; other screens pending | In progress |
+| TECH-07 | Reusable frontend components | Separate list and shared pagination implemented; rule builder pending | In progress |
 | TECH-08 | Organized architecture and separation of responsibilities | Architecture document and code review | Not started |
 
 ## Mandatory submission artifacts
