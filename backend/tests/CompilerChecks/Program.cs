@@ -123,6 +123,40 @@ query = compiler.Compile(Rule(Compare("firstName", "equals", Constant("Dana"))))
 reason = explanations.Explain(query.Explanation, EvidenceFor(query, new Dictionary<string, object?> { ["firstName"] = "DANA " }));
 Check(reason.Explanation.Message.Contains("DANA ") && reason.Explanation.Right!.Value is string,
     "sqlTruthIsNotReevaluatedWithDotNetStringEquality");
+
+var searchableRule = Rule(Compare("isActive", "isNotNull")) with
+{
+    ResultFields = [new("firstName"), new("salary"), new("name", ["employeeDepartment"])]
+};
+var plain = compiler.Compile(searchableRule).Query!;
+var options = new RuleExecutionOptions(" %_[~ ", Compare("salary", "greaterThan", Constant(15000)));
+query = compiler.Compile(searchableRule, options).Query!;
+Check(query.Sql.Contains("LIKE @p1 ESCAPE N'~'") && query.Sql.Contains("[t1].[Name] LIKE @p1") &&
+    !query.Sql.Contains("[t0].[Salary] LIKE"), "searchOnlyProjectedTextFields");
+Check(Equals(query.Parameters[1].Value, "%~%~_~[~~%") && query.Parameters[0].Type == SqlDbType.Decimal,
+    "literalLikeEscapingAndTypedFilterParameter");
+Check(query.Parameters.Select(p => p.Name).Distinct().Count() == query.Parameters.Count &&
+    query.Sql.Contains("WHERE ([t0].[IsActive] IS NOT NULL) AND ([t0].[Salary] > @p0) AND ("),
+    "filterAndSearchIntersectOriginalCondition");
+Check(query.EvidenceColumnCount == plain.EvidenceColumnCount &&
+    JsonSerializer.Serialize(query.Explanation) == JsonSerializer.Serialize(plain.Explanation), "optionsNeverBecomeFailureExplanation");
+Check(compiler.Compile(searchableRule, new("   ")).Query!.Sql == plain.Sql, "blankSearchIgnored");
+Check(compiler.Compile(searchableRule, new(new string('x', 201))).Validation.Errors.Any(e =>
+    e.Path == "options.search" && e.Code == "searchTooLong"), "searchLengthValidation");
+Check(!compiler.Compile(searchableRule with { ResultFields = [new("salary")] }, new("Noam")).Validation.IsValid,
+    "searchNeedsDisplayedTextField");
+Check(compiler.Compile(searchableRule, new(Filter: Compare("isActive", "equals", Constant(true))))
+    .Validation.Errors.Any(e => e.Code == "filterFieldNotDisplayed"), "filterCannotUseHiddenRootField");
+Check(compiler.Compile(searchableRule, new(Filter: Compare("missing", "equals", Constant(1))))
+    .Validation.Errors.Any(e => e.Path == "options.filter.left.fieldId" && e.Code == "unknownField"), "filterValidationPaths");
+Check(compiler.Compile(searchableRule, new(Filter: Compare("salary", "equals", Constant("15000"))))
+    .Query is null, "filterUsesOriginalTypeValidation");
+var nestedOptions = new RuleExecutionOptions(Filter: new RuleGroup("or", [
+    Compare("salary", "greaterThan", Constant(20000)),
+    Compare("name", "equals", Constant("Sales"), "employeeDepartment")]));
+query = compiler.Compile(searchableRule, nestedOptions).Query!;
+Check(query.Sql.Contains(" OR ") && query.Sql.Split("LEFT JOIN").Length == 2 && query.EvidenceColumnCount == plain.EvidenceColumnCount,
+    "nestedRelatedFilterReusesJoinWithoutExplanationEvidence");
 Console.WriteLine($"All {count} compiler checks passed without SQL execution.");
 
 sealed class TestMetadata(MetadataCatalog catalog) : IMetadataProvider

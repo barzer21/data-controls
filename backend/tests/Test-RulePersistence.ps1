@@ -63,6 +63,12 @@ function Send-Request([string]$Method, [string]$Path, $Body = $null, [int]$Expec
     $response = $null
     try {
         if ($null -ne $Body) {
+            # Keep existing execution scenarios readable while sending the new HTTP envelope.
+            $isDefinition = if ($Body -is [System.Collections.IDictionary]) { $Body.Contains('rootEntityId') }
+                elseif ($Body -is [string]) { $false } else { $null -ne $Body.PSObject.Properties['rootEntityId'] }
+            if ($Method -eq 'POST' -and $Path -match '^/execute(?:\?|$)' -and $isDefinition) {
+                $Body = @{ definition = $Body }
+            }
             $json = if ($Body -is [string]) { $Body } else { $Body | ConvertTo-Json -Depth 100 -Compress }
             $request.Content = [System.Net.Http.StringContent]::new($json, [System.Text.Encoding]::UTF8, 'application/json')
         }

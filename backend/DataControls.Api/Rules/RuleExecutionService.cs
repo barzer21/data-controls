@@ -5,9 +5,9 @@ public sealed record RuleExecutionAttempt(RuleValidationResult Validation, RuleE
 public sealed class RuleExecutionService(RuleSqlCompiler compiler, RuleExecutor executor)
 {
     public async Task<RuleExecutionAttempt> ExecuteAsync(RuleDefinition definition, int limit,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, RuleExecutionOptions? options = null)
     {
-        var compilation = compiler.Compile(definition);
+        var compilation = compiler.Compile(definition, options);
         if (!compilation.Validation.IsValid) return new(compilation.Validation, null);
         return new(compilation.Validation, await executor.ExecuteAsync(compilation.Query!, limit, cancellationToken));
     }

@@ -1,6 +1,7 @@
 using DataControls.Api.Rules;
 using DataControls.Api.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace DataControls.Api.Controllers;
 
@@ -10,22 +11,27 @@ public sealed class RulesController(RuleValidator validator, RuleService rules, 
 {
     [HttpPost("execute")]
     [RequestSizeLimit(64 * 1024)]
-    public async Task<ActionResult<RuleExecutionResponse>> ExecuteDraft(RuleDefinition definition,
+    public async Task<ActionResult<RuleExecutionResponse>> ExecuteDraft(DraftRuleExecutionRequest request,
         CancellationToken cancellationToken, [FromQuery] int limit = 100)
     {
         if (limit is < 1 or > RuleExecutor.MaxLimit) return InvalidLimit();
-        var result = await execution.ExecuteAsync(definition, limit, cancellationToken);
+        if (request.Definition is null)
+            return BadRequest(new RuleValidationResult(false,
+                [new("definition", "requiredDefinition", "יש לספק הגדרת בקרה להרצה.")]));
+        var result = await execution.ExecuteAsync(request.Definition, limit, cancellationToken, request.Options);
         return result.Validation.IsValid ? Ok(result.Result) : BadRequest(result.Validation);
     }
 
     [HttpPost("{id:int:min(1)}/execute")]
+    [RequestSizeLimit(64 * 1024)]
     public async Task<ActionResult<RuleExecutionResponse>> ExecuteSaved(int id,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] SavedRuleExecutionRequest? request,
         CancellationToken cancellationToken, [FromQuery] int limit = 100)
     {
         if (limit is < 1 or > RuleExecutor.MaxLimit) return InvalidLimit();
         var saved = await rules.GetAsync(id, cancellationToken);
         if (saved is null) return NotFoundRule();
-        var result = await execution.ExecuteAsync(saved.Definition, limit, cancellationToken);
+        var result = await execution.ExecuteAsync(saved.Definition, limit, cancellationToken, request?.Options);
         return result.Validation.IsValid ? Ok(result.Result) : BadRequest(result.Validation);
     }
 

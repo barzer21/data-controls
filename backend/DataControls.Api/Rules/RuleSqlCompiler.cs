@@ -12,14 +12,17 @@ public sealed record RuleCompilationResult(RuleValidationResult Validation, Comp
 
 public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator validator)
 {
-    public RuleCompilationResult Compile(RuleDefinition definition)
+    public RuleCompilationResult Compile(RuleDefinition definition, RuleExecutionOptions? options = null)
     {
         var validation = validator.Validate(definition);
-        return new(validation, validation.IsValid ? new Compilation(metadata.Catalog, definition).Build() : null);
+        if (!validation.IsValid) return new(validation, null);
+        options ??= new();
+        validation = RuleExecutionOptionsValidator.Validate(definition, options, metadata.Catalog, validator);
+        return new(validation, validation.IsValid ? new Compilation(metadata.Catalog, definition, options).Build() : null);
     }
 
     // Every compilation owns its aliases/parameters. No SQL fragment comes from a request.
-    private sealed class Compilation(MetadataCatalog catalog, RuleDefinition definition)
+    private sealed class Compilation(MetadataCatalog catalog, RuleDefinition definition, RuleExecutionOptions options)
     {
         private readonly Dictionary<string, MetadataEntity> entities =
             catalog.Entities.ToDictionary(e => e.Id, StringComparer.OrdinalIgnoreCase);
@@ -37,13 +40,25 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
             var references = definition.ResultFields ?? root.Fields.Select(f => new FieldReference(f.Id)).ToArray();
             // Resolve projections before rendering FROM, because a display-only field can add a join.
             var projections = references.Select(reference => Projection(reference!)).ToArray();
+            var predicates = new List<string> { condition.Sql };
+            if (options.Filter is not null)
+                predicates.Add(Condition(options.Filter, "options.filter", false).Sql);
+            if (!string.IsNullOrWhiteSpace(options.Search))
+            {
+                var name = $"@p{parameters.Count}";
+                var literal = options.Search.Trim().Replace("~", "~~").Replace("%", "~%")
+                    .Replace("_", "~_").Replace("[", "~[");
+                parameters.Add(new(name, SqlDbType.NVarChar, "%" + literal + "%"));
+                predicates.Add("(" + string.Join(" OR ", projections.Where(p => p.Column.Type == "text")
+                    .Select(p => $"{p.Sql} LIKE {name} ESCAPE N'~'")) + ")");
+            }
             var fields = projections.Select((projection, index) => $"{projection.Sql} AS [c{index}]");
             var sql = $"SELECT TOP (@__limit) COUNT_BIG(*) OVER() AS [__count], " +
                 $"[t0].{Quote(root.KeyColumn)} AS [__id], {string.Join(", ", fields)}, {string.Join(", ", evidenceColumns)} " +
                 $"FROM {Table(root)} AS [t0] {string.Join(" ", joins)} " +
-                $"WHERE {condition.Sql} ORDER BY [t0].{Quote(root.KeyColumn)};";
+                $"WHERE {string.Join(" AND ", predicates)} ORDER BY [t0].{Quote(root.KeyColumn)};";
             return new(sql, parameters.ToArray(), projections.Select(p => p.Column).ToArray(),
-                condition.Explanation, evidenceColumns.Count);
+                condition.Explanation!, evidenceColumns.Count);
         }
 
         private (string Sql, RuleResultColumn Column) Projection(FieldReference reference)
@@ -55,20 +70,20 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
             return (sql, new(key, label, field.Type));
         }
 
-        private (string Sql, CompiledExplanationNode Explanation) Condition(RuleCondition condition, string path)
+        private (string Sql, CompiledExplanationNode? Explanation) Condition(RuleCondition condition, string path, bool explain = true)
         {
             if (condition is RuleGroup group)
             {
                 var children = group.Children!.Select((child, index) =>
-                    Condition(child!, $"{path}.children[{index}]")).ToArray();
+                    Condition(child!, $"{path}.children[{index}]", explain)).ToArray();
                 var sql = "(" + string.Join(group.Operator == "and" ? " AND " : " OR ", children.Select(c => c.Sql)) + ")";
-                return (sql, new(path, "group", group.Operator!, Match(sql), null, null,
-                    children.Select(c => c.Explanation).ToArray()));
+                return (sql, explain ? new(path, "group", group.Operator!, Match(sql), null, null,
+                    children.Select(c => c.Explanation!).ToArray()) : null);
             }
             if (condition is not RuleComparison comparison)
                 throw new InvalidOperationException("Only validated condition nodes can be compiled.");
-            var (predicate, left, right) = Comparison(comparison);
-            return (predicate, new(path, "comparison", comparison.Operator!, Match(predicate), left, right, []));
+            var (predicate, left, right) = Comparison(comparison, explain);
+            return (predicate, explain ? new(path, "comparison", comparison.Operator!, Match(predicate), left, right, []) : null);
         }
 
         private int Evidence(string sql)
@@ -87,10 +102,10 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
                 projection.Column.Type, Evidence(projection.Sql), null);
         }
 
-        private (string Sql, CompiledExplanationOperand Left, CompiledExplanationOperand? Right) Comparison(RuleComparison comparison)
+        private (string Sql, CompiledExplanationOperand? Left, CompiledExplanationOperand? Right) Comparison(RuleComparison comparison, bool explain)
         {
             var (left, field) = Field(comparison.Left!);
-            var leftEvidence = EvidenceField(comparison.Left!);
+            var leftEvidence = explain ? EvidenceField(comparison.Left!) : null;
             if (comparison.Operator == "isNull") return ($"({left} IS NULL)", leftEvidence, null);
             if (comparison.Operator == "isNotNull") return ($"({left} IS NOT NULL)", leftEvidence, null);
             var op = comparison.Operator switch
@@ -100,16 +115,16 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
                 _ => throw new InvalidOperationException("Only validated operators can be compiled.")
             };
             string right;
-            CompiledExplanationOperand rightEvidence;
+            CompiledExplanationOperand? rightEvidence;
             if (comparison.Right is FieldOperand operand)
             {
                 right = Field(operand.Field!).Sql;
-                rightEvidence = EvidenceField(operand.Field!);
+                rightEvidence = explain ? EvidenceField(operand.Field!) : null;
             }
             else if (comparison.Right is ConstantOperand constant)
             {
                 right = Parameter(constant, field.Type);
-                rightEvidence = new("constant", null, null, field.Type, null, parameters[^1].Value);
+                rightEvidence = explain ? new("constant", null, null, field.Type, null, parameters[^1].Value) : null;
             }
             else throw new InvalidOperationException("Only validated operands can be compiled.");
             return ($"({left} {op} {right})", leftEvidence, rightEvidence);

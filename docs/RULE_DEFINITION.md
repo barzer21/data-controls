@@ -10,6 +10,8 @@ This is a custom expression tree serialized as JSON, not `System.Linq.Expression
 
 The endpoint validates the definition, not the underlying business records. It does not save the rule, create SQL or execute a control. Only application startup reads the SQL Server schema to validate the catalog.
 
+This endpoint and CRUD still take RuleDefinition directly. Draft execution separately takes `{ "definition": { ... }, "options": { ... } }`; options are transient search/filter settings, not properties of RuleDefinition (D-019, [RESULT_FILTERING.md](RESULT_FILTERING.md)).
+
 Valid rule: HTTP 200:
 
 ```json

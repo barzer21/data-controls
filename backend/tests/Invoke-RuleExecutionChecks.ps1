@@ -169,4 +169,5 @@ try {
 }
 Assert-Test ((Send-Request 'GET' '').Body.totalCount -eq $beforeExecution) 'executionNeverCreatesHistoryOrDraftRows'
 . (Join-Path $PSScriptRoot 'Invoke-RuleExplanationChecks.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-RuleFilteringChecks.ps1')
 Invoke-TestSql "IF (SELECT COUNT(*) FROM dbo.Employees)<>20 OR (SELECT COUNT(*) FROM dbo.Departments)<>5 THROW 51000,'Business row counts changed',1;"

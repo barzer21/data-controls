@@ -2,7 +2,9 @@
 
 ## Execute draft or saved rules
 
-`POST /api/rules/execute` runs an unsaved RuleDefinition; `POST /api/rules/{id}/execute` runs the saved definition. Both validate against the current catalog and share the parameterized compiler and read-only executor. Neither saves a draft or execution history. `?limit=100` controls returned rows (maximum 500); the response includes the total count and a truncation flag.
+`POST /api/rules/execute` runs an unsaved rule using `{ "definition": { ... }, "options": { ... } }`; `POST /api/rules/{id}/execute` runs the saved definition with an optional `{ "options": { ... } }` body. Both validate against the current catalog and share the parameterized compiler and read-only executor. Neither saves a draft or execution history. `?limit=100` controls returned rows (maximum 500); the response includes the total count and a truncation flag. Old bare-definition draft execution bodies must now be wrapped; CRUD/validation request bodies are unchanged.
+
+Optional `options.search` searches displayed text fields; `options.filter` uses the existing condition tree on displayed result fields. They apply in SQL before the limit/count and do not change the original rule or its explanations. See [docs/RESULT_FILTERING.md](docs/RESULT_FILTERING.md) and `backend/DataControls.Api/Filtering.http` for examples and validation rules. No migration is required.
 
 Provision the read-only SQL user with `database/05_rule_reader.sql` before executing controls. The application identity needs permission to impersonate that user. SQL scripts/migrations alone do not automatically apply this permission setup. See [docs/RULE_EXECUTION.md](docs/RULE_EXECUTION.md) for setup, semantics, limits and tests; examples are in `backend/DataControls.Api/Execution.http`.
 
