@@ -9,7 +9,7 @@ import { BusinessValuePipe } from '../business-value.pipe';
   template: `
     @let node = condition();
     @if (node.kind === 'group') {
-      <div class="group">
+      <div class="group" [class.or-group]="node.operator === 'or'">
         <strong>{{
           node.operator === 'and'
             ? 'כל התנאים הבאים מתקיימים (וגם):'

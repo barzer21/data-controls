@@ -1,11 +1,11 @@
-dialog {
+﻿dialog {
   width: min(1250px, 95vw);
   max-height: 92dvh;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius);
   color: var(--text);
-  background: white;
+  background: var(--surface);
   box-shadow: 0 20px 70px #10273540;
 }
 dialog[open] {
@@ -13,7 +13,7 @@ dialog[open] {
   flex-direction: column;
 }
 dialog::backdrop {
-  background: #10273580;
+  background: #153c3880;
 }
 header,
 footer {
@@ -36,7 +36,7 @@ header p {
   margin-block: 0.5rem 0;
 }
 footer {
-  background: #f8fafc;
+  background: var(--surface-subtle);
   border-block-start: 1px solid var(--border);
   flex-wrap: wrap;
 }
@@ -88,10 +88,10 @@ h3 {
   flex-wrap: wrap;
 }
 .error-summary {
-  border: 1px solid #dba4a4;
+  border: 1px solid var(--danger);
   border-radius: 6px;
-  background: #fff4f4;
-  color: #8b2020;
+  background: var(--danger-soft);
+  color: var(--danger);
   padding: 1rem;
   margin-block-end: 1rem;
 }
@@ -100,7 +100,7 @@ h3 {
   line-height: 1.7;
 }
 .notice {
-  background: #fff8e8;
+  background: var(--warning-soft);
   padding: 1rem;
   margin-block-start: 1rem;
   border-radius: 6px;
@@ -114,4 +114,60 @@ h3 {
   height: 450px;
   margin-block-start: 1rem;
   border: 1px solid var(--border);
+}
+header {
+  background: var(--surface-subtle);
+  padding: 1.4rem 1.6rem;
+}
+header h2 {
+  color: var(--text);
+  font-size: 1.65rem;
+}
+label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.condition-section {
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--border);
+}
+.notice {
+  color: var(--warning);
+  border-inline-start: 3px solid var(--warning);
+}
+.notice button {
+  margin-inline-end: 0.5rem;
+  margin-block: 0.25rem;
+}
+.error-summary {
+  border-inline-start-width: 4px;
+}
+.preview-table {
+  border-radius: 10px;
+  overflow: hidden;
+}
+@media (max-width: 760px) {
+  dialog {
+    width: calc(100vw - 1rem);
+    max-width: none;
+    max-height: 96dvh;
+  }
+  header,
+  footer,
+  .dialog-content {
+    padding: 1rem;
+  }
+  header {
+    align-items: start;
+  }
+  .basic-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .footer-actions {
+    width: 100%;
+    gap: 0.5rem;
+  }
+  .footer-actions button {
+    flex: 1;
+  }
 }

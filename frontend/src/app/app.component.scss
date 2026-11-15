@@ -1,0 +1,122 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.app-rail {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  padding: 2rem 1.15rem;
+  background: var(--rail);
+  color: #e8f4ed;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+.app-brand {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  text-decoration: none;
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.app-brand small {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  margin-top: 0.4rem;
+  text-align: start;
+  color: #b1ccc1;
+}
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border: 7px solid #9bdbb9;
+  border-radius: 50% 50% 8px 50%;
+  flex-shrink: 0;
+}
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #c5dcd4;
+  font-size: 0.9rem;
+}
+nav a.active,
+nav a:hover {
+  color: white;
+  background: #2c554d;
+}
+nav a span {
+  font-size: 1.3rem;
+}
+.rail-note {
+  margin-top: auto;
+  padding-top: 1.25rem;
+  border-top: 1px solid #3b5c54;
+  color: #b1ccc1;
+  font-size: 0.8rem;
+  line-height: 1.9;
+}
+.app-workspace {
+  min-width: 0;
+}
+.workspace-header {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2.4rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.workspace-header span span {
+  margin-inline: 0.6rem;
+  color: var(--border-strong);
+}
+.workspace-label {
+  color: var(--accent);
+}
+.skip-link {
+  position: fixed;
+  top: -100px;
+  inset-inline-start: 1rem;
+  z-index: 100;
+  background: white;
+  color: var(--accent);
+  padding: 1rem;
+  border-radius: 8px;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .app-rail {
+    position: static;
+    height: auto;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .app-brand {
+    font-size: 1.2rem;
+  }
+  .app-brand small,
+  .rail-note,
+  .workspace-header {
+    display: none;
+  }
+  nav a {
+    padding: 0.6rem 0.8rem;
+  }
+}

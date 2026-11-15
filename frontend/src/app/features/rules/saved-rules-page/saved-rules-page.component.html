@@ -1,12 +1,10 @@
-<header class="app-header">
-  <div class="header-content">
-    <span class="brand" lang="en" dir="ltr">Data Controls</span><span>בקרות נתונים</span>
-  </div>
-</header>
 <main id="main-content">
   <div class="page-heading">
-    <h1>בקרות שמורות</h1>
-    <p class="intro">כל הבקרות שהוגדרו לבדיקת הנתונים העסקיים, במקום אחד.</p>
+    <div class="heading-copy">
+      <p class="eyebrow">סביבת הבקרות / ספריית הבקרות</p>
+      <h1>בקרות שמורות</h1>
+      <p class="intro">כל הבקרות שהוגדרו לבדיקת הנתונים העסקיים, במקום אחד.</p>
+    </div>
     <button
       type="button"
       class="primary new-rule"
@@ -32,6 +30,19 @@
     <p class="save-notice" role="status">{{ saveNotice() }}</p>
   }
   @let current = state();
+  @if (current.status === 'loaded') {
+    <section class="library-overview" aria-label="סקירת ספריית הבקרות">
+      <div>
+        <h2>נתונים שאפשר לסמוך עליהם.</h2>
+        <p>בחרו בקרה כדי להריץ אותה על הנתונים העדכניים.</p>
+      </div>
+      <div class="library-total">
+        <strong>{{ current.result.totalCount }}</strong
+        ><span>בקרות שמורות</span>
+      </div>
+      <span class="overview-mark" aria-hidden="true">◎</span>
+    </section>
+  }
   <section
     class="panel"
     aria-label="רשימת בקרות שמורות"

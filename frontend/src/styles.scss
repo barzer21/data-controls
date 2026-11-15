@@ -1,12 +1,27 @@
 :root {
-  --text: #172b3a;
-  --text-muted: #536577;
-  --accent: #195d73;
-  --accent-soft: #eaf3f5;
-  --border: #dde5eb;
+  --text: #183a38;
+  --text-muted: #59716e;
+  --accent: #116b5b;
+  --accent-soft: #e6f2ec;
+  --border: #d5e2dd;
+  --border-strong: #a7beb5;
+  --surface: #fff;
+  --surface-subtle: #f7fbf9;
+  --background: #f4f7f6;
+  --rail: #153c38;
+  --danger: #a12e2e;
+  --danger-soft: #fff0ed;
+  --success: #206243;
+  --success-soft: #e9f5eb;
+  --warning: #82531d;
+  --warning-soft: #fff6e6;
+  --or: #74529c;
+  --or-soft: #f7f3fc;
+  --radius: 14px;
   font-family: Arial, 'Segoe UI', sans-serif;
   color: var(--text);
-  background: #f3f6f9;
+  background: var(--background);
+  line-height: 1.6;
 }
 * {
   box-sizing: border-box;
@@ -20,9 +35,9 @@ textarea {
   font: inherit;
   color: var(--text);
   background: white;
-  border: 1px solid #bac8d3;
-  border-radius: 6px;
-  min-height: 42px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  min-height: 44px;
   padding: 0.55rem 0.7rem;
   width: 100%;
   min-width: 0;
@@ -40,8 +55,9 @@ button {
   font: inherit;
   color: var(--text);
   background: white;
-  border: 1px solid #bac8d3;
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-weight: 600;
   min-height: 44px;
   padding: 0.55rem 1.1rem;
   cursor: pointer;
@@ -64,7 +80,28 @@ button.primary {
   border-color: var(--accent);
 }
 button.primary:hover {
-  background: #12485a;
+  background: #0d5548;
+}
+a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.app-rail a:focus-visible {
+  outline-color: #9bdbb9;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 .sr-only {
   position: absolute;

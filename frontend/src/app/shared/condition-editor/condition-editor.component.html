@@ -1,6 +1,7 @@
 @let node = condition();
 @if (node.kind === 'group') {
-  <div class="condition-group">
+  <div class="condition-group" [class.or-group]="node.operator === 'or'">
+    <span class="logic-badge" aria-hidden="true">{{ node.operator === 'and' ? 'AND' : 'OR' }}</span>
     <label class="group-operator"
       >קבוצת תנאים
       <select

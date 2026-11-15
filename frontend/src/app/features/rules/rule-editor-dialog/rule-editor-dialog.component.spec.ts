@@ -112,7 +112,11 @@ describe('Rule editor dialog with API transport', () => {
     expect(text).toContain('בקרה חדשה');
     expect(text).toContain('נתוני בדיקה');
     expect(text).toContain('סכום עסקי');
-    expect(text).toContain('הרצה ללא שמירה');
+    const runButton = Array.from(
+      fixture.nativeElement.querySelectorAll('.footer-actions button[type="button"]'),
+    ).find((node) => (node as HTMLButtonElement).textContent?.trim() === 'הרצה');
+    expect(runButton).toBeDefined();
+    expect(text).toContain('שמירה והרצה הן פעולות נפרדות.');
     expect(text).toContain('שמירת בקרה');
     http.expectNone(() => true);
   });

@@ -1,11 +1,11 @@
-:host {
+﻿:host {
   display: block;
   flex-shrink: 0;
   max-height: 35dvh;
   overflow: auto;
   border-block-end: 1px solid var(--border);
   padding: 0.85rem 1.25rem;
-  background: #fafbfd;
+  background: var(--surface);
 }
 .filter-toolbar,
 .search-form,
@@ -43,9 +43,9 @@
 .column-panel {
   padding: 0.8rem;
   margin-block-start: 0.8rem;
-  background: white;
+  background: var(--surface-subtle);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
 }
 .column-panel label {
   max-width: 250px;
@@ -62,6 +62,32 @@
   font-size: 0.8rem;
 }
 .filter-error {
-  color: #8b2020;
+  color: var(--danger);
   margin-block: 0.6rem 0;
+}
+.chip {
+  border-radius: 30px;
+}
+.column-panel strong {
+  color: var(--accent);
+}
+@media (max-width: 760px) {
+  :host {
+    max-height: none;
+    padding: 1rem;
+  }
+  .search-form label,
+  .column-picker {
+    min-width: 0;
+  }
+  .search-form {
+    flex-basis: 100%;
+  }
+  .column-picker {
+    flex: 1;
+  }
+  .column-panel label {
+    max-width: none;
+    min-width: 120px;
+  }
 }

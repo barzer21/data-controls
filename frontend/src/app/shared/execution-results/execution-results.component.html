@@ -1,5 +1,5 @@
 @let data = result();
-<div class="result-summary" role="status">
+<div class="result-summary" role="status" [class.has-violations]="data.totalCount > 0">
   <strong
     >{{ filtered() ? 'חריגות התואמות לחיפוש ולסינון:' : 'מספר החריגות:' }}
     {{ data.totalCount | businessValue }}</strong
@@ -89,7 +89,21 @@
                 <bdi>{{ record.values[column.id] | businessValue: column.type }}</bdi>
               </td>
             }
-            <td class="failure-reason">{{ record.failureReason }}</td>
+            <td class="failure-reason">
+              <div class="failure-message">
+                <svg
+                  class="failure-icon"
+                  aria-hidden="true"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M10 5v6m0 2v1" stroke-width="2" /></svg
+                ><span>{{ record.failureReason }}</span>
+              </div>
+            </td>
           </tr>
         }
       </tbody>
