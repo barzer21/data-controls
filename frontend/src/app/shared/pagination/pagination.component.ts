@@ -3,21 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 @Component({
   selector: 'app-pagination',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <nav aria-label="דפדוף ברשימת הבקרות" class="pagination">
-      <button type="button" [disabled]="page() <= 1" (click)="pageChange.emit(page() - 1)">
-        הקודם
-      </button>
-      <span aria-live="polite">עמוד {{ page() }} מתוך {{ totalPages() }}</span>
-      <button
-        type="button"
-        [disabled]="page() >= totalPages()"
-        (click)="pageChange.emit(page() + 1)"
-      >
-        הבא
-      </button>
-    </nav>
-  `,
+  templateUrl: './pagination.component.html',
   styleUrl: './pagination.component.scss',
 })
 export class PaginationComponent {

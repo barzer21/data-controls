@@ -1,0 +1,23 @@
+<section class="editor-card read-view" aria-label="הגדרת הבקרה לקריאה">
+  <div class="read-heading">
+    <div>
+      <span class="read-label">הגדרת הבקרה{{ unsaved() ? ' · שינויים שטרם נשמרו' : '' }}</span>
+      <h2>{{ definition().name || 'בקרה ללא שם' }}</h2>
+      <p>{{ definition().description || 'לא נוסף תיאור לבקרה.' }}</p>
+    </div>
+    <span class="entity-badge">{{ entityLabel() }}</span>
+  </div>
+  <div class="read-summary">
+    <span>מה הבקרה מאתרת?</span>
+    <p>{{ summary() }}</p>
+  </div>
+  <h3>תנאי החריגה</h3>
+  <app-rule-condition
+    [condition]="definition().condition"
+    [rootEntityId]="definition().rootEntityId"
+    [metadata]="metadata()"
+  />
+  <button type="button" class="back-to-edit" (click)="edit.emit()">
+    <app-ui-icon name="edit" />עריכת הבקרה
+  </button>
+</section>

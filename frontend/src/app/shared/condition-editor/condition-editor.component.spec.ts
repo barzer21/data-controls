@@ -97,9 +97,86 @@ describe('Metadata-driven condition editing', () => {
   it('offers only matching types for field-to-field comparisons', () => {
     editor.changeLeft(field('start').key);
     editor.changeOperand('field');
-    expect(editor.compatibleFields().map((f) => f.reference.fieldId)).toEqual(['start', 'end']);
+    expect(editor.compatibleFields().map((f) => f.reference.fieldId)).toEqual(['end']);
     editor.changeRightField(field('end').key);
     expect(emitted).toMatchObject({ right: { kind: 'field', field: { fieldId: 'end' } } });
+  });
+
+  it('locks related boolean comparisons while preserving null checks and boolean fields', () => {
+    editor.changeOperator('greaterThan');
+    const related = editor.fields().find((f) => !!f.reference.relationshipPath)!;
+    editor.changeLeft(related.key);
+    fixture.detectChanges();
+    expect(editor.operators().map((op) => op.id)).toEqual([
+      'equals',
+      'notEquals',
+      'isNull',
+      'isNotNull',
+    ]);
+    expect(emitted).toMatchObject({ operator: 'equals', right: { kind: 'constant', value: true } });
+    const selects = fixture.nativeElement.querySelectorAll(
+      '.comparison select',
+    ) as NodeListOf<HTMLSelectElement>;
+    expect(Array.from(selects[1].options, (option) => option.value)).toEqual([
+      'equals',
+      'notEquals',
+      'isNull',
+      'isNotNull',
+    ]);
+    const listener = vi.fn();
+    editor.conditionChange.subscribe(listener);
+    editor.changeOperator('greaterThan');
+    editor.changeConstant('15000');
+    expect(listener).not.toHaveBeenCalled();
+    editor.changeOperand('field');
+    expect(editor.compatibleFields().every((f) => f.type === 'boolean')).toBe(true);
+    expect(editor.compatibleFields().length).toBe(1);
+    editor.changeOperator('isNull');
+    expect('right' in emitted).toBe(false);
+    editor.changeOperator('isNotNull');
+    expect('right' in emitted).toBe(false);
+  });
+
+  it('does not silently display an invalid boolean value as no', async () => {
+    fixture.componentRef.setInput('condition', {
+      kind: 'comparison',
+      left: { fieldId: 'active', relationshipPath: ['unitLink'] },
+      operator: 'equals',
+      right: { kind: 'constant', value: 'invalid' },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelectorAll(
+      '.comparison select',
+    )[3] as HTMLSelectElement;
+    expect(select.value).toBe('');
+    expect(select.selectedOptions[0].textContent).toContain('יש לבחור כן או לא');
+  });
+
+  it('excludes the same related field while allowing the root field with the same name', () => {
+    const related = editor.fields().find((f) => !!f.reference.relationshipPath)!;
+    editor.changeLeft(related.key);
+    expect(editor.compatibleFields().map((f) => f.key)).toEqual([field('active').key]);
+    editor.changeOperand('field');
+    expect(emitted).toMatchObject({ right: { kind: 'field', field: { fieldId: 'active' } } });
+    expect(editor.rightFieldAvailable(related.key)).toBe(false);
+    const listener = vi.fn();
+    editor.conditionChange.subscribe(listener);
+    editor.changeRightField(related.key);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('disables field comparison when no distinct field of the same type exists', () => {
+    fixture.detectChanges();
+    const kind = fixture.nativeElement.querySelectorAll(
+      '.comparison select',
+    )[2] as HTMLSelectElement;
+    expect(kind.querySelector<HTMLOptionElement>('option[value="field"]')!.disabled).toBe(true);
+    const listener = vi.fn();
+    editor.conditionChange.subscribe(listener);
+    editor.changeOperand('field');
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it('builds nested AND/OR groups and preserves siblings during updates and removals', () => {

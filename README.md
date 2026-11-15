@@ -1,5 +1,11 @@
 # Data Controls
 
+For a guided walkthrough of the code, start with [the Hebrew code map](docs/CODE_GUIDE.md).
+
+## AI rule proposals — Python mock
+
+The sidebar links to a dedicated AI creation page at `/rules/ai/new`, with five supported mock examples. `POST /api/ai/proposals` accepts a description, supplies trusted business metadata to the local Python mock and validates the returned proposal with the existing rule validator. Proposal review and editing remain on the same page without a dialog. Saving and draft execution require explicit approval, which resets after every edit; neither happens automatically. Unsaved departure is guarded and pending AI requests can be cancelled. Run the Python service alongside the backend and Angular. See [docs/AI_SERVICE.md](docs/AI_SERVICE.md) for startup commands, supported responses and integration checks, and [python-ai/README.md](python-ai/README.md) for the supported mock descriptions.
+
 ## Angular frontend — saved rules and execution results
 
 Requires Node.js `^22.22.3 || ^24.15.0 || ^26.0.0` and npm. Angular 22 compatibility: [official version table](https://angular.dev/reference/versions).
@@ -20,9 +26,9 @@ npm.cmd start
 
 Open `http://localhost:4200`. The development proxy in `frontend/proxy.conf.json` forwards `/api/**` to `http://localhost:5037`; API services use relative URLs. Restart `npm.cmd start` after changing the proxy. No backend CORS change is required for this development setup. Production hosting must separately route `/api` to the backend; the development proxy is not part of the production build.
 
-The saved rules page (`/rules?page=1`) displays names, descriptions and metadata-based business entity labels, with server pagination (20 per page), loading, empty and retry states. New Rule (plus icon) and per-rule Edit open a shared modal editor for name/description, business data and nested AND/OR conditions. Fields and relationships come from metadata; comparisons support typed constants or other fields of the same type. Saving is explicit; running a draft does not save it and displays its results within the modal. See [docs/UI_EDITOR.md](docs/UI_EDITOR.md).
+The saved rules page (`/rules?page=1`) displays names, descriptions and metadata-based business entity labels, with server pagination (20 per page), loading, empty and retry states. New Rule in the sidebar opens a full page at `/rules/new`; per-rule Edit opens a full page at `/rules/{id}/edit?page={listPage}`. Both use the same editor for name/description, business data and nested AND/OR conditions. Fields and relationships come from metadata; comparisons support typed constants or other fields of the same type. Boolean fields offer equality/inequality, missing/not-missing and yes/no constants; ordering is available only for numeric/date fields. Saving is explicit; running a draft does not save it and displays its results within the editor. The edit page preserves the list page on return and guards unsaved departures. See [docs/UI_EDITOR.md](docs/UI_EDITOR.md).
 
-Each rule also has a Run action opening `/rules/{id}/results?page={listPage}`. Results show the exact executed definition in Hebrew above a scrollable table, total violation count, server-defined columns and per-row failure reasons. Back returns to the same list page. The desktop results view keeps the rule context and table headers visible while scrolling. Search runs across displayed text fields; filter icons in data column headers open typed comparisons. Multiple column filters combine with AND, with active chips and individual/all reset. They run on the server before counting/limiting and never change the rule or its failure explanations. See [docs/UI_RESULT_FILTERS.md](docs/UI_RESULT_FILTERS.md). Result pagination and deletion remain future increments. An empty database correctly shows an empty list; rules can be created using the New Rule button. The frontend never creates sample data automatically.
+Each rule also has a Run action opening `/rules/{id}/results?page={listPage}`. Results show the exact executed definition in Hebrew above a scrollable table, total violation count, server-defined columns and per-row failure reasons. Back returns to the same list page. The desktop results view keeps the rule context and table headers visible while scrolling. Search runs across displayed text fields; filter icons in data column headers open typed comparisons. Multiple column filters combine with AND, with active chips and individual/all reset. They run on the server before counting/limiting and never change the rule or its failure explanations. See [docs/UI_RESULT_FILTERS.md](docs/UI_RESULT_FILTERS.md). Result pagination and deletion remain future increments. An empty database correctly shows an empty list; rules can be created using the New Rule sidebar link. The frontend never creates sample data automatically.
 
 To keep the displayed conditions consistent with execution, the UI loads the saved definition by ID and submits that snapshot to the existing draft execution endpoint. This does not save or edit the rule. Results are capped at 100 rows with an explicit truncation notice. See [docs/UI_RESULTS.md](docs/UI_RESULTS.md) for behavior, verification and limits.
 
@@ -46,7 +52,9 @@ Each violating record also contains a Hebrew `failureReason` and structured `exp
 
 ## Save, open and edit rules
 
-The API now supports create/list/get/update/delete under `/api/rules`. Apply the `AddSavedRules` migration or run `database/04_create_rules.sql` once on a database with InitialCreate before using persistence endpoints. Existing databases are not upgraded automatically. Validation and metadata endpoints continue to work without the Rules table.
+The API now supports create/list/get/update/delete under `/api/rules`. Apply the pending EF migrations or follow the SQL setup below before using persistence endpoints. An existing database with the Rules table needs `database/06_add_rule_ai_origin.sql` (or the `AddRuleAiOrigin` migration) for the persisted AI-origin badge. Existing databases are not upgraded automatically. Validation and metadata endpoints continue to work without the Rules table.
+
+The list uses consecutive display numbers across pages, independently of database IDs. New AI-created rules are saved with `POST /api/rules?createdWithAi=true`; manual creation defaults to false. The flag is returned in saved-rule and summary responses, preserved during edits, and shown as a small badge. Existing rules default to false because their creation source was not recorded; the app does not infer it from their names or conditions.
 
 See [docs/RULE_PERSISTENCE.md](docs/RULE_PERSISTENCE.md) for API response shapes, schema upgrade paths, limitations and verification. Example requests: `backend/DataControls.Api/SavedRules.http`. The persistence test creates its own database: `powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-RulePersistence.ps1`.
 
@@ -92,14 +100,15 @@ For a fresh database, run these scripts once in numeric order in SSMS:
 3. `database/03_seed_data.sql`
 4. `database/04_create_rules.sql`
 5. `database/05_rule_reader.sql`
+6. `database/06_add_rule_ai_origin.sql`
 
-Scripts 02/04 create the schema and record InitialCreate/AddSavedRules in EF history. Alternatively run `dotnet ef database update --project backend/DataControls.Api`, then seed with 03 and provision permissions with 05. Do not run both schema paths for the same migration. Script 03 can be repeated without adding duplicate seed rows; script 05 is repeatable permission setup.
+Scripts 02/04/06 create or upgrade the schema and record InitialCreate/AddSavedRules/AddRuleAiOrigin in EF history. Alternatively run `dotnet ef database update --project backend/DataControls.Api`, then seed with 03 and provision permissions with 05. Do not run both schema paths for the same migration. Script 03 can be repeated without adding duplicate seed rows; script 05 is repeatable permission setup, and script 06 skips an already-recorded migration.
 
 Employee runs return all employee fields, departmentId and department name, with the employee ID separately in record.id. The server catalog's relatedColumns setting supplies the related name without request-level column selection.
 
 ## Verify the database in SSMS
 
-After running all five scripts, open a new query window and execute:
+After running all six scripts, open a new query window and execute:
 
 ```sql
 USE [DataControlsDb];

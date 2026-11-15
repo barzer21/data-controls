@@ -1,7 +1,7 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, combineLatest, forkJoin, map, of, startWith, Subject, switchMap } from 'rxjs';
 import {
   MetadataResponse,
@@ -9,9 +9,9 @@ import {
   SavedRuleResponse,
   RuleResultColumn,
 } from '../../../core/api/api.models';
-import { RulesApiService } from '../../../core/api/rules-api.service';
 import { MetadataApiService } from '../../../core/api/metadata-api.service';
-import { RuleConditionComponent } from '../../../shared/rule-condition/rule-condition.component';
+import { RulesApiService } from '../../../core/api/rules-api.service';
+import { ruleListPage } from '../../../core/routing/rule-list-page';
 import { ExecutionResultsComponent } from '../../../shared/execution-results/execution-results.component';
 import { ResultFiltersComponent } from '../../../shared/result-filters/result-filters.component';
 import {
@@ -20,6 +20,7 @@ import {
   filterColumns,
   ResultFilterSelection,
 } from '../../../shared/result-filters/result-filters.model';
+import { RuleConditionComponent } from '../../../shared/rule-condition/rule-condition.component';
 
 interface Snapshot {
   saved: SavedRuleResponse;
@@ -62,8 +63,7 @@ export class RuleResultsPageComponent {
     () => !!this.filterSelection().search.trim() || this.filterSelection().filters.length > 0,
   );
   get returnPage(): number {
-    const page = Number(this.route.snapshot.queryParamMap.get('page') ?? 1);
-    return Number.isSafeInteger(page) && page > 0 && (page - 1) * 20 <= 2147483647 ? page : 1;
+    return ruleListPage(this.route.snapshot.queryParamMap.get('page'));
   }
 
   constructor() {

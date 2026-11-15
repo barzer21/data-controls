@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { MetadataResponse, RuleSummary } from '../../../core/api/api.models';
 import { SavedRulesPageComponent } from './saved-rules-page.component';
 
@@ -26,7 +26,6 @@ function rule(id: number, description: string | null = 'תיאור עסקי'): R
 describe('Saved rules page with API services', () => {
   let fixture: ComponentFixture<SavedRulesPageComponent>;
   let http: HttpTestingController;
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SavedRulesPageComponent],
@@ -61,50 +60,23 @@ describe('Saved rules page with API services', () => {
     ).find((element) => element.textContent?.trim() === text)!;
   }
 
-  it('refreshes the final list page after creating a rule and reports success', () => {
+  it('keeps AI creation out of the list heading', () => {
     http.expectOne('/api/metadata').flush(metadata);
-    finishList([rule(1)], 46);
-    const page = fixture.componentInstance;
-    page.openEditor(null);
-    page.onSaved({
-      id: 47,
-      definition: {
-        name: 'בקרה חדשה',
-        description: null,
-        rootEntityId: 'customEntity',
-        condition: { kind: 'comparison', left: { fieldId: 'any' }, operator: 'isNull' },
-      },
-      definitionVersion: 1,
-      createdAtUtc: '',
-      updatedAtUtc: '',
-    });
-    finishList([rule(47)], 47, 3);
-    expect(page.editor()).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('נשמרה בהצלחה');
-    expect(fixture.nativeElement.textContent).toContain('עמוד 3 מתוך 3');
+    finishList([]);
+    expect(fixture.nativeElement.querySelector('.ai-create')).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-ai-rule-creator')).toBeNull();
   });
 
-  it('refreshes the current page after editing an existing rule', () => {
+  it('opens saved-rule editing as a route and preserves the current list page', () => {
     http.expectOne('/api/metadata').flush(metadata);
     finishList([rule(1)], 46);
     button('הבא').click();
     finishList([rule(21)], 46, 2);
-    const page = fixture.componentInstance;
-    page.openEditor(21);
-    page.onSaved({
-      id: 21,
-      definition: {
-        name: 'בקרה מעודכנת',
-        description: null,
-        rootEntityId: 'customEntity',
-        condition: { kind: 'comparison', left: { fieldId: 'any' }, operator: 'isNull' },
-      },
-      definitionVersion: 1,
-      createdAtUtc: '',
-      updatedAtUtc: '',
-    });
-    finishList([rule(21)], 46, 2);
-    expect(fixture.nativeElement.textContent).toContain('עמוד 2 מתוך 3');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fixture.nativeElement.querySelector('.entity-field button:not(.primary)').click();
+    expect(navigate).toHaveBeenCalledWith(['/rules', 21, 'edit'], { queryParams: { page: 2 } });
+    expect(fixture.nativeElement.querySelector('app-rule-editor')).toBeNull();
+    http.expectNone('/api/rules/21');
   });
 
   it('shows loading until both the list and business metadata arrive', () => {
@@ -127,6 +99,19 @@ describe('Saved rules page with API services', () => {
     expect(text).not.toContain('customEntity');
   });
 
+  it('numbers list positions independently of IDs and badges only AI-created rules', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([
+      { ...rule(7), createdWithAi: true },
+      { ...rule(99), createdWithAi: false },
+    ]);
+    const rows = fixture.nativeElement.querySelectorAll('.rule');
+    expect(rows[0].querySelector('.rule-mark').textContent.trim()).toBe('1');
+    expect(rows[1].querySelector('.rule-mark').textContent.trim()).toBe('2');
+    expect(rows[0].querySelector('.ai-origin').textContent).toContain('נוצרה בעזרת AI');
+    expect(rows[1].querySelector('.ai-origin')).toBeNull();
+  });
+
   it('uses server pagination, caches metadata, and disables buttons at the boundaries', () => {
     http.expectOne('/api/metadata').flush(metadata);
     finishList([rule(1)], 21);
@@ -137,10 +122,12 @@ describe('Saved rules page with API services', () => {
     expect(fixture.nativeElement.textContent).toContain('טוען');
     http.expectNone('/api/metadata');
     finishList([rule(21)], 21, 2);
+    expect(fixture.nativeElement.querySelector('.rule-mark').textContent.trim()).toBe('21');
     expect(fixture.nativeElement.textContent).toContain('עמוד 2 מתוך 2');
     expect(button('הבא').disabled).toBe(true);
     button('הקודם').click();
     finishList([rule(1)], 21);
+    expect(fixture.nativeElement.querySelector('.rule-mark').textContent.trim()).toBe('1');
     expect(fixture.nativeElement.textContent).toContain('עמוד 1 מתוך 2');
   });
 

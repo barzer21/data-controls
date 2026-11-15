@@ -16,14 +16,14 @@
 | Order | Work package | Requirements | Current state |
 |---|---|---|---|
 | 0 | Requirement baseline and metadata approach | DB-03, all SUB | JSON catalog selected; review continues |
-| 1 | SQL schema and seed scripts | DB-01, DB-02, SUB-02 | Clean setup from scripts 01–05 |
+| 1 | SQL schema and seed scripts | DB-01, DB-02, SUB-02 | Scripts 01–06 include persisted rule creation origin; existing data preserved |
 | 2 | Metadata API and Hebrew labels | DB-03, GEN-03, RULE-02, RULE-05 | Implemented and tested |
 | 3 | Rule definition and validation | RULE-01, RULE-03, EXEC-03 | Implemented and tested |
 | 4 | Rule persistence and CRUD | DB-04, RULE-04 | Implemented and tested |
 | 5 | SQL compiler and read-only executor | EXEC-01..06, TECH-04 | Draft/saved execution with full employee and department name |
 | 6 | Explanations, counts, search and filtering | RESULTS-03..06 | Implemented via API; UI pending |
 | 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | First increment: Angular setup + saved list with server pagination; 10 tests, live proxy and Edge checks (docs/FRONTEND_LIST.md) |
-| 8 | Python AI mock and approval flow | AI-01..07, TECH-02 | Not started |
+| 8 | Python AI mock and approval flow | AI-01..07, TECH-02 | Implemented: five mock examples, metadata contract, validated .NET adapter and Angular approval flow; 69 UI tests and live backend/Python checks; browser demo pending |
 | 9 | Documentation and clean setup verification | SUB-01..08 | In progress |
 
 ## Architecture decisions currently proposed (subject to review)
@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review the results, generic modal editor and result search/filter increments (docs/UI_RESULTS.md, docs/UI_EDITOR.md, docs/UI_RESULT_FILTERS.md). Create/edit, nested conditions, explicit save, unsaved execution and temporary server-side column filtering/search are implemented; 54 frontend tests pass. Next increments add true backend result pagination and rule deletion. Full-record results (D-020) and clean database setup through scripts 01–05 were verified. Calculated age and Python AI mock remain separate tasks.
+Review the AI flow in a browser with Angular, .NET and Python running (docs/AI_SERVICE.md). Five mock examples, business metadata, shared server validation, editable proposal review and explicit approval before save/run are implemented. Saved-rule editing now uses a guarded full-page route, and related boolean comparisons enforce type-compatible options; 84 frontend tests and live backend/Python checks pass. Native Edge UI checks cover full-page editing, branding, boolean controls and dialog close behavior. The full live three-service browser demo remains pending. Future increments include true backend result pagination, rule deletion in the UI and calculated age.

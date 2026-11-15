@@ -1,0 +1,26 @@
+<app-result-filters
+  #filters
+  [columns]="filterColumns()"
+  [selection]="selection()"
+  (selectionChange)="applyFilters($event)"
+/>
+<div class="results-content" [attr.aria-busy]="state().status === 'running'">
+  @let current = state();
+  @if (current.status === 'ready') {
+    <app-execution-results
+      [result]="current.result"
+      [enableFilters]="true"
+      [filtered]="filtered()"
+      [filterableColumnIds]="filterableColumnIds()"
+      [filteredColumnIds]="filteredColumnIds()"
+      (filterColumn)="filters.openColumn($event)"
+    />
+  } @else if (current.status === 'error') {
+    <div class="state">
+      <p role="alert">{{ current.message }}</p>
+      <button type="button" class="primary" (click)="retry()">ניסיון חוזר</button>
+    </div>
+  } @else {
+    <div class="state" role="status">מעדכנים את תוצאות ההרצה…</div>
+  }
+</div>

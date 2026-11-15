@@ -1,9 +1,18 @@
-<ul class="rule-list" aria-label="בקרות שמורות">
-  @for (rule of rules(); track rule.id) {
+<ol class="rule-list" [attr.start]="startIndex() + 1" aria-label="בקרות שמורות">
+  @for (rule of rules(); track rule.id; let index = $index) {
     <li class="rule">
-      <span class="rule-mark" aria-hidden="true">▤</span>
+      <span class="rule-mark" [attr.aria-label]="'בקרה מספר ' + (startIndex() + index + 1)"
+        ><bdi>{{ startIndex() + index + 1 }}</bdi></span
+      >
       <div class="rule-details">
-        <h2>{{ rule.name }}</h2>
+        <div class="rule-title">
+          <h2>{{ rule.name }}</h2>
+          @if (rule.createdWithAi) {
+            <span class="ai-origin" title="הבקרה נוצרה בעזרת AI; ייתכן שנערכה לאחר מכן"
+              ><span aria-hidden="true">✦</span> נוצרה בעזרת AI</span
+            >
+          }
+        </div>
         <p>{{ rule.description || 'לא נוסף תיאור לבקרה זו.' }}</p>
       </div>
       <div class="entity-field">
@@ -26,4 +35,4 @@
       </div>
     </li>
   }
-</ul>
+</ol>

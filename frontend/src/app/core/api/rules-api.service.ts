@@ -25,9 +25,11 @@ export class RulesApiService {
     return this.http.post<RuleValidationResult>('/api/rules/validate', definition);
   }
 
-  save(id: number | null, definition: RuleDefinition) {
+  save(id: number | null, definition: RuleDefinition, createdWithAi = false) {
     return id === null
-      ? this.http.post<SavedRuleResponse>('/api/rules', definition)
+      ? this.http.post<SavedRuleResponse>('/api/rules', definition, {
+          params: createdWithAi ? { createdWithAi: 'true' } : {},
+        })
       : this.http.put<SavedRuleResponse>(`/api/rules/${id}`, definition);
   }
 

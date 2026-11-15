@@ -1,7 +1,6 @@
 @let node = condition();
 @if (node.kind === 'group') {
   <div class="condition-group" [class.or-group]="node.operator === 'or'">
-    <span class="logic-badge" aria-hidden="true">{{ node.operator === 'and' ? 'AND' : 'OR' }}</span>
     <label class="group-operator"
       >קבוצת תנאים
       <select
@@ -16,6 +15,9 @@
     <ol>
       @for (child of node.children; track $index) {
         <li>
+          @if (!$first) {
+            <div class="condition-join">{{ node.operator === 'and' ? 'וגם' : 'או' }}</div>
+          }
           <div class="child-heading">
             <span>תנאי {{ $index + 1 }}</span
             ><button
@@ -24,7 +26,7 @@
               (click)="removeChild($index)"
               [attr.aria-label]="'הסר תנאי ' + ($index + 1)"
             >
-              הסר
+              <app-ui-icon name="trash" />
             </button>
           </div>
           <app-condition-editor
@@ -38,9 +40,11 @@
       }
     </ol>
     <div class="group-actions">
-      <button type="button" [disabled]="depth() >= 8" (click)="addChild(false)">הוסף תנאי</button>
+      <button type="button" [disabled]="depth() >= 8" (click)="addChild(false)">
+        ＋ הוספת תנאי
+      </button>
       <button type="button" [disabled]="depth() >= 7" (click)="addChild(true)">
-        הוסף קבוצת תנאים
+        ＋ הוספת קבוצה
       </button>
     </div>
   </div>
@@ -64,6 +68,7 @@
     <label
       >השוואה
       <select
+        [disabled]="!leftField()"
         [ngModel]="node.operator"
         [ngModelOptions]="{ standalone: true }"
         (ngModelChange)="changeOperator($event)"
@@ -77,15 +82,18 @@
       </select>
     </label>
     @if (node.operator !== 'isNull' && node.operator !== 'isNotNull') {
-      <label
+      <label class="operand-choice"
         >להשוות אל
         <select
+          [disabled]="!leftField()"
           [ngModel]="node.right?.kind ?? 'constant'"
           [ngModelOptions]="{ standalone: true }"
           (ngModelChange)="changeOperand($event)"
         >
           <option value="constant">ערך קבוע</option>
-          <option value="field">שדה אחר</option>
+          <option value="field" [disabled]="!compatibleFields().length">
+            {{ compatibleFields().length ? 'שדה אחר' : 'שדה אחר — אין שדה מתאים נוסף' }}
+          </option>
         </select>
       </label>
       @if (node.right; as right) {
@@ -98,9 +106,7 @@
               (ngModelChange)="changeRightField($event)"
             >
               @if (!rightFieldAvailable(fieldKey(right.field))) {
-                <option [value]="fieldKey(right.field)" disabled>
-                  יש לבחור שדה זמין מאותו סוג
-                </option>
+                <option [value]="fieldKey(right.field)" disabled>יש לבחור שדה אחר מאותו סוג</option>
               }
               @for (field of compatibleFields(); track field.key) {
                 <option [value]="field.key">{{ field.label }}</option>
@@ -113,10 +119,11 @@
             @switch (leftField()?.type) {
               @case ('boolean') {
                 <select
-                  [ngModel]="right.value === true ? 'true' : 'false'"
+                  [ngModel]="right.value === true ? 'true' : right.value === false ? 'false' : ''"
                   [ngModelOptions]="{ standalone: true }"
                   (ngModelChange)="changeConstant($event)"
                 >
+                  <option value="" disabled>יש לבחור כן או לא</option>
                   <option value="true">כן</option>
                   <option value="false">לא</option>
                 </select>

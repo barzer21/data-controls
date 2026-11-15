@@ -35,6 +35,7 @@ Thumbs.db
 **/__pycache__/
 **/.venv/
 *.pyc
+python-ai/proposal.json
 
 # Local environment files
 .env

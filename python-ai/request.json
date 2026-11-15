@@ -1,0 +1,84 @@
+{
+  "description": "מצאי עובדים שהשכר שלהם גבוה מ-15000.",
+  "metadata": {
+    "version": 1,
+    "entities": [
+      {
+        "id": "employee",
+        "label": "עובדים",
+        "fields": [
+          {
+            "id": "firstName",
+            "label": "שם פרטי",
+            "type": "text"
+          },
+          {
+            "id": "lastName",
+            "label": "שם משפחה",
+            "type": "text"
+          },
+          {
+            "id": "birthDate",
+            "label": "תאריך לידה",
+            "type": "date"
+          },
+          {
+            "id": "salary",
+            "label": "שכר",
+            "type": "number"
+          },
+          {
+            "id": "startDate",
+            "label": "תחילת העסקה",
+            "type": "date"
+          },
+          {
+            "id": "endDate",
+            "label": "סיום העסקה",
+            "type": "date"
+          },
+          {
+            "id": "isActive",
+            "label": "עובד פעיל",
+            "type": "boolean"
+          },
+          {
+            "id": "departmentId",
+            "label": "מזהה מחלקה",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "id": "department",
+        "label": "מחלקות",
+        "fields": [
+          {
+            "id": "name",
+            "label": "שם המחלקה",
+            "type": "text"
+          },
+          {
+            "id": "isActive",
+            "label": "מחלקה פעילה",
+            "type": "boolean"
+          },
+          {
+            "id": "managerName",
+            "label": "שם מנהל המחלקה",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "id": "employeeDepartment",
+        "label": "מחלקת העובד",
+        "fromEntity": "employee",
+        "toEntity": "department",
+        "cardinality": "manyToOne"
+      }
+    ]
+  }
+}

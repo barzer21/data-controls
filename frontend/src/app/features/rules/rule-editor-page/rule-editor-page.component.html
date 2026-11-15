@@ -1,0 +1,26 @@
+@let current = state();
+@if (current.status === 'ready') {
+  @for (active of [current]; track active.id) {
+    <app-rule-editor
+      #editor
+      [ruleId]="active.id"
+      [metadata]="active.metadata"
+      (closed)="leave()"
+      (closeCancelled)="cancelLeave()"
+      (saved)="onSaved($event)"
+    />
+  }
+} @else {
+  <main class="editor-state" [attr.aria-busy]="current.status === 'loading'">
+    <a routerLink="/rules" [queryParams]="{ page: returnPage }">חזרה לרשימת הבקרות</a>
+    <h1>{{ isCreation ? 'יצירת בקרה חדשה' : 'עריכת בקרה' }}</h1>
+    @if (current.status === 'loading') {
+      <p role="status">טוען את הנתונים העסקיים…</p>
+    } @else {
+      <p role="alert">{{ current.message }}</p>
+      @if (current.retryable) {
+        <button type="button" class="primary" (click)="retry()">ניסיון חוזר</button>
+      }
+    }
+  </main>
+}

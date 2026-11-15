@@ -1,4 +1,5 @@
 export interface RuleSummary {
+  readonly createdWithAi?: boolean;
   readonly id: number;
   readonly name: string;
   readonly description: string | null;
@@ -69,6 +70,7 @@ export interface RuleDefinition {
 }
 
 export interface SavedRuleResponse {
+  readonly createdWithAi?: boolean;
   readonly id: number;
   readonly definition: RuleDefinition;
   readonly definitionVersion: number;

@@ -1,0 +1,50 @@
+:host {
+  display: block;
+}
+p {
+  margin: 0;
+}
+.summary-card {
+  background: #eaf1e5;
+  border: 1px solid #d5e0cc;
+  border-radius: 15px;
+  padding: 23px;
+}
+.summary-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #3c6743;
+  margin-bottom: 1.2rem;
+}
+.summary-card > p {
+  font-size: 1rem;
+  line-height: 2;
+  color: #2c5035;
+  overflow-wrap: anywhere;
+}
+.summary-card hr {
+  border: 0;
+  border-top: 1px solid #cfddc5;
+  margin: 1.2rem 0;
+}
+.summary-card small,
+.aside-note {
+  font-size: 0.73rem;
+  line-height: 1.9;
+  color: #607456;
+}
+.aside-note {
+  padding: 1rem 0.5rem;
+}
+@media (max-width: 1200px) {
+  .aside-note {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .summary-card {
+    padding: 1rem;
+  }
+}

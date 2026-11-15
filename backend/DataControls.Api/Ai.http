@@ -1,0 +1,41 @@
+@baseUrl = http://localhost:5037
+
+### Salary proposal only — does not save or execute a rule
+POST {{baseUrl}}/api/ai/proposals
+Content-Type: application/json
+
+{
+  "description": "מצאי עובדים שהשכר שלהם גבוה מ-15000."
+}
+
+### Related department proposal
+POST {{baseUrl}}/api/ai/proposals
+Content-Type: application/json
+
+{
+  "description": "מצאי עובדים פעילים שהמחלקה שלהם לא פעילה."
+}
+
+### Missing data proposal
+POST {{baseUrl}}/api/ai/proposals
+Content-Type: application/json
+
+{
+  "description": "מצאי עובדים שחסר להם שם פרטי או שכר."
+}
+
+### Unsupported mock description — 400
+POST {{baseUrl}}/api/ai/proposals
+Content-Type: application/json
+
+{
+  "description": "בקשה שאינה נתמכת בהדגמה"
+}
+
+### Empty description — 400
+POST {{baseUrl}}/api/ai/proposals
+Content-Type: application/json
+
+{
+  "description": ""
+}

@@ -1,24 +1,56 @@
-﻿:host {
+:host {
   display: block;
-  line-height: 1.8;
+  line-height: 1.9;
   overflow-wrap: anywhere;
   font-size: 0.9rem;
+  min-width: 0;
 }
 ul {
-  margin-block: 0.4rem;
-  padding-inline-start: 1.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+li + li {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e1e8db;
 }
 .group {
-  border-inline-start: 3px solid var(--accent);
-  padding-inline-start: 0.85rem;
+  border: 1px solid #dce5d6;
+  border-inline-start: 3px solid #6d9771;
+  border-radius: 11px;
+  background: #fbfcfa;
+  padding: 1.1rem;
 }
 .group.or-group {
-  border-inline-start-color: var(--or);
+  border-color: #e1d7ea;
+  border-inline-start-color: #9b80b7;
+  background: #fcfafd;
 }
 .group > strong {
-  color: var(--accent);
-  font-size: 0.85rem;
+  display: block;
+  color: #526f48;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 .group.or-group > strong {
-  color: var(--or);
+  color: #795c92;
+}
+bdi,
+.field-value {
+  display: inline-block;
+  background: #eaf1e3;
+  border-radius: 6px;
+  padding: 0.1rem 0.5rem;
+  color: #285938;
+  font-weight: 500;
+}
+.or-group bdi {
+  background: #efe8f5;
+  color: #76568e;
+}
+@media (max-width: 700px) {
+  .group {
+    padding: 0.75rem;
+  }
 }

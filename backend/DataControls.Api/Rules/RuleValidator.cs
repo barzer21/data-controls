@@ -104,6 +104,8 @@ public sealed class RuleValidator(IMetadataProvider metadata)
                     var right = Resolve(operand.Field, root, path + ".right.field");
                     if (left is not null && right is not null && left.Type != right.Type)
                         Error(path + ".right.field", "fieldTypeMismatch", "ניתן להשוות רק שדות בעלי אותו סוג נתון.");
+                    if (left is not null && right is not null && SameField(comparison.Left!, operand.Field!))
+                        Error(path + ".right.field", "sameFieldComparison", "לא ניתן להשוות שדה לעצמו. יש לבחור שדה אחר להשוואה.");
                     break;
                 case ConstantOperand constant:
                     if (constant.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
@@ -116,6 +118,10 @@ public sealed class RuleValidator(IMetadataProvider metadata)
                     break;
             }
         }
+
+        private static bool SameField(FieldReference left, FieldReference right) =>
+            string.Equals(left.FieldId, right.FieldId, StringComparison.OrdinalIgnoreCase)
+            && (left.RelationshipPath ?? []).SequenceEqual(right.RelationshipPath ?? [], StringComparer.OrdinalIgnoreCase);
 
         private MetadataField? Resolve(FieldReference? reference, MetadataEntity root, string path)
         {

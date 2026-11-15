@@ -10,6 +10,7 @@ import { MetadataEntity, RuleSummary } from '../../../core/api/api.models';
 export class SavedRulesListComponent {
   readonly rules = input.required<readonly RuleSummary[]>();
   readonly entities = input.required<readonly MetadataEntity[]>();
+  readonly startIndex = input(0);
   readonly runRule = output<number>();
   readonly editRule = output<number>();
 

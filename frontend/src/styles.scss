@@ -1,3 +1,15 @@
+@font-face {
+  font-family: 'Heebo';
+  src: url('/fonts/heebo/Heebo-variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   --text: #183a38;
   --text-muted: #59716e;
@@ -18,7 +30,7 @@
   --or: #74529c;
   --or-soft: #f7f3fc;
   --radius: 14px;
-  font-family: Arial, 'Segoe UI', sans-serif;
+  font-family: 'Heebo', Arial, sans-serif;
   color: var(--text);
   background: var(--background);
   line-height: 1.6;

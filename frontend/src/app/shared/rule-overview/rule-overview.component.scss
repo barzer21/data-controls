@@ -1,0 +1,85 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.editor-card {
+  padding: 1.6rem;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface);
+}
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+h3 {
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+p {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .editor-card {
+    padding: 1rem;
+  }
+}
+.entity-badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 25px;
+  font-size: 0.75rem;
+}
+.read-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.4rem;
+}
+.read-heading h2 {
+  font-size: 1.25rem;
+  margin: 0.6rem 0;
+}
+.read-heading p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.read-label {
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+.entity-badge {
+  flex-shrink: 0;
+}
+.read-summary {
+  background: #f0f5ec;
+  padding: 1.3rem;
+  border-radius: 11px;
+  margin-bottom: 1.5rem;
+}
+.read-summary > span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.read-summary p {
+  font-size: 1rem;
+  line-height: 1.9;
+  margin-top: 0.6rem;
+  overflow-wrap: anywhere;
+}
+.back-to-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1.5rem;
+}
+@media (max-width: 760px) {
+  .read-heading {
+    flex-direction: column;
+  }
+}

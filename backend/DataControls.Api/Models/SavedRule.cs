@@ -8,6 +8,7 @@ public sealed class SavedRule
     public string RootEntityId { get; set; } = string.Empty;
     public string ConditionJson { get; set; } = string.Empty;
     public int DefinitionVersion { get; set; } = 1;
+    public bool CreatedWithAi { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
 }

@@ -6,40 +6,7 @@ import { BusinessValuePipe } from '../business-value.pipe';
   selector: 'app-rule-condition',
   imports: [BusinessValuePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @let node = condition();
-    @if (node.kind === 'group') {
-      <div class="group" [class.or-group]="node.operator === 'or'">
-        <strong>{{
-          node.operator === 'and'
-            ? 'כל התנאים הבאים מתקיימים (וגם):'
-            : 'לפחות אחד מהתנאים הבאים מתקיים (או):'
-        }}</strong>
-        <ul>
-          @for (child of node.children; track $index) {
-            <li>
-              <app-rule-condition
-                [condition]="child"
-                [rootEntityId]="rootEntityId()"
-                [metadata]="metadata()"
-              />
-            </li>
-          }
-        </ul>
-      </div>
-    } @else {
-      <span
-        >{{ field(node.left).label }} {{ operatorLabel(node.operator) }}
-        @if (node.right; as right) {
-          @if (right.kind === 'field') {
-            {{ field(right.field).label }}
-          } @else {
-            <bdi>{{ right.value | businessValue: field(node.left).type }}</bdi>
-          }
-        }
-      </span>
-    }
-  `,
+  templateUrl: './rule-condition.component.html',
   styleUrl: './rule-condition.component.scss',
 })
 export class RuleConditionComponent {

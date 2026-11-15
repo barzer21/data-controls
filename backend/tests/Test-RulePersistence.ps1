@@ -1,10 +1,12 @@
-param([string]$Server = 'localhost', [int]$Port = 5200, [switch]$IncludeExecution)
+param([string]$Server = 'localhost', [int]$Port = 5200, [switch]$IncludeExecution,
+    [string]$ApiAssemblyPath = '')
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Net.Http
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $apiDirectory = Join-Path $repositoryRoot 'backend/DataControls.Api'
-$apiDll = (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path
+$apiDll = if ($ApiAssemblyPath) { (Resolve-Path -LiteralPath $ApiAssemblyPath).Path }
+    else { (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path }
 $testDatabase = 'DataControlsPersistenceTest_' + [guid]::NewGuid().ToString('N').Substring(0, 8)
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) $testDatabase
 New-Item -ItemType Directory -Path (Join-Path $testRoot 'Metadata') -Force | Out-Null
@@ -89,7 +91,7 @@ try {
     # A unique database per run keeps setup and failure simulation away from existing databases.
     & sqlcmd -S $Server -E -C -b -l 10 -Q "IF DB_ID(N'$testDatabase') IS NOT NULL THROW 51000,'Test database already exists',1;"
     if ($LASTEXITCODE -ne 0) { throw 'Test database name must be unused.' }
-    foreach ($file in @('01_create_database.sql', '02_create_tables.sql', '03_seed_data.sql', '04_create_rules.sql')) {
+    foreach ($file in @('01_create_database.sql', '02_create_tables.sql', '03_seed_data.sql', '04_create_rules.sql', '06_add_rule_ai_origin.sql')) {
         (Get-Content (Join-Path $repositoryRoot "database/$file") -Raw -Encoding UTF8).Replace('DataControlsDb', $testDatabase) |
             & sqlcmd -S $Server -E -C -b -l 10
         if ($LASTEXITCODE -ne 0) { throw "Setup failed: $file" }
@@ -120,6 +122,7 @@ try {
     Assert-Test ($saved.definition.name -eq $definition.name -and $saved.definition.description -eq $definition.description) 'hebrewNameAndDescription'
     Assert-Test ($saved.definition.condition.kind -eq 'group' -and $saved.definition.condition.children[1].right.value -eq 15000) 'treeRoundTrip'
     Assert-Test ($saved.definitionVersion -eq 1 -and $saved.createdAtUtc -and $saved.updatedAtUtc) 'versionAndTimestamps'
+    Assert-Test ($saved.createdWithAi -eq $false) 'manualRuleHasNoAiOrigin'
     $loaded = (Send-Request 'GET' "/$id").Body
     Assert-Test (($loaded.definition | ConvertTo-Json -Depth 100 -Compress) -eq ($saved.definition | ConvertTo-Json -Depth 100 -Compress)) 'getById'
     Stop-TestApi
@@ -129,7 +132,8 @@ try {
 
     $loaded.definition.name = $loaded.definition.name + ' updated'
     $loaded.definition.condition.children[1].right.value = 20000
-    $updated = (Send-Request 'PUT' "/$id" $loaded.definition).Body
+    $updated = (Send-Request 'PUT' "/$id`?createdWithAi=true" $loaded.definition).Body
+    Assert-Test ($updated.createdWithAi -eq $false) 'editingManualRuleDoesNotChangeOrigin'
     Assert-Test ($updated.id -eq $id -and $updated.createdAtUtc -eq $saved.createdAtUtc -and
         [DateTimeOffset]$updated.updatedAtUtc -ge [DateTimeOffset]$saved.updatedAtUtc -and
         $updated.definition.condition.children[1].right.value -eq 20000) 'updatePreservesIdAndCreation'
@@ -141,7 +145,13 @@ try {
             right = @{ kind = 'field'; field = @{ fieldId = 'startDate' } }
         }
     }
-    $second = (Send-Request 'POST' '' $secondDefinition 201).Body
+    $second = (Send-Request 'POST' '?createdWithAi=true' $secondDefinition 201).Body
+    Assert-Test ($second.createdWithAi -eq $true) 'aiOriginRecordedOnCreate'
+    $secondUpdated = (Send-Request 'PUT' "/$($second.id)?createdWithAi=false" $second.definition).Body
+    Assert-Test ($secondUpdated.createdWithAi -eq $true) 'aiOriginSurvivesEditing'
+    Stop-TestApi
+    Start-TestApi
+    Assert-Test ((Send-Request 'GET' "/$($second.id)").Body.createdWithAi -eq $true) 'aiOriginSurvivesRestart'
     Assert-Test ($second.definition.condition.right.kind -eq 'field' -and $null -eq $second.definition.description) 'fieldOperandAndOptionalDescription'
     $thirdDefinition = @{
         name = 'Related missing value'; rootEntityId = 'employee'; condition = @{
@@ -152,6 +162,7 @@ try {
     Assert-Test ($third.definition.condition.left.relationshipPath[0] -eq 'employeeDepartment') 'relationshipAndNullOperatorRoundTrip'
     $page1 = (Send-Request 'GET' '?page=1&pageSize=2').Body
     $page2 = (Send-Request 'GET' '?page=2&pageSize=2').Body
+    Assert-Test ($page1.items[0].createdWithAi -eq $false -and $page1.items[1].createdWithAi -eq $true) 'listReturnsCreationOrigin'
     Assert-Test ($page1.totalCount -eq 3 -and $page1.items.Count -eq 2 -and $page2.items.Count -eq 1 -and
         $page2.items[0].id -eq $third.id -and !$page1.items[0].PSObject.Properties['definition']) 'stablePaginationAndSummaryOnly'
     Send-Request 'GET' '?page=0' $null 400 | Out-Null

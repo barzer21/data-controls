@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
             });
             entity.Property(r => r.Name).HasMaxLength(200);
             entity.Property(r => r.Description).HasMaxLength(2000);
+            entity.Property(r => r.CreatedWithAi).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<Employee>(entity =>

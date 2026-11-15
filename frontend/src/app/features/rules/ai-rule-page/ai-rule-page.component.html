@@ -1,0 +1,30 @@
+@if (metadata(); as businessMetadata) {
+  @if (proposal(); as definition) {
+    <app-rule-editor
+      #editor
+      [initialDefinition]="definition"
+      [metadata]="businessMetadata"
+      (closed)="leave()"
+      (closeCancelled)="cancelLeave()"
+      (saved)="onSaved($event)"
+    />
+  } @else {
+    <app-ai-rule-creator
+      #creator
+      (proposed)="proposal.set($event)"
+      (closed)="leave()"
+      (closeCancelled)="cancelLeave()"
+    />
+  }
+} @else {
+  <main class="page-state" [attr.aria-busy]="!error()">
+    <a routerLink="/rules" [queryParams]="{ page: returnPage }">חזרה לרשימת הבקרות</a>
+    <h1>יצירת בקרה בעזרת AI</h1>
+    @if (error()) {
+      <p role="alert">{{ error() }}</p>
+      <button type="button" class="primary" (click)="loadMetadata()">ניסיון חוזר</button>
+    } @else {
+      <p role="status">טוען את הנתונים העסקיים…</p>
+    }
+  </main>
+}

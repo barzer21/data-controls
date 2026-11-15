@@ -1,8 +1,9 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import {
-  AfterViewInit,
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
@@ -15,7 +16,6 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { finalize, Observable, switchMap, throwError } from 'rxjs';
 import {
   MetadataResponse,
@@ -31,31 +31,52 @@ import {
   editableFields,
   newComparison,
 } from '../../../shared/condition-editor/condition-editor.model';
-import { ExecutionResultsComponent } from '../../../shared/execution-results/execution-results.component';
+import { EntityPickerComponent } from '../../../shared/entity-picker/entity-picker.component';
+import { FilteredExecutionResultsComponent } from '../../../shared/filtered-execution-results/filtered-execution-results.component';
 import { RuleConditionComponent } from '../../../shared/rule-condition/rule-condition.component';
+import { RuleOverviewComponent } from '../../../shared/rule-overview/rule-overview.component';
+import { RuleSummaryComponent } from '../../../shared/rule-summary/rule-summary.component';
+import { UiIconComponent } from '../../../shared/ui-icon/ui-icon.component';
 
 @Component({
-  selector: 'app-rule-editor-dialog',
+  selector: 'app-rule-editor',
   imports: [
     FormsModule,
     ConditionEditorComponent,
-    ExecutionResultsComponent,
+    FilteredExecutionResultsComponent,
     RuleConditionComponent,
+    UiIconComponent,
+    EntityPickerComponent,
+    RuleOverviewComponent,
+    RuleSummaryComponent,
   ],
-  templateUrl: './rule-editor-dialog.component.html',
-  styleUrl: './rule-editor-dialog.component.scss',
+  templateUrl: './rule-editor.component.html',
+  styleUrl: './rule-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
+export class RuleEditorComponent implements OnInit {
   readonly ruleId = input<number | null>(null);
+  readonly mode = signal<'edit' | 'view'>('edit');
+  readonly hasRelatedFields = computed(() =>
+    this.metadata().relationships.some((link) => link.fromEntity === this.draft().rootEntityId),
+  );
+  readonly initialDefinition = input<RuleDefinition | null>(null);
+  readonly requiresApproval = computed(
+    () => this.ruleId() === null && this.initialDefinition() !== null,
+  );
+  readonly proposalApproved = signal(false);
   readonly metadata = input.required<MetadataResponse>();
   readonly closed = output<void>();
+  readonly closeCancelled = output<void>();
   readonly saved = output<SavedRuleResponse>();
   private readonly api = inject(RulesApiService);
   private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private readonly previewElement = viewChild<ElementRef<HTMLElement>>('draftPreview');
+  private readonly errorSummary = viewChild<ElementRef<HTMLElement>>('errorSummary');
+  private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
+  private readonly keepEditingButton =
+    viewChild<ElementRef<HTMLButtonElement>>('keepEditingButton');
   readonly draft = signal<RuleDefinition>({
     name: '',
     description: '',
@@ -82,12 +103,10 @@ export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
       condition: newComparison(editableFields(this.metadata(), rootEntityId)),
     });
     if (this.ruleId() !== null) this.load();
-  }
-
-  ngAfterViewInit(): void {
-    const element = this.dialog().nativeElement;
-    element.showModal();
-    this.destroyRef.onDestroy(() => element.close());
+    else if (this.initialDefinition()) {
+      this.draft.set(structuredClone(this.initialDefinition()!));
+      this.dirty.set(true);
+    }
   }
 
   load(): void {
@@ -120,11 +139,12 @@ export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
     this.errors.set([]);
     this.preview.set(null);
     this.confirmClose.set(false);
+    this.proposalApproved.set(false);
   }
 
   updateCondition(condition: RuleCondition): void {
     if (conditionCount(condition) > 100) {
-      this.errors.set(['ניתן להגדיר עד 100 תנאים וקבוצות בבקרה.']);
+      this.showErrors(['ניתן להגדיר עד 100 תנאים וקבוצות בבקרה.']);
       return;
     }
     this.update({ condition });
@@ -146,25 +166,44 @@ export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
 
   requestClose(): void {
     if (this.busy()) return;
-    if (this.dirty()) this.confirmClose.set(true);
-    else this.close();
+    if (this.dirty()) {
+      this.confirmClose.set(true);
+      afterNextRender(() => this.keepEditingButton()?.nativeElement.focus(), {
+        injector: this.injector,
+      });
+    } else this.close();
+  }
+
+  cancelClose(): void {
+    this.confirmClose.set(false);
+    this.closeCancelled.emit();
+    afterNextRender(() => this.closeButton()?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  onEscape(event: Event): void {
+    event.preventDefault();
+    if (this.confirmClose()) this.cancelClose();
+    else this.requestClose();
   }
 
   close(): void {
     if (this.busy()) return;
-    this.dialog().nativeElement.close();
     this.closed.emit();
   }
 
   perform(action: 'save' | 'run'): void {
     if (this.busy() || this.loading() || this.loadFailed() || this.pendingRoot()) return;
+    if (this.requiresApproval() && !this.proposalApproved()) {
+      this.showErrors(['יש לבדוק ולאשר את הצעת הבקרה לפני שמירה או הרצה.']);
+      return;
+    }
     const definition = structuredClone(this.draft());
     if (!definition.name.trim()) {
-      this.errors.set(['יש להזין שם לבקרה.']);
+      this.showErrors(['יש להזין שם לבקרה.']);
       return;
     }
     if (definition.name.length > 200 || (definition.description?.length ?? 0) > 2000) {
-      this.errors.set(['שם הבקרה מוגבל ל־200 תווים והתיאור ל־2,000 תווים.']);
+      this.showErrors(['שם הבקרה מוגבל ל־200 תווים והתיאור ל־2,000 תווים.']);
       return;
     }
     this.busy.set(action);
@@ -177,7 +216,7 @@ export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
           if (!validation.isValid)
             return throwError(() => ({ validationErrors: validation.errors }));
           return action === 'save'
-            ? this.api.save(this.ruleId(), definition)
+            ? this.api.save(this.ruleId(), definition, this.requiresApproval())
             : this.api.execute(definition);
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -211,7 +250,7 @@ export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
       Array.isArray(semanticErrors) &&
       semanticErrors.every((item) => typeof item.message === 'string')
     ) {
-      this.errors.set(
+      this.showErrors(
         semanticErrors.map((item) => {
           const indices = [...String(item.path ?? '').matchAll(/children\[(\d+)\]/g)].map(
             (match) => `תנאי ${Number(match[1]) + 1}`,
@@ -220,11 +259,16 @@ export class RuleEditorDialogComponent implements OnInit, AfterViewInit {
         }),
       );
     } else if (error instanceof HttpErrorResponse && error.status === 404) {
-      this.errors.set(['הבקרה לא נמצאה. ייתכן שנמחקה. ניתן לסגור ולרענן את הרשימה.']);
+      this.showErrors(['הבקרה לא נמצאה. ייתכן שנמחקה. ניתן לסגור ולרענן את הרשימה.']);
     } else if (error instanceof HttpErrorResponse && error.status === 504) {
-      this.errors.set(['הפעולה חרגה מזמן ההמתנה. ניתן לנסות שוב.']);
+      this.showErrors(['הפעולה חרגה מזמן ההמתנה. ניתן לנסות שוב.']);
     } else {
-      this.errors.set(['לא ניתן להשלים את הפעולה. בדקו את החיבור לשרת ונסו שוב.']);
+      this.showErrors(['לא ניתן להשלים את הפעולה. בדקו את החיבור לשרת ונסו שוב.']);
     }
+  }
+
+  private showErrors(messages: readonly string[]): void {
+    this.errors.set(messages);
+    afterNextRender(() => this.errorSummary()?.nativeElement.focus(), { injector: this.injector });
   }
 }

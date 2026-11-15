@@ -1,12 +1,14 @@
 param(
     [string]$ConnectionString = 'Server=localhost;Database=DataControlsTestDb;Integrated Security=True;TrustServerCertificate=True;Connect Timeout=5',
-    [int]$Port = 5199
+    [int]$Port = 5199,
+    [string]$ApiAssemblyPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Net.Http
 $apiDirectory = Join-Path $PSScriptRoot '../DataControls.Api'
-$apiDll = (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path
+$apiDll = if ($ApiAssemblyPath) { (Resolve-Path -LiteralPath $ApiAssemblyPath).Path }
+    else { (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path }
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('DataControls-Rules-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path (Join-Path $testRoot 'Metadata') -Force | Out-Null
 Copy-Item (Join-Path $apiDirectory 'Metadata/metadata.json') (Join-Path $testRoot 'Metadata/metadata.json')
@@ -89,6 +91,15 @@ try {
     Test-RuleCase 'relatedFieldOnRight' (New-Rule (New-Comparison (New-Field 'isActive') 'notEquals' @{
         kind = 'field'; field = (New-Field 'isActive' @('employeeDepartment'))
     }))
+    Test-RuleCase 'rejectSameRootField' (New-Rule (New-Comparison (New-Field 'salary') 'notEquals' @{
+        kind = 'field'; field = (New-Field 'SALARY')
+    })) 400 'sameFieldComparison' 'condition.right.field'
+    Test-RuleCase 'rejectSameRelatedField' (New-Rule (New-Comparison (New-Field 'isActive' @('employeeDepartment')) 'notEquals' @{
+        kind = 'field'; field = (New-Field 'ISACTIVE' @('EMPLOYEEDEPARTMENT'))
+    })) 400 'sameFieldComparison' 'condition.right.field'
+    Test-RuleCase 'rejectSameFieldWithEmptyPath' (New-Rule (New-Comparison @{ fieldId = 'salary' } 'equals' @{
+        kind = 'field'; field = (New-Field 'salary')
+    })) 400 'sameFieldComparison' 'condition.right.field'
     Test-RuleCase 'validLeapDate' (New-Rule (New-Comparison (New-Field 'birthDate') 'lessThan' (New-Constant '2024-02-29')))
     Test-RuleCase 'text' (New-Rule (New-Comparison (New-Field 'firstName') 'equals' (New-Constant 'Dana')))
     Test-RuleCase 'sqlLikeTextIsData' (New-Rule (New-Comparison (New-Field 'firstName') 'equals' (New-Constant "'; DROP TABLE Employees;--")))

@@ -1,0 +1,86 @@
+<main
+  class="ai-page"
+  aria-labelledby="ai-title"
+  (keydown.escape)="confirmClose() && onEscape($event)"
+>
+  <header>
+    <div>
+      <span class="badge">✦ AI · הדגמה</span>
+
+      <h1 id="ai-title">יצירת בקרה בעזרת AI</h1>
+    </div>
+    <button #closeButton type="button" (click)="requestClose()" aria-label="חזרה לרשימת הבקרות">
+      חזרה לרשימה
+    </button>
+  </header>
+  @if (confirmClose()) {
+    <section
+      class="confirmation"
+      role="region"
+      aria-labelledby="discard-ai-title"
+      aria-describedby="discard-ai-description"
+    >
+      <h3 id="discard-ai-title">לעזוב ללא יצירת הצעה?</h3>
+      <p id="discard-ai-description">התיאור שהוזן לא יישמר לאחר עזיבת העמוד.</p>
+      <div class="confirmation-actions">
+        <button #keepWritingButton type="button" class="primary" (click)="cancelClose()">
+          המשך כתיבה
+        </button>
+        <button type="button" (click)="close()">עזיבה ללא יצירה</button>
+      </div>
+    </section>
+  }
+  <div class="form-content" [hidden]="confirmClose()" [attr.aria-busy]="busy()">
+    <p class="intro">תארו את החריגה שתרצו לאתר. ההצעה תוצג לבדיקה ולעריכה לפני אישור.</p>
+    <form id="ai-proposal-form" (ngSubmit)="generate()">
+      <label for="ai-description">תיאור הבקרה</label>
+      <textarea
+        id="ai-description"
+        name="description"
+        rows="4"
+        required
+        maxlength="2000"
+        aria-describedby="ai-description-hint"
+        [disabled]="busy()"
+        [ngModel]="description()"
+        (ngModelChange)="updateDescription($event)"
+        placeholder="לדוגמה: מצאי עובדים שהשכר שלהם גבוה מ-15000."
+      ></textarea>
+      <p id="ai-description-hint" class="hint">
+        כרגע זמינות חמש דוגמאות מוגדרות. בחרו דוגמה כדי להשתמש בנוסח הנתמך.
+      </p>
+    </form>
+    <section aria-label="דוגמאות לבקרות">
+      <h3>אפשר להתחיל מכאן</h3>
+      <div class="examples">
+        @for (example of examples; track example) {
+          <button type="button" [disabled]="busy()" (click)="updateDescription(example)">
+            {{ example }}
+          </button>
+        }
+      </div>
+    </section>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    @if (busy()) {
+      <p class="progress" role="status">יוצרים הצעה לבדיקה… אפשר לבטל בכל רגע.</p>
+    }
+  </div>
+  <footer [hidden]="confirmClose()">
+    <small>יצירת הצעה אינה שומרת או מריצה בקרה.</small>
+    <div class="actions">
+      <button type="button" (click)="requestClose()">
+        {{ busy() ? 'ביטול יצירה' : 'ביטול' }}
+      </button>
+      <button
+        type="submit"
+        form="ai-proposal-form"
+        class="primary"
+        [disabled]="busy() || !description().trim() || description().trim().length > 2000"
+      >
+        {{ busy() ? 'יוצרים הצעה…' : error() ? 'ניסיון חוזר' : 'יצירת הצעה לבדיקה' }}
+      </button>
+    </div>
+  </footer>
+</main>

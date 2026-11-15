@@ -55,9 +55,10 @@ public sealed class RulesController(RuleValidator validator, RuleService rules, 
 
     [HttpPost]
     [RequestSizeLimit(64 * 1024)]
-    public async Task<ActionResult<SavedRuleResponse>> Create(RuleDefinition definition, CancellationToken cancellationToken)
+    public async Task<ActionResult<SavedRuleResponse>> Create(RuleDefinition definition, CancellationToken cancellationToken,
+        [FromQuery] bool createdWithAi = false)
     {
-        var result = await rules.SaveAsync(null, definition, cancellationToken);
+        var result = await rules.SaveAsync(null, definition, cancellationToken, createdWithAi);
         if (!result.Validation.IsValid) return BadRequest(result.Validation);
         return CreatedAtAction(nameof(Get), new { id = result.Rule!.Id }, result.Rule);
     }

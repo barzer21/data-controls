@@ -1,46 +1,86 @@
-﻿:host {
+:host {
   display: block;
+  min-width: 0;
 }
 label {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: 0.4rem;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--text-muted);
   min-width: 0;
+}
+input,
+select {
+  font-size: 0.85rem;
+  background: white;
+  min-height: 44px;
+  border-color: #dce4d9;
+  color: #264c38;
+  font-weight: 400;
 }
 .comparison {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.5fr);
-  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.6rem;
   align-items: start;
 }
+.comparison > label {
+  order: 1;
+}
+.comparison > .operand-choice {
+  order: 2;
+  grid-column: 1/-1;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.7rem;
+}
+.operand-choice select {
+  width: auto;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.73rem;
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .condition-group {
-  border: 1px solid var(--border);
-  border-inline-start: 4px solid var(--accent);
-  padding: 1.1rem;
+  border: 1px solid #d4e3d6;
+  border-inline-start: 3px solid #6d9771;
+  padding: 1rem;
   border-radius: 12px;
-  background: var(--surface-subtle);
+  background: #fafcf9;
 }
 .condition-group.or-group {
-  border-inline-start-color: var(--or);
-  background: var(--or-soft);
-}
-.logic-badge {
-  display: inline-block;
-  margin-bottom: 0.65rem;
-  padding: 0.12rem 0.6rem;
-  border-radius: 5px;
-  color: white;
-  background: var(--accent);
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-.or-group > .logic-badge {
-  background: var(--or);
+  border-color: #e1d9e9;
+  border-inline-start-color: #9b80b7;
+  background: #fcfafd;
 }
 .group-operator {
+  max-width: 100%;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #e2eae0;
+  color: #526f51;
+}
+.group-operator select {
   max-width: 380px;
+  background: #edf3e8;
+  border-color: #d9e4d2;
+  font-size: 0.8rem;
+  color: #315f3c;
+}
+.or-group > .group-operator {
+  border-color: #e8e0ee;
+  color: #765a96;
+}
+.or-group > .group-operator select {
+  background: #f0eaf6;
+  border-color: #e0d7e9;
+  color: #765a96;
 }
 ol {
   list-style: none;
@@ -48,50 +88,90 @@ ol {
   margin: 1rem 0;
 }
 li {
-  padding: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  margin: 0.75rem 0;
-}
-.child-heading,
-.group-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  min-width: 0;
 }
 .child-heading {
+  display: flex;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.8rem;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #6b7f68;
+  font-size: 0.7rem;
 }
 .child-heading button {
   min-height: 36px;
-  padding: 0.25rem 0.65rem;
-  font-size: 0.8rem;
+  min-width: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: #70846a;
+  padding: 0.3rem;
+}
+.child-heading button:hover:not(:disabled) {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.condition-join {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: #6c8563;
+  margin: 1rem 0;
+}
+.condition-join:before,
+.condition-join:after {
+  content: '';
+  height: 1px;
+  background: #dfe7da;
+  flex: 1;
+}
+.or-group > ol > li > .condition-join {
+  color: var(--or);
+}
+.group-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.group-actions button,
+.wrap-group {
+  font-size: 0.75rem;
+  min-height: 40px;
+  color: #4a7147;
+  border: 1px dashed #b6cbb0;
+  background: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+}
+.group-actions button + button {
+  border-style: solid;
+  border-color: var(--border);
+  color: var(--text-muted);
 }
 .wrap-group {
-  margin-top: 0.75rem;
-  font-size: 0.85rem;
+  margin-top: 0.8rem;
 }
-.group-actions button {
-  font-size: 0.85rem;
-}
-@media (max-width: 1100px) {
-  .comparison {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .comparison {
     grid-template-columns: minmax(0, 1fr);
   }
-  .condition-group {
-    padding: 0.65rem;
+  .comparison > .operand-choice {
+    flex-wrap: wrap;
   }
-  li {
-    padding: 0.6rem;
+  .condition-group {
+    padding: 0.7rem;
+  }
+  .group-operator select {
+    font-size: 0.75rem;
+  }
+  .group-actions button {
+    flex: 1;
+  }
+  .operand-choice select {
+    width: 100%;
+    white-space: normal;
   }
 }

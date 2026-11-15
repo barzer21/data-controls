@@ -43,13 +43,13 @@
 
 | ID | Explicit requirement from assignment | Acceptance evidence | Status |
 |---|---|---|---|
-| AI-01 | Free-text control description input | UI text input | Not started |
-| AI-02 | Infrastructure to supply schema and business semantics to future AI model | Schema/business metadata payload contract | Not started |
-| AI-03 | Define expected AI response structure | Documented JSON schema/DTO and sample | Not started |
-| AI-04 | Demonstrate receiving AI response using mock | Mock returns example proposal | Not started |
-| AI-05 | Translate AI response to Stage A control definition | Same rule model/validator | Not started |
-| AI-06 | Show proposed control for user approval before execution | Preview + approve step | Not started |
-| AI-07 | Decouple AI mechanism from rule execution, enabling model replacement | AI adapter boundary and same executor | Not started |
+| AI-01 | Free-text control description input | Angular dialog with text input and five selectable examples; docs/AI_SERVICE.md | Implemented |
+| AI-02 | Infrastructure to supply schema and business semantics to future AI model | Server supplies public business metadata; Pydantic contract and reference checks; docs/AI_SERVICE.md | Implemented |
+| AI-03 | Define expected AI response structure | Pydantic models/OpenAPI and existing RuleDefinition contract; python-ai/models.py | Implemented |
+| AI-04 | Demonstrate receiving AI response using mock | Five Python mock examples checked over live HTTP; docs/AI_SERVICE.md | Implemented |
+| AI-05 | Translate AI response to Stage A control definition | Typed RuleDefinition and shared RuleValidator; live integration checks | Implemented |
+| AI-06 | Show proposed control for user approval before execution | Shared editor review, explicit approval reset on edits, guarded save/run; 69 frontend tests; visual demo pending | Implemented |
+| AI-07 | Decouple AI mechanism from rule execution, enabling model replacement | IAiRuleProposalProvider, separate Angular API service and same executor | Implemented |
 | AI-OPTIONAL | Optional: proactively propose controls based on schema | Design only if time permits | Not started |
 
 ## Mandatory technology
@@ -57,7 +57,7 @@
 | ID | Explicit requirement | Acceptance evidence | Status |
 |---|---|---|---|
 | TECH-01 | .NET Web API | Running backend | Implemented |
-| TECH-02 | Python | Python component included and documented | Not started |
+| TECH-02 | Python | Local FastAPI mock service, pinned dependencies and documented startup; python-ai/README.md | Implemented |
 | TECH-03 | SQL Server | Running DB and scripts | In progress |
 | TECH-04 | Secure dynamic SQL mechanisms | Parameterization/identifier quoting and real restricted-SQL-identity tests passed; docs/RULE_EXECUTION.md | Verified |
 | TECH-05 | Angular | Angular 22 builds and runs against local API; docs/FRONTEND_LIST.md | Implemented |
@@ -74,7 +74,7 @@
 | SUB-03 | Installation and run instructions | `README.md` | In progress |
 | SUB-04 | Short architecture and rule engine description | `docs/ARCHITECTURE.md` | Not started |
 | SUB-05 | Examples of definable/runnable controls | `docs/EXAMPLE_RULES.md` and demo | Not started |
-| SUB-06 | Stage B demonstration using mock | Running AI mock demo | Not started |
+| SUB-06 | Stage B demonstration using mock | Three-process flow implemented; live backend/Python and Angular approval tests pass; full browser demo pending | In progress |
 | SUB-07 | Assumptions, limitations and possible extensions | `docs/ASSUMPTIONS_AND_LIMITATIONS.md` | Not started |
 | SUB-08 | AI tools used and purpose of each | `docs/AI_USAGE.md` | Not started |
 

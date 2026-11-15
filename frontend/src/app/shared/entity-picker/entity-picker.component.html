@@ -1,0 +1,25 @@
+<div class="entity-options" role="group" aria-label="נתונים לבדיקה">
+  @for (entity of entities(); track entity.id) {
+    <button
+      type="button"
+      class="entity-option"
+      [attr.aria-pressed]="selected() === entity.id"
+      [class.pending]="pending() === entity.id"
+      (click)="selectedChange.emit(entity.id)"
+    >
+      <span class="entity-icon"><app-ui-icon [name]="entity.id" /></span
+      ><span
+        ><strong>{{ entity.label }}</strong
+        ><small>{{
+          entity.id === 'employee'
+            ? 'פרטי עובד, העסקה ושכר'
+            : entity.id === 'department'
+              ? 'פרטי המחלקה והניהול'
+              : 'נתונים עסקיים לבדיקה'
+        }}</small></span
+      ><span class="entity-check" aria-hidden="true">{{
+        selected() === entity.id ? '✓' : ''
+      }}</span>
+    </button>
+  }
+</div>

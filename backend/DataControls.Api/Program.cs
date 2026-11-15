@@ -1,4 +1,5 @@
 using DataControls.Api.Data;
+using DataControls.Api.Ai;
 using Microsoft.EntityFrameworkCore;
 using DataControls.Api.Metadata;
 using DataControls.Api.Rules;
@@ -22,6 +23,13 @@ builder.Services.AddSingleton<RuleSqlCompiler>();
 builder.Services.AddSingleton<RuleExecutor>();
 builder.Services.AddSingleton<RuleExplanationService>();
 builder.Services.AddScoped<RuleExecutionService>();
+builder.Services.AddHttpClient<IAiRuleProposalProvider, PythonAiRuleProposalProvider>(http =>
+{
+    var baseUrl = builder.Configuration["AiService:BaseUrl"]
+        ?? throw new InvalidOperationException("AiService:BaseUrl is required.");
+    http.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+    http.Timeout = TimeSpan.FromSeconds(15);
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<PersistenceExceptionHandler>();
 

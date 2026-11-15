@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import { MetadataResponse, RuleCondition } from '../../core/api/api.models';
 import {
   comparisonOperators,
@@ -11,7 +12,7 @@ import {
 
 @Component({
   selector: 'app-condition-editor',
-  imports: [FormsModule],
+  imports: [FormsModule, UiIconComponent],
   templateUrl: './condition-editor.component.html',
   styleUrl: './condition-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,15 +31,19 @@ export class ConditionEditorComponent {
       : undefined;
   });
   readonly compatibleFields = computed(() =>
-    this.fields().filter((f) => f.type === this.leftField()?.type),
-  );
-  readonly operators = computed(() =>
-    comparisonOperators.filter(
-      (op) =>
-        ['number', 'date'].includes(this.leftField()?.type ?? '') ||
-        ['equals', 'notEquals', 'isNull', 'isNotNull'].includes(op.id),
+    this.fields().filter(
+      (f) => f.type === this.leftField()?.type && f.key !== this.leftField()?.key,
     ),
   );
+  readonly operators = computed(() => {
+    const type = this.leftField()?.type;
+    if (!['number', 'date', 'text', 'boolean'].includes(type ?? '')) return [];
+    return comparisonOperators.filter(
+      (op) =>
+        ['number', 'date'].includes(type ?? '') ||
+        ['equals', 'notEquals', 'isNull', 'isNotNull'].includes(op.id),
+    );
+  });
   readonly fieldKey = fieldKey;
   operatorAvailable(operator: string): boolean {
     return this.operators().some((op) => op.id === operator);
@@ -65,7 +70,7 @@ export class ConditionEditorComponent {
 
   changeOperator(operator: string): void {
     const node = this.condition();
-    if (node.kind !== 'comparison') return;
+    if (node.kind !== 'comparison' || !this.operatorAvailable(operator)) return;
     const { right, ...withoutRight } = node;
     this.conditionChange.emit(
       operator === 'isNull' || operator === 'isNotNull'
@@ -76,12 +81,21 @@ export class ConditionEditorComponent {
 
   changeOperand(kind: string): void {
     const node = this.condition();
-    if (node.kind !== 'comparison') return;
+    if (
+      node.kind !== 'comparison' ||
+      !this.leftField() ||
+      node.operator === 'isNull' ||
+      node.operator === 'isNotNull' ||
+      (kind !== 'constant' && kind !== 'field')
+    )
+      return;
+    const otherField = this.compatibleFields()[0];
+    if (kind === 'field' && !otherField) return;
     this.conditionChange.emit({
       ...node,
       right:
         kind === 'field'
-          ? { kind: 'field', field: this.compatibleFields()[0]?.reference ?? node.left }
+          ? { kind: 'field', field: otherField!.reference }
           : constantFor(this.leftField()?.type),
     });
   }
@@ -95,8 +109,9 @@ export class ConditionEditorComponent {
 
   changeConstant(value: string): void {
     const node = this.condition();
-    if (node.kind !== 'comparison') return;
+    if (node.kind !== 'comparison' || node.right?.kind !== 'constant') return;
     const type = this.leftField()?.type;
+    if (type === 'boolean' && value !== 'true' && value !== 'false') return;
     const typed =
       type === 'number'
         ? value === ''

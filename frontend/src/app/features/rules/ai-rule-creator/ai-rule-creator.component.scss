@@ -1,0 +1,152 @@
+header,
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  flex-shrink: 0;
+}
+header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-subtle);
+}
+
+.badge {
+  display: inline-block;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.15rem 0.65rem;
+  font-size: 0.8rem;
+  border-radius: 30px;
+}
+.form-content {
+  overflow: auto;
+  padding: 1.5rem;
+  min-height: 0;
+}
+.intro {
+  color: var(--text-muted);
+  margin: 0 0 1.4rem;
+}
+label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+textarea {
+  line-height: 1.8;
+}
+.hint,
+footer small {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+h3 {
+  margin: 1.4rem 0 0.7rem;
+  font-size: 0.95rem;
+}
+.examples {
+  display: grid;
+  gap: 0.5rem;
+}
+.examples button {
+  text-align: start;
+  font-weight: 400;
+  font-size: 0.85rem;
+  background: var(--surface-subtle);
+}
+.error {
+  padding: 1rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-inline-start: 3px solid var(--danger);
+  border-radius: 8px;
+}
+.progress {
+  padding: 0.8rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 8px;
+}
+footer {
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+}
+.actions,
+.confirmation-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.confirmation {
+  padding: 2rem;
+  border-block-start: 3px solid var(--warning);
+  overflow: auto;
+}
+.confirmation h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
+.confirmation p {
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+}
+.form-content[hidden],
+footer[hidden] {
+  display: none;
+}
+.ai-page {
+  max-width: 1280px;
+  margin: auto;
+  padding: 1.8rem 2.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.ai-page > header,
+.ai-page > .form-content,
+.ai-page > footer,
+.ai-page > .confirmation {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.ai-page > header {
+  background: var(--surface-subtle);
+}
+.ai-page h1 {
+  margin: 0.5rem 0 0;
+  font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+}
+.ai-page > header > button {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ai-page > .form-content {
+  overflow: visible;
+}
+.ai-page > footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  box-shadow: 0 -5px 20px #153c3808;
+}
+@media (max-width: 760px) {
+  .ai-page {
+    padding: 1.5rem 1rem;
+  }
+  header,
+  footer,
+  .form-content {
+    padding: 1rem;
+  }
+  .actions {
+    width: 100%;
+  }
+  .actions button {
+    flex: 1;
+  }
+}

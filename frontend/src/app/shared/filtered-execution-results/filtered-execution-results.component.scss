@@ -1,0 +1,16 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.results-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}

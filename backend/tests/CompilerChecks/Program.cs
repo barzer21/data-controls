@@ -43,10 +43,23 @@ query = compiler.Compile(Rule(Compare("salary", "notEquals", Constant(1)))).Quer
 Check(query.Sql.Contains("[Salary] <> @p0") && !query.Sql.Contains("COALESCE"), "sqlNullSemantics");
 
 query = compiler.Compile(Rule(new RuleGroup("and", [
-    Compare("isActive", "equals", new FieldOperand(new("isActive", ["EMPLOYEEDEPARTMENT"])), "employeeDepartment"),
+    Compare("isActive", "equals", new FieldOperand(new("isActive", ["EMPLOYEEDEPARTMENT"]))),
     Compare("managerName", "isNull", null, "employeeDepartment")]))).Query!;
 Check(query.Sql.Split("LEFT JOIN").Length == 2 && !query.Sql.Contains("INNER JOIN"), "reuseJoinForBothOperands");
 Check(query.Sql.Contains("[t1].[ManagerName] IS NULL"), "relatedNullCheck");
+foreach (var op in new[] { "equals", "notEquals", "lessThan", "greaterThan" })
+{
+    var selfComparison = compiler.Compile(Rule(Compare("salary", op, new FieldOperand(new("SALARY")))));
+    Check(selfComparison.Query is null && selfComparison.Validation.Errors.Any(e => e.Code == "sameFieldComparison"),
+        "rejectSelfComparison_" + op);
+}
+var relatedSelf = compiler.Compile(Rule(Compare("isActive", "notEquals",
+    new FieldOperand(new("ISACTIVE", ["EMPLOYEEDEPARTMENT"])), "employeeDepartment")));
+Check(relatedSelf.Query is null && relatedSelf.Validation.Errors.Any(e => e.Code == "sameFieldComparison"),
+    "rejectRelatedSelfComparisonIgnoringCase");
+var emptyPathSelf = compiler.Compile(Rule(Compare("salary", "equals", new FieldOperand(new("salary", [])))));
+Check(emptyPathSelf.Query is null && emptyPathSelf.Validation.Errors.Any(e => e.Code == "sameFieldComparison"),
+    "rejectSelfComparisonWithEmptyPath");
 Check(!compiler.Compile(Rule(Compare("Employees.DepartmentId", "equals", Constant(1)))).Validation.IsValid, "rejectPhysicalField");
 Check(compiler.Compile(Rule(Compare("salary", "drop", Constant(1)))).Query is null, "rejectOperatorBeforeSql");
 

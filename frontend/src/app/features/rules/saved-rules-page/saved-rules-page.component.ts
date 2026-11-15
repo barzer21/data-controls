@@ -1,17 +1,13 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, forkJoin, map, of, startWith, Subject, switchMap } from 'rxjs';
-import {
-  MetadataResponse,
-  RuleListResponse,
-  SavedRuleResponse,
-} from '../../../core/api/api.models';
-import { RuleEditorDialogComponent } from '../rule-editor-dialog/rule-editor-dialog.component';
+import { MetadataResponse, RuleListResponse } from '../../../core/api/api.models';
 import { MetadataApiService } from '../../../core/api/metadata-api.service';
 import { RulesApiService } from '../../../core/api/rules-api.service';
+import { RULE_LIST_PAGE_SIZE, ruleListPage } from '../../../core/routing/rule-list-page';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Location } from '@angular/common';
 import { SavedRulesListComponent } from '../saved-rules-list/saved-rules-list.component';
 
 type PageState =
@@ -21,7 +17,7 @@ type PageState =
 
 @Component({
   selector: 'app-saved-rules-page',
-  imports: [SavedRulesListComponent, PaginationComponent, RuleEditorDialogComponent],
+  imports: [SavedRulesListComponent, PaginationComponent],
   templateUrl: './saved-rules-page.component.html',
   styleUrl: './saved-rules-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,11 +30,13 @@ export class SavedRulesPageComponent {
   private readonly metadataApi = inject(MetadataApiService);
   private readonly pageRequests = new Subject<number>();
   readonly state = signal<PageState>({ status: 'loading', page: 1 });
-  readonly pageSize = 20;
-  readonly editor = signal<{ id: number | null; metadata: MetadataResponse } | null>(null);
+  readonly pageSize = RULE_LIST_PAGE_SIZE;
   readonly saveNotice = signal('');
 
   constructor() {
+    const navigationState = this.location.getState() as { saveNotice?: unknown } | null;
+    if (typeof navigationState?.saveNotice === 'string')
+      this.saveNotice.set(navigationState.saveNotice);
     this.pageRequests
       .pipe(
         startWith(this.initialPage()),
@@ -86,30 +84,13 @@ export class SavedRulesPageComponent {
     });
   }
 
-  openEditor(id: number | null): void {
-    const state = this.state();
-    if (state.status === 'loaded') {
-      this.saveNotice.set('');
-      this.editor.set({ id, metadata: state.metadata });
-    }
-  }
-
-  onSaved(saved: SavedRuleResponse): void {
-    const created = this.editor()?.id === null;
-    const state = this.state();
-    this.editor.set(null);
-    this.saveNotice.set(`הבקרה „${saved.definition.name}” נשמרה בהצלחה.`);
-    this.loadPage(
-      created && state.status === 'loaded'
-        ? Math.max(1, Math.ceil((state.result.totalCount + 1) / this.pageSize))
-        : state.page,
-    );
+  openEditor(id: number): void {
+    void this.router.navigate(['/rules', id, 'edit'], {
+      queryParams: { page: this.state().page },
+    });
   }
 
   private initialPage(): number {
-    const page = Number(this.route.snapshot.queryParamMap.get('page') ?? 1);
-    return Number.isSafeInteger(page) && page > 0 && (page - 1) * this.pageSize <= 2147483647
-      ? page
-      : 1;
+    return ruleListPage(this.route.snapshot.queryParamMap.get('page'));
   }
 }

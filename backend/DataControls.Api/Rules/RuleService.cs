@@ -21,7 +21,7 @@ public sealed class RuleService(AppDbContext db, RuleValidator validator, IOptio
         var items = await db.Rules.AsNoTracking().OrderBy(r => r.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(r => new RuleSummaryResponse(r.Id, r.Name, r.Description, r.RootEntityId,
-                r.DefinitionVersion, r.CreatedAtUtc, r.UpdatedAtUtc))
+                r.DefinitionVersion, r.CreatedAtUtc, r.UpdatedAtUtc, r.CreatedWithAi))
             .ToListAsync(cancellationToken);
         return new(items, totalCount, page, pageSize);
     }
@@ -32,7 +32,8 @@ public sealed class RuleService(AppDbContext db, RuleValidator validator, IOptio
         return rule is null ? null : ToResponse(rule);
     }
 
-    public async Task<RuleSaveResult> SaveAsync(int? id, RuleDefinition definition, CancellationToken cancellationToken)
+    public async Task<RuleSaveResult> SaveAsync(int? id, RuleDefinition definition, CancellationToken cancellationToken,
+        bool createdWithAi = false)
     {
         // Both create and update must pass the same validator as manual/AI proposals.
         var validation = validator.Validate(definition);
@@ -40,7 +41,7 @@ public sealed class RuleService(AppDbContext db, RuleValidator validator, IOptio
 
         var rule = id.HasValue
             ? await db.Rules.SingleOrDefaultAsync(r => r.Id == id.Value, cancellationToken)
-            : new SavedRule { CreatedAtUtc = DateTimeOffset.UtcNow };
+            : new SavedRule { CreatedAtUtc = DateTimeOffset.UtcNow, CreatedWithAi = createdWithAi };
         if (rule is null) return new(validation, null);
 
         rule.Name = definition.Name!;
@@ -69,6 +70,6 @@ public sealed class RuleService(AppDbContext db, RuleValidator validator, IOptio
         var condition = JsonSerializer.Deserialize<RuleCondition>(rule.ConditionJson, serializerOptions)
             ?? throw new InvalidOperationException($"Stored rule {rule.Id} has an empty condition.");
         return new(rule.Id, new(rule.Name, rule.Description, rule.RootEntityId, condition),
-            rule.DefinitionVersion, rule.CreatedAtUtc, rule.UpdatedAtUtc);
+            rule.DefinitionVersion, rule.CreatedAtUtc, rule.UpdatedAtUtc, rule.CreatedWithAi);
     }
 }

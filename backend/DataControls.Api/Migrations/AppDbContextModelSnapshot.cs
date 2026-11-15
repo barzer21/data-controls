@@ -106,6 +106,11 @@ namespace DataControls.Api.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("CreatedWithAi")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("DefinitionVersion")
                         .HasColumnType("int");
 

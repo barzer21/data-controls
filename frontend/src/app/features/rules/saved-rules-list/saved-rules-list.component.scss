@@ -24,7 +24,31 @@
   color: var(--accent);
   background: var(--accent-soft);
   border-radius: 12px;
-  font-size: 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.rule-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.rule-title h2 {
+  margin: 0;
+}
+.ai-origin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  color: var(--accent);
+  background: var(--surface-subtle);
+  font-size: 0.7rem;
+  font-weight: 400;
 }
 .rule-details {
   min-width: 0;
