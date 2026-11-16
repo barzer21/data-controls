@@ -6,6 +6,7 @@ import {
   RuleResultColumn,
 } from '../../core/api/api.models';
 import { comparisonOperators, editableFields } from '../condition-editor/condition-editor.model';
+import { parseNumericInput } from '../numeric-input';
 
 export interface FilterColumn extends RuleResultColumn {
   readonly reference: FieldReference;
@@ -59,8 +60,9 @@ export function parseColumnFilter(
     return { filter: { columnId: column.id, operator } };
   let value: string | number | boolean = raw;
   if (column.type === 'number') {
-    if (!raw.trim() || !Number.isFinite(Number(raw))) return { error: 'יש להזין מספר תקין.' };
-    value = Number(raw);
+    const parsed = parseNumericInput(raw);
+    if ('error' in parsed) return parsed;
+    value = parsed.value;
   } else if (column.type === 'boolean') {
     if (raw !== 'true' && raw !== 'false') return { error: 'יש לבחור כן או לא.' };
     value = raw === 'true';

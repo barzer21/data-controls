@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
+import { numericConstantError, NUMERIC_INPUT_LIMITS, parseNumericInput } from '../numeric-input';
 import { MetadataResponse, RuleCondition } from '../../core/api/api.models';
 import {
   comparisonOperators,
@@ -45,6 +46,17 @@ export class ConditionEditorComponent {
     );
   });
   readonly fieldKey = fieldKey;
+  readonly numericLimits = NUMERIC_INPUT_LIMITS;
+  readonly numericError = computed(() => {
+    const node = this.condition();
+    return node.kind === 'comparison' &&
+      this.leftField()?.type === 'number' &&
+      node.operator !== 'isNull' &&
+      node.operator !== 'isNotNull' &&
+      node.right?.kind === 'constant'
+      ? numericConstantError(node.right.value)
+      : null;
+  });
   operatorAvailable(operator: string): boolean {
     return this.operators().some((op) => op.id === operator);
   }
@@ -112,14 +124,18 @@ export class ConditionEditorComponent {
     if (node.kind !== 'comparison' || node.right?.kind !== 'constant') return;
     const type = this.leftField()?.type;
     if (type === 'boolean' && value !== 'true' && value !== 'false') return;
-    const typed =
-      type === 'number'
-        ? value === ''
-          ? null
-          : Number(value)
-        : type === 'boolean'
-          ? value === 'true'
-          : value;
+    if (type === 'number') {
+      const parsed = parseNumericInput(value);
+      this.conditionChange.emit({
+        ...node,
+        right: {
+          kind: 'constant',
+          value: !value.trim() ? null : 'error' in parsed ? value : parsed.value,
+        },
+      });
+      return;
+    }
+    const typed = type === 'boolean' ? value === 'true' : value;
     this.conditionChange.emit({ ...node, right: { kind: 'constant', value: typed } });
   }
 

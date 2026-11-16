@@ -155,6 +155,32 @@ describe('Result filter controls', () => {
       filters: [{ columnId: 'amount', operator: 'greaterThan', value: 20000 }],
     });
   });
+  it.each(['9007199254740993', '0.10000000000000001'])(
+    'preserves raw numeric input %s and rejects it without applying a rounded filter',
+    async (raw) => {
+      const emit = vi.fn();
+      component.selectionChange.subscribe(emit);
+      component.openColumn('amount');
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const input = fixture.nativeElement.querySelector(
+        'input[inputmode="decimal"]',
+      ) as HTMLInputElement;
+      input.value = raw;
+      input.dispatchEvent(new Event('input'));
+      component.applyColumn();
+      fixture.detectChanges();
+      expect(component.value()).toBe(raw);
+      expect(input.value).toBe(raw);
+      expect(emit).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('15');
+      input.value = '123.45';
+      input.dispatchEvent(new Event('input'));
+      component.applyColumn();
+      expect(component.selection().filters[0].value).toBe(123.45);
+    },
+  );
+
   it('removes one filter independently and clears everything explicitly', () => {
     component.searchDraft.set('דנה');
     component.applySearch();

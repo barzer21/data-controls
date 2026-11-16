@@ -30,6 +30,7 @@ import {
   conditionCount,
   editableFields,
   newComparison,
+  numericConditionErrors,
 } from '../../../shared/condition-editor/condition-editor.model';
 import { EntityPickerComponent } from '../../../shared/entity-picker/entity-picker.component';
 import { RuleResultsComponent } from '../../../shared/rule-results/rule-results.component';
@@ -204,6 +205,15 @@ export class RuleEditorComponent implements OnInit {
     }
     if (definition.name.length > 200 || (definition.description?.length ?? 0) > 2000) {
       this.showErrors(['שם הבקרה מוגבל ל־200 תווים והתיאור ל־2,000 תווים.']);
+      return;
+    }
+    const numericErrors = numericConditionErrors(
+      definition.condition,
+      this.metadata(),
+      definition.rootEntityId,
+    );
+    if (numericErrors.length) {
+      this.showErrors(numericErrors);
       return;
     }
     this.busy.set(action);

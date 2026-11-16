@@ -134,6 +134,44 @@ describe('Rule editor with API transport', () => {
     expect(editor.busy()).toBeNull();
   });
 
+  it.each(['save', 'run'] as const)(
+    'blocks %s for unsupported numeric input before HTTP and allows correction',
+    (action) => {
+      open();
+      fill();
+      editor.update({
+        condition: {
+          kind: 'group',
+          operator: 'and',
+          children: [
+            {
+              kind: 'comparison',
+              left: { fieldId: 'amount' },
+              operator: 'equals',
+              right: { kind: 'constant', value: '9007199254740993' },
+            },
+          ],
+        },
+      });
+      editor.perform(action);
+      expect(editor.errors().join(' ')).toContain('15');
+      expect(editor.busy()).toBeNull();
+      http.expectNone(() => true);
+      editor.update(structuredClone(definition));
+      editor.perform(action);
+      validate();
+      if (action === 'save') http.expectOne('/api/rules').flush(saved);
+      else
+        http.expectOne('/api/rules/execute?limit=100').flush({
+          totalCount: 0,
+          returnedCount: 0,
+          truncated: false,
+          columns: [],
+          records: [],
+        });
+    },
+  );
+
   it('validates then explicitly creates without executing', () => {
     open();
     fill();

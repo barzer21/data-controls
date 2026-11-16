@@ -80,6 +80,24 @@ describe('Metadata-driven condition editing', () => {
     expect(emitted).toMatchObject({ right: { value: '2026-11-12' } });
   });
 
+  it('preserves invalid numeric text and shows an error rather than emitting a rounded number', () => {
+    const input = fixture.nativeElement.querySelector(
+      'input[inputmode="decimal"]',
+    ) as HTMLInputElement;
+    input.value = '9007199254740993';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(emitted).toMatchObject({ right: { value: '9007199254740993' } });
+    expect(input.value).toBe('9007199254740993');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('15');
+    input.value = '15000.25';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(emitted).toMatchObject({ right: { value: 15000.25 } });
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it('restricts comparisons by type and removes operands from NULL checks', () => {
     editor.changeLeft(field('name').key);
     expect(editor.operators().map((op) => op.id)).toEqual([

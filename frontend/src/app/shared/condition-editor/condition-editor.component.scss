@@ -2,6 +2,10 @@
   display: block;
   min-width: 0;
 }
+.numeric-error {
+  color: var(--danger, #a32f2f);
+  font-size: 0.8rem;
+}
 label {
   display: flex;
   flex-direction: column;

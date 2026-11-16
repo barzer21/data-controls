@@ -4,6 +4,7 @@ import {
   RuleCondition,
   RuleOperand,
 } from '../../core/api/api.models';
+import { numericConstantError } from '../numeric-input';
 
 export interface EditableField {
   key: string;
@@ -65,6 +66,33 @@ export function conditionCount(condition: RuleCondition): number {
   return condition.kind === 'group'
     ? 1 + condition.children.reduce((count, child) => count + conditionCount(child), 0)
     : 1;
+}
+
+export function numericConditionErrors(
+  condition: RuleCondition,
+  metadata: MetadataResponse,
+  rootEntityId: string,
+): string[] {
+  const fields = editableFields(metadata, rootEntityId);
+  const errors: string[] = [];
+  function visit(node: RuleCondition): void {
+    if (node.kind === 'group') {
+      node.children.forEach(visit);
+      return;
+    }
+    const field = fields.find((item) => item.key === fieldKey(node.left));
+    if (
+      field?.type !== 'number' ||
+      node.right?.kind !== 'constant' ||
+      node.operator === 'isNull' ||
+      node.operator === 'isNotNull'
+    )
+      return;
+    const message = numericConstantError(node.right.value);
+    if (message) errors.push(`${field.label}: ${message}`);
+  }
+  visit(condition);
+  return errors;
 }
 
 export const comparisonOperators = [

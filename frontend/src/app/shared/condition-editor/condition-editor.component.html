@@ -130,12 +130,17 @@
               }
               @case ('number') {
                 <input
-                  type="number"
-                  step="any"
+                  type="text"
+                  inputmode="decimal"
+                  [attr.aria-invalid]="numericError() ? 'true' : null"
+                  [title]="numericLimits"
                   [value]="right.value ?? ''"
                   (input)="changeConstant(value($event))"
                   required
                 />
+                @if (numericError(); as message) {
+                  <span class="numeric-error" role="alert">{{ message }}</span>
+                }
               }
               @case ('date') {
                 <input

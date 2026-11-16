@@ -98,12 +98,12 @@
           @case ('number') {
             <input
               aria-label="ערך לסינון"
-              type="number"
+              type="text"
+              inputmode="decimal"
               name="value"
-              step="any"
               required
               [ngModel]="value()"
-              (ngModelChange)="value.set($event === null ? '' : '' + $event)"
+              (ngModelChange)="value.set($event)"
             />
           }
           @case ('date') {
