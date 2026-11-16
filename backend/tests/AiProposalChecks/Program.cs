@@ -5,6 +5,28 @@ using DataControls.Api.Ai;
 using DataControls.Api.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using DataControls.Api.Rules;
+
+var contractOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+{
+    AllowOutOfOrderMetadataProperties = true
+};
+using (var fixtures = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "rule-contract.json"))))
+{
+    var validator = new RuleValidator(new ContractMetadata());
+    foreach (var fixture in fixtures.RootElement.EnumerateArray())
+    {
+        bool accepted;
+        try
+        {
+            var definition = fixture.GetProperty("definition").Deserialize<RuleDefinition>(contractOptions);
+            accepted = definition is not null && validator.Validate(definition).IsValid;
+        }
+        catch (JsonException) { accepted = false; }
+        Check(accepted == fixture.GetProperty("valid").GetBoolean(), fixture.GetProperty("name").GetString()!);
+    }
+    Console.WriteLine($"PASS: {fixtures.RootElement.GetArrayLength()} shared Python/.NET contract cases.");
+}
 
 const string valid = """
     {"name":"Salary check","description":"Mock","rootEntityId":"employee",
@@ -88,4 +110,13 @@ sealed class SampleMetadata : IMetadataProvider
     public MetadataCatalog Catalog { get; } = new(1,
         [new MetadataEntity("employee", "Employees", "dbo", "Employees", "Id",
             [new MetadataField("salary", "Salary", "Salary", "number")])], []);
+}
+
+sealed class ContractMetadata : IMetadataProvider
+{
+    public MetadataCatalog Catalog { get; } = new(1,
+        [new MetadataEntity("employee", "Employees", "dbo", "Employees", "Id",
+            [new MetadataField("salary", "Salary", "Salary", "number"),
+             new MetadataField("isActive", "Active", "IsActive", "boolean"),
+             new MetadataField("firstName", "First name", "FirstName", "text")])], []);
 }

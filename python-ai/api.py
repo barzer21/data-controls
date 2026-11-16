@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from mock_ai import propose_rule
 from models import ProposalRequest, RuleProposal
+from pydantic import ValidationError
 
 
 app = FastAPI(title="Data Controls - Mock AI")
@@ -10,5 +11,7 @@ app = FastAPI(title="Data Controls - Mock AI")
 def create_proposal(request: ProposalRequest):
     try:
         return propose_rule(request.description, request.metadata)
+    except ValidationError as error:
+        raise HTTPException(status_code=500, detail="The generated proposal is invalid.") from error
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error

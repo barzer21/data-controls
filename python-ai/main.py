@@ -22,7 +22,7 @@ def load_proposal(input_path):
     except OSError:
         print("Error: request.json could not be read. Check file permissions.")
     except ValidationError as error:
-        print("Error: request.json does not match ProposalRequest.")
+        print("Error: the request or generated proposal does not match its contract.")
         for issue in error.errors():
             print(" -", ".".join(str(part) for part in issue["loc"]), ":", issue["msg"])
     except ValueError as error:

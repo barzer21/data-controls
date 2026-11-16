@@ -1,25 +1,25 @@
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-class BusinessMetadataModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class ContractModel(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
 
 
-class MetadataField(BusinessMetadataModel):
+class MetadataField(ContractModel):
     id: str = Field(min_length=1, strict=True)
     label: str = Field(min_length=1, strict=True)
     type: Literal["text", "number", "date", "boolean"]
 
 
-class MetadataEntity(BusinessMetadataModel):
+class MetadataEntity(ContractModel):
     id: str = Field(min_length=1, strict=True)
     label: str = Field(min_length=1, strict=True)
     fields: list[MetadataField] = Field(min_length=1)
 
 
-class MetadataRelationship(BusinessMetadataModel):
+class MetadataRelationship(ContractModel):
     id: str = Field(min_length=1, strict=True)
     label: str = Field(min_length=1, strict=True)
     fromEntity: str = Field(min_length=1, strict=True)
@@ -27,13 +27,13 @@ class MetadataRelationship(BusinessMetadataModel):
     cardinality: Literal["manyToOne"]
 
 
-class BusinessMetadata(BusinessMetadataModel):
+class BusinessMetadata(ContractModel):
     version: int = Field(ge=1, strict=True)
     entities: list[MetadataEntity] = Field(min_length=1)
     relationships: list[MetadataRelationship]
 
 
-class ProposalRequest(BaseModel):
+class ProposalRequest(ContractModel):
     description: str = Field(
         min_length=1,
         max_length=2000,
@@ -43,25 +43,28 @@ class ProposalRequest(BaseModel):
     metadata: BusinessMetadata
 
 
-class FieldReference(BaseModel):
+class FieldReference(ContractModel):
     fieldId: str = Field(min_length=1, strict=True)
     relationshipPath: list[str] | None = Field(default=None, max_length=4)
 
 
-class FieldOperand(BaseModel):
+class FieldOperand(ContractModel):
     kind: Literal["field"]
     field: FieldReference
 
 
-class ConstantOperand(BaseModel):
+class ConstantOperand(ContractModel):
     kind: Literal["constant"]
     value: str | int | float | bool | None
 
 
-class ComparisonCondition(BaseModel):
+class ComparisonCondition(ContractModel):
     kind: Literal["comparison"]
     left: FieldReference
-    operator: Literal["equals", "lessThan", "greaterThan", "isNull", "isNotNull"]
+    operator: Literal[
+        "equals", "notEquals", "lessThan", "lessThanOrEqual",
+        "greaterThan", "greaterThanOrEqual", "isNull", "isNotNull",
+    ]
     right: FieldOperand | ConstantOperand | None = Field(default=None, discriminator="kind")
 
     @model_validator(mode="after")
@@ -76,7 +79,7 @@ class ComparisonCondition(BaseModel):
         return self
 
 
-class GroupCondition(BaseModel):
+class GroupCondition(ContractModel):
     kind: Literal["group"]
     operator: Literal["and", "or"]
     children: list["RuleCondition"] = Field(min_length=1, max_length=100)
@@ -90,8 +93,36 @@ RuleCondition = Annotated[
 GroupCondition.model_rebuild()
 
 
-class RuleProposal(BaseModel):
+class RuleProposal(ContractModel):
     name: str = Field(min_length=1, max_length=200, strict=True)
-    description: str = Field(max_length=2000, strict=True)
+    description: str | None = Field(default=None, max_length=2000)
     rootEntityId: str = Field(min_length=1, strict=True)
     condition: RuleCondition
+
+    @field_validator("name", "description")
+    @classmethod
+    def validate_text(cls, value, info):
+        if value is None:
+            return value
+        if info.field_name == "name" and not value.strip():
+            raise ValueError("Rule name must not be blank.")
+        limit = 200 if info.field_name == "name" else 2000
+        # .NET string.Length counts UTF-16 code units, not Unicode code points.
+        if len(value.encode("utf-16-le")) // 2 > limit:
+            raise ValueError(f"{info.field_name} exceeds {limit} UTF-16 code units.")
+        return value
+
+    @model_validator(mode="after")
+    def validate_tree_limits(self):
+        count = 0
+        pending = [(self.condition, 1)]
+        while pending:
+            node, depth = pending.pop()
+            count += 1
+            if count > 100:
+                raise ValueError("A rule supports at most 100 condition nodes.")
+            if depth > 8:
+                raise ValueError("A rule supports at most 8 condition levels.")
+            if isinstance(node, GroupCondition):
+                pending.extend((child, depth + 1) for child in node.children)
+        return self

@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../DataControls.Api/DataControls.Api.csproj" />
+    <Content Include="../fixtures/rule-contract.json" Link="rule-contract.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

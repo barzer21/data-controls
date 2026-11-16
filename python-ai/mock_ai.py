@@ -1,4 +1,5 @@
 from metadata_validation import validate_proposal_references
+from models import RuleProposal
 
 
 def propose_rule(description, metadata):
@@ -100,5 +101,7 @@ def propose_rule(description, metadata):
         "rootEntityId": "employee",
         "condition": condition,
     }
+    # Validate once here so HTTP and file-based use share the same output contract.
+    proposal = RuleProposal.model_validate(proposal).model_dump(exclude_unset=True)
     validate_proposal_references(proposal, metadata)
     return proposal
