@@ -32,13 +32,8 @@ export class AiRuleCreatorComponent {
   readonly busy = signal(false);
   readonly error = signal('');
   readonly confirmClose = signal(false);
-  readonly examples = [
-    'מצאי עובדים שתאריך סיום ההעסקה שלהם מוקדם מתאריך תחילת ההעסקה.',
-    'מצאי עובדים שהשכר שלהם גבוה מ-15000.',
-    'מצאי עובדים פעילים שהשכר שלהם גבוה מ-15000.',
-    'מצאי עובדים פעילים שהמחלקה שלהם לא פעילה.',
-    'מצאי עובדים שחסר להם שם פרטי או שכר.',
-  ];
+  readonly examples = signal<readonly string[]>([]);
+  readonly examplesError = signal(false);
 
   private readonly api = inject(AiProposalsApiService);
   private readonly destroyRef = inject(DestroyRef);
@@ -46,6 +41,21 @@ export class AiRuleCreatorComponent {
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
   private readonly keepWritingButton =
     viewChild<ElementRef<HTMLButtonElement>>('keepWritingButton');
+
+  constructor() {
+    this.loadExamples();
+  }
+
+  loadExamples(): void {
+    this.examplesError.set(false);
+    this.api
+      .examples()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (examples) => this.examples.set(examples),
+        error: () => this.examplesError.set(true),
+      });
+  }
 
   updateDescription(value: string): void {
     this.description.set(value);

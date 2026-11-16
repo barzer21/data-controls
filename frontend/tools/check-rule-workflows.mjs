@@ -189,6 +189,11 @@ const server = http.createServer(async (req, res) => {
           }),
         );
       }
+      if (url.pathname === '/api/ai/proposals/examples') {
+        return res.end(
+          JSON.stringify(['Example A', 'Example B', 'Example C', 'Example D', 'Example E']),
+        );
+      }
       if (url.pathname === '/api/ai/proposals') {
         setTimeout(() => {
           if (!res.destroyed) res.end(JSON.stringify(definition));

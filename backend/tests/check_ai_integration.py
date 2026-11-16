@@ -105,20 +105,16 @@ def main():
             assert before_status == 200
             endpoint = api_url + "/api/ai/proposals"
 
-            examples = [
-                ("מצאי עובדים שתאריך סיום ההעסקה שלהם מוקדם מתאריך תחילת ההעסקה.", "comparison"),
-                ("מצאי עובדים שהשכר שלהם גבוה מ-15000.", "comparison"),
-                ("מצאי עובדים פעילים שהשכר שלהם גבוה מ-15000.", "group"),
-                ("מצאי עובדים פעילים שהמחלקה שלהם לא פעילה.", "group"),
-                ("מצאי עובדים שחסר להם שם פרטי או שכר.", "group"),
-            ]
+            status, descriptions = call(endpoint + "/examples")
+            assert status == 200 and len(descriptions) == 5 and len(set(descriptions)) == 5
+            examples = list(zip(descriptions, ["comparison", "comparison", "group", "group", "group"], strict=True))
             valid_proposal = None
             for description, kind in examples:
                 status, proposal = call(endpoint, {"description": description})
                 assert status == 200, (status, proposal)
                 assert proposal["rootEntityId"] == "employee" and proposal["condition"]["kind"] == kind
                 valid_proposal = proposal
-            print("PASS: five live .NET -> Python -> .NET proposals.", flush=True)
+            print("PASS: server-published examples and five live .NET -> Python -> .NET proposals.", flush=True)
 
             for body in [{}, {"description": ""}, {"description": "   "},
                          {"description": "x" * 2001}, {"description": 123},

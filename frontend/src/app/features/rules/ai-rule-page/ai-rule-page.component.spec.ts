@@ -62,6 +62,10 @@ describe('AI creation page', () => {
     const page = await harness.navigateByUrl('/rules/ai/new?page=2', AiRulePageComponent);
     http.expectOne('/api/metadata').flush(metadata);
     harness.detectChanges();
+    http
+      .expectOne('/api/ai/proposals/examples')
+      .flush(['Example A', 'Example B', 'Example C', 'Example D', 'Example E']);
+    harness.detectChanges();
     return page;
   }
   function creator() {
@@ -73,7 +77,7 @@ describe('AI creation page', () => {
       .componentInstance as RuleEditorComponent;
   }
   function generate() {
-    creator().updateDescription(creator().examples[1]);
+    creator().updateDescription(creator().examples()[1]);
     creator().generate();
     http.expectOne('/api/ai/proposals').flush(proposal);
     harness.detectChanges();
@@ -127,19 +131,19 @@ describe('AI creation page', () => {
   it('protects the description on sidebar navigation and preserves it on cancellation', async () => {
     await open();
     const form = creator();
-    form.updateDescription(form.examples[0]);
+    form.updateDescription(form.examples()[0]);
     const navigation = router.navigateByUrl('/rules?page=2');
     await vi.waitFor(() => expect(form.confirmClose()).toBe(true));
     form.cancelClose();
     expect(await navigation).toBe(false);
-    expect(form.description()).toBe(form.examples[0]);
+    expect(form.description()).toBe(form.examples()[0]);
     expect(router.url).toBe('/rules/ai/new?page=2');
   });
 
   it('returns to the original list page after discarding text', async () => {
     await open();
     const form = creator();
-    form.updateDescription(form.examples[0]);
+    form.updateDescription(form.examples()[0]);
     const navigation = router.navigateByUrl('/rules?page=2');
     await vi.waitFor(() => expect(form.confirmClose()).toBe(true));
     form.close();
@@ -150,7 +154,7 @@ describe('AI creation page', () => {
 
   it('cancels a pending AI request when leaving the page', async () => {
     await open();
-    creator().updateDescription(creator().examples[0]);
+    creator().updateDescription(creator().examples()[0]);
     creator().generate();
     const request = http.expectOne('/api/ai/proposals');
     expect(await router.navigateByUrl('/rules?page=2')).toBe(true);
@@ -202,6 +206,10 @@ describe('AI creation page', () => {
     expect(page.error()).not.toBe('');
     page.loadMetadata();
     http.expectOne('/api/metadata').flush(metadata);
+    harness.detectChanges();
+    http
+      .expectOne('/api/ai/proposals/examples')
+      .flush(['Example A', 'Example B', 'Example C', 'Example D', 'Example E']);
     harness.detectChanges();
     expect(harness.routeNativeElement!.querySelector('main.ai-page')).not.toBeNull();
     http.expectNone('/api/ai/proposals');

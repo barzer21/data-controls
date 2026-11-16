@@ -1,10 +1,15 @@
 from fastapi import FastAPI, HTTPException
-from mock_ai import propose_rule
+from mock_ai import EXAMPLES, propose_rule
 from models import ProposalRequest, RuleProposal
 from pydantic import ValidationError
 
 
 app = FastAPI(title="Data Controls - Mock AI")
+
+
+@app.get("/examples", response_model=list[str])
+def get_examples():
+    return list(EXAMPLES)
 
 
 @app.post("/proposals", response_model=RuleProposal, response_model_exclude_unset=True)

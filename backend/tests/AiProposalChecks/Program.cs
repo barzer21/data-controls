@@ -83,6 +83,34 @@ cancelled.Cancel();
 await Expect<OperationCanceledException>(() => Propose(valid, cancellationToken: cancelled.Token), "cancellation");
 
 Check(requestCount == 5, "cancelled operation did not send a request");
+foreach (var (body, validExamples) in new (string, bool)[]
+{
+    ("[\"First example\",\"Second example\"]", true),
+    ("[]", true),
+    ("null", false),
+    ("{}", false),
+    ("[1]", false),
+    ("[null]", false),
+    ("[\" \"]", false),
+    ("[\"Same\",\"Same\"]", false)
+})
+{
+    using var handler = new StubHandler((request, _) =>
+    {
+        Check(request.Method == HttpMethod.Get && request.RequestUri!.AbsolutePath == "/examples", "examples GET");
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(body, Encoding.UTF8, "application/json")
+        });
+    });
+    using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:8000/") };
+    var provider = new PythonAiRuleProposalProvider(http, metadata, new RuleValidator(metadata), Options.Create(options));
+    var accepted = true;
+    try { await provider.GetExamplesAsync(CancellationToken.None); }
+    catch (JsonException) { accepted = false; }
+    Check(accepted == validExamples, "examples response contract: " + body);
+}
+Console.WriteLine("PASS: examples GET, valid/empty lists, malformed types, nulls, blanks and duplicates.");
 Console.WriteLine("PASS: business-only request, valid/invalid proposals, polymorphic JSON, malformed/null responses, HTTP error, cancellation.");
 
 static void Check(bool condition, string message)

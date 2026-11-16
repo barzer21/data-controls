@@ -44,7 +44,7 @@
         [disabled]="busy()"
         [ngModel]="description()"
         (ngModelChange)="updateDescription($event)"
-        placeholder="לדוגמה: מצאי עובדים שהשכר שלהם גבוה מ-15000."
+        placeholder="תארו כאן את החריגה שתרצו לאתר"
       ></textarea>
       <p id="ai-description-hint" class="hint">
         כרגע זמינות חמש דוגמאות מוגדרות. בחרו דוגמה כדי להשתמש בנוסח הנתמך.
@@ -52,8 +52,12 @@
     </form>
     <section aria-label="דוגמאות לבקרות">
       <h3>אפשר להתחיל מכאן</h3>
+      @if (examplesError()) {
+        <p role="status">לא ניתן לטעון את הדוגמאות כרגע. אפשר להקליד תיאור או לנסות שוב.</p>
+        <button type="button" (click)="loadExamples()">טעינת דוגמאות מחדש</button>
+      }
       <div class="examples">
-        @for (example of examples; track example) {
+        @for (example of examples(); track example) {
           <button type="button" [disabled]="busy()" (click)="updateDescription(example)">
             {{ example }}
           </button>

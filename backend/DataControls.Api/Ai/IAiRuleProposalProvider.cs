@@ -6,5 +6,6 @@ public sealed record AiRuleProposalResult(RuleDefinition Definition, RuleValidat
 
 public interface IAiRuleProposalProvider
 {
+    Task<IReadOnlyList<string>> GetExamplesAsync(CancellationToken cancellationToken);
     Task<AiRuleProposalResult> ProposeAsync(string description, CancellationToken cancellationToken);
 }

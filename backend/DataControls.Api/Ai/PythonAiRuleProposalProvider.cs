@@ -13,6 +13,16 @@ public sealed class PythonAiRuleProposalProvider(
     RuleValidator validator,
     IOptions<JsonOptions> jsonOptions) : IAiRuleProposalProvider
 {
+    public async Task<IReadOnlyList<string>> GetExamplesAsync(CancellationToken cancellationToken)
+    {
+        var examples = await http.GetFromJsonAsync<string[]>("examples", cancellationToken)
+            ?? throw new JsonException("The AI service returned empty examples.");
+        if (examples.Length > 20 || examples.Any(value => string.IsNullOrWhiteSpace(value) || value.Length > 2000)
+            || examples.Distinct(StringComparer.Ordinal).Count() != examples.Length)
+            throw new JsonException("The AI service returned invalid examples.");
+        return examples;
+    }
+
     public async Task<AiRuleProposalResult> ProposeAsync(string description, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

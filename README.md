@@ -135,6 +135,8 @@ npm.cmd --prefix frontend start
 dotnet build backend/DataControls.slnx -c Release
 dotnet run --project backend/tests/CompilerChecks -c Release -p:UseAppHost=false
 dotnet run --project backend/tests/AgeChecks -c Release -p:UseAppHost=false
+dotnet run --project backend/tests/AiProposalChecks -c Release -p:UseAppHost=false
+.\python-ai\.venv\Scripts\python.exe -B -m unittest discover -s python-ai -p "test_*.py"
 
 npm.cmd --prefix frontend run build
 npm.cmd --prefix frontend test -- --watch=false
@@ -144,6 +146,7 @@ npm.cmd --prefix frontend test -- --watch=false
 
 בדיקות נוספות והדרישות שלהן:
 
+- `backend/tests/Test-SubmissionSetup.ps1`: בדיקת הקמה מלאה מסקריפטים 01–07, כולל אימות והרצת עשר בקרות הדוגמה, הרשאות קריאה והרצות חוזרות של סקריפט 07 ללא כפילויות או דריסת עריכות. דורשת SQL Server, ‏`sqlcmd`, הרשאת יצירה והסרה של DB ובניית Release של ה־API. נוצרים DB ייעודי עם שם אקראי ו־API זמני; ה־DB הייעודי מוסר גם במקרה של כישלון. נתוני ה־DB הרגיל אינם משתנים. קובצי האבחון נשמרים בתיקיית Temp שהבדיקה מדפיסה.
 - `frontend/tools/check-rule-workflows.mjs`: בדיקות דפדפן מול build ותגובות API מדומות. דורש Edge מותקן, או כתובת לדפדפן מתאים במשתנה `BROWSER_TEST_EXECUTABLE`.
 - `backend/tests/check_age_api.py`: API זמני מול דאטה בייס הפיתוח, לקריאה בלבד; דורש build של Release ונתוני דוגמה.
 - `backend/tests/Test-RulePersistence.ps1`: יוצר דאטה בייס בדיקה נפרד.
@@ -169,6 +172,20 @@ npm.cmd --prefix frontend test -- --watch=false
 לאחר restore מחדש, בדיקת `dotnet list package --vulnerable --include-transitive --no-restore` מול מקור NuGet לא מצאה חבילות פגיעות ב־API או בשלושת פרויקטי הבדיקות. הבנייה עברה ללא אזהרות. עברו 49 בדיקות קומפיילר, 55 בדיקות גיל מול SQL, בדיקות מתאם AI ובדיקות API מול ה־DB הקיים. בנוסף עברו 99 בדיקות שמירה, הרצה, סינון והרשאות ב־DB זמני נפרד, שהוסר בסיום. ספירות ו־checksums של טבלאות העובדים, המחלקות והבקרות ב־DB העבודה נשארו ללא שינוי.
 
 הבדיקה מתייחסת לחבילות ולמידע האבטחה הזמין בזמן הרצתה; היא אינה מבדק חדירה או אישור מוכנות מלא לייצור.
+
+### ‏מצב נוכחי ובדיקת הקמה אוטומטית — 16.11.2026
+
+‏הדיווחים לעיל מתעדים בדיקות קודמות בהיקף המצוין בכל דיווח. לאחר התיקונים האחרונים עברו בניית Angular ו־179 בדיקות, בדיקות הדפדפן במחשב ובמסך צר מול API מדומה, 39 מקרי תאימות בשתי השפות ושש בדיקות Python. בדיקת החיבור החי בין ‎.NET ל־Python כיסתה את חמש דוגמאות ה־mock ואת תרחישי השגיאה; רשימת הבקרות השמורות נשארה ללא שינוי. אופרטורים, תוויות והתאמה לסוג השדה מרוכזים כעת בפרונטאנד ב־`core/rules/comparison-operators.ts`.
+
+‏בדיקת ההקמה החדשה עברה 47 בדיקות ב־DB ייעודי: סקריפטים 01–07, ‏20 עובדים, 5 מחלקות, היסטוריית המיגרציות והרשאות הקורא, עשר בקרות עם שמות בעברית, ואימות והרצה של כולן דרך API זמני. הרצת סקריפט 07 שוב שמרה על המזהים, ההגדרות והזמנים; גם לאחר עריכת תיאור ותנאי תוך שמירת אותו שם, הרצה נוספת שמרה על העריכה ועל יתר הבקרות. נתוני העובדים והמחלקות נשארו ללא שינוי, וה־DB הייעודי הוסר בסיום.
+
+‏להרצת הבדיקה מתוך שורש הפרויקט, לאחר בניית Release:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-SubmissionSetup.ps1
+```
+
+‏אפשר להעביר `-Server` עבור שרת SQL אחר או `-ApiAssemblyPath` עבור קובץ DLL אחר. הבדיקה אינה מקבלת שם של DB קיים. היא בודקת התקנה חדשה וריצה חוזרת של טעינת הבקרות; סקריפטי יצירת הטבלאות אינם מיועדים כולם להרצה חוזרת על DB קיים. אין בכך אימות של התקנה מ־clone נקי או במחשב אחר.
 
 ## מגבלות והגשה
 

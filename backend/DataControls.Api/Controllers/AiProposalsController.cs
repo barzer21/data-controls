@@ -13,6 +13,29 @@ public sealed class AiProposalsController(
     IAiRuleProposalProvider proposals,
     ILogger<AiProposalsController> logger) : ControllerBase
 {
+    [HttpGet("examples")]
+    public async Task<ActionResult<IReadOnlyList<string>>> Examples(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Ok(await proposals.GetExamplesAsync(cancellationToken));
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return Problem(statusCode: 504, title: "טעינת הדוגמאות חרגה מזמן ההמתנה.");
+        }
+        catch (JsonException error)
+        {
+            logger.LogWarning(error, "AI service returned invalid examples.");
+            return Problem(statusCode: 502, title: "שירות ההצעות החזיר רשימת דוגמאות לא תקינה.");
+        }
+        catch (HttpRequestException error)
+        {
+            logger.LogWarning(error, "AI examples service is unavailable.");
+            return Problem(statusCode: 503, title: "לא ניתן לטעון כרגע את דוגמאות הבקרות.");
+        }
+    }
+
     [HttpPost]
     [RequestSizeLimit(64 * 1024)]
     [ProducesResponseType<RuleDefinition>(StatusCodes.Status200OK)]

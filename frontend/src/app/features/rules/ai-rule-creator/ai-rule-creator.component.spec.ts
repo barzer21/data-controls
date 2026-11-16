@@ -28,6 +28,9 @@ describe('AI proposal creator', () => {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(AiRuleCreatorComponent);
     component = fixture.componentInstance;
+    http
+      .expectOne('/api/ai/proposals/examples')
+      .flush(['Example A', 'Example B', 'Example C', 'Example D', 'Example E']);
     fixture.detectChanges();
   });
   afterEach(() => {
@@ -35,7 +38,25 @@ describe('AI proposal creator', () => {
     http.verify();
   });
 
-  it('renders a labelled page with all supported examples and no requests', () => {
+  it('preserves written text when example loading fails and allows retry', () => {
+    component.updateDescription('My description');
+    component.loadExamples();
+    http
+      .expectOne('/api/ai/proposals/examples')
+      .flush({}, { status: 503, statusText: 'Unavailable' });
+    fixture.detectChanges();
+    expect(component.examplesError()).toBe(true);
+    expect(component.description()).toBe('My description');
+    expect(fixture.nativeElement.querySelector('[role="status"]')).not.toBeNull();
+    component.loadExamples();
+    http.expectOne('/api/ai/proposals/examples').flush(['Updated server example']);
+    fixture.detectChanges();
+    expect(component.examples()).toEqual(['Updated server example']);
+    expect(component.examplesError()).toBe(false);
+    expect(component.description()).toBe('My description');
+  });
+
+  it('renders a labelled page with server examples and no additional requests', () => {
     expect(
       fixture.nativeElement.querySelector('main.ai-page[aria-labelledby="ai-title"]'),
     ).not.toBeNull();
@@ -49,7 +70,7 @@ describe('AI proposal creator', () => {
     component.proposed.subscribe(onProposed);
     fixture.nativeElement.querySelectorAll('.examples button')[1].click();
     fixture.detectChanges();
-    const description = component.examples[1];
+    const description = component.examples()[1];
     expect(component.description()).toBe(description);
     fixture.nativeElement
       .querySelector('form')
@@ -69,7 +90,7 @@ describe('AI proposal creator', () => {
     component.description.set('x'.repeat(2001));
     component.generate();
     http.expectNone(() => true);
-    component.updateDescription(component.examples[0]);
+    component.updateDescription(component.examples()[0]);
     component.generate();
     component.generate();
     expect(component.busy()).toBe(true);
@@ -79,13 +100,13 @@ describe('AI proposal creator', () => {
   it.each([400, 502, 503, 504, 0])('preserves text and permits retry after HTTP %s', (status) => {
     const onProposed = vi.fn();
     component.proposed.subscribe(onProposed);
-    component.updateDescription(component.examples[0]);
+    component.updateDescription(component.examples()[0]);
     component.generate();
     http
       .expectOne('/api/ai/proposals')
       .flush({ title: 'Internal details' }, { status, statusText: 'Error' });
     fixture.detectChanges();
-    expect(component.description()).toBe(component.examples[0]);
+    expect(component.description()).toBe(component.examples()[0]);
     expect(component.busy()).toBe(false);
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).not.toContain(
       'Internal details',
@@ -99,18 +120,18 @@ describe('AI proposal creator', () => {
   it('asks before discarding text and can continue writing', () => {
     const onClosed = vi.fn();
     component.closed.subscribe(onClosed);
-    component.updateDescription(component.examples[0]);
+    component.updateDescription(component.examples()[0]);
     component.requestClose();
     expect(component.confirmClose()).toBe(true);
     expect(onClosed).not.toHaveBeenCalled();
     component.confirmClose.set(false);
-    expect(component.description()).toBe(component.examples[0]);
+    expect(component.description()).toBe(component.examples()[0]);
     component.close();
     expect(onClosed).toHaveBeenCalledOnce();
   });
 
   it('allows cancellation and aborts the request when the creator is removed', () => {
-    component.updateDescription(component.examples[0]);
+    component.updateDescription(component.examples()[0]);
     component.generate();
     const request = http.expectOne('/api/ai/proposals');
     const onClosed = vi.fn();
@@ -122,7 +143,7 @@ describe('AI proposal creator', () => {
   });
 
   it('shows discard confirmation prominently and Escape returns to the unchanged prompt', () => {
-    component.updateDescription(component.examples[0]);
+    component.updateDescription(component.examples()[0]);
     fixture.nativeElement.querySelector('header button').click();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[role="region"]')).not.toBeNull();
@@ -133,7 +154,7 @@ describe('AI proposal creator', () => {
     fixture.detectChanges();
     expect(event.defaultPrevented).toBe(true);
     expect(component.confirmClose()).toBe(false);
-    expect(component.description()).toBe(component.examples[0]);
+    expect(component.description()).toBe(component.examples()[0]);
     expect(fixture.nativeElement.querySelector('dialog')).toBeNull();
     http.expectNone(() => true);
   });
@@ -141,7 +162,7 @@ describe('AI proposal creator', () => {
   it('notifies the parent after discard confirmation', () => {
     const onClosed = vi.fn();
     component.closed.subscribe(onClosed);
-    component.updateDescription(component.examples[0]);
+    component.updateDescription(component.examples()[0]);
     component.requestClose();
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.confirmation button:last-of-type').click();

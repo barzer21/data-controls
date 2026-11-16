@@ -10,12 +10,23 @@ from pydantic import ValidationError
 from api import create_proposal
 from metadata_validation import validate_proposal_references
 from models import ConstantOperand, ProposalRequest, RuleProposal
+from mock_ai import EXAMPLES, propose_rule
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ContractTests(unittest.TestCase):
+    def test_every_published_example_produces_an_independent_valid_proposal(self):
+        self.assertEqual(5, len(EXAMPLES))
+        self.assertEqual(len(EXAMPLES), len(set(EXAMPLES)))
+        for description in EXAMPLES:
+            with self.subTest(description=description):
+                proposal = propose_rule(description, self.request.metadata)
+                RuleProposal.model_validate(proposal)
+                proposal['condition'].clear()
+                self.assertTrue(propose_rule(description, self.request.metadata)['condition'])
+
     def setUp(self):
         self.request = ProposalRequest.model_validate_json(
             (ROOT / "python-ai/request.json").read_text(encoding="utf-8")

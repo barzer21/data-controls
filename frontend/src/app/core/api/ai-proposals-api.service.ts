@@ -6,6 +6,10 @@ import { RuleDefinition } from './api.models';
 export class AiProposalsApiService {
   private readonly http = inject(HttpClient);
 
+  examples() {
+    return this.http.get<readonly string[]>('/api/ai/proposals/examples');
+  }
+
   propose(description: string) {
     return this.http.post<RuleDefinition>('/api/ai/proposals', { description });
   }

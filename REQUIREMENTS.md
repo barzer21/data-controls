@@ -4,13 +4,13 @@
 > This document distinguishes **explicit assignment requirements** from implementation choices. Statuses: `Not started`, `In progress`, `Implemented`, `Verified`.
 > Do not mark `Verified` until an observable test/demo and relevant deliverable have been checked.
 
-Submission verification: 2026-11-16. Deliverables checked against the original assignment DOCX. SQL scripts 01-06 passed after recreating DataControlsDb; frontend dependencies reinstalled; Python dependencies installed in a fresh virtual environment. Live Angular/.NET/Python browser flow passed. Verification used the existing working tree, not a fresh clone or another machine. Historical evidence below retains its original scope; current results are recorded in README.md.
+Submission verification: 2026-11-16. Deliverables checked against the original assignment DOCX. SQL scripts 01-07 now also pass an automated isolated-DB regression (47 checks, including all ten seeded controls and repeated seeding); frontend dependencies reinstalled; Python dependencies installed in a fresh virtual environment. Live Angular/.NET/Python browser flow passed. Verification used the existing working tree, not a fresh clone or another machine. Historical evidence below retains its original scope; current results are recorded in README.md.
 
 ## General and data
 
 | ID | Explicit requirement from assignment | Acceptance evidence | Status |
 |---|---|---|---|
-| GEN-01 | Build a web application with frontend, backend and database | Implemented Angular/API/SQL flow and HTTP checks; full clean-checkout/browser submission walkthrough pending | Implemented |
+| GEN-01 | Build a web application with frontend, backend and database | Live Angular/.NET/Python walkthrough recorded on 2026-11-16; current fixture-based browser regression passed. Fresh clone / other-machine installation not tested. | Verified |
 | GEN-02 | Generic controls: add/change controls without dedicated code per rule | Metadata-driven full-page editor, generic comparisons/groups | Implemented |
 | GEN-03 | Business users need no SQL/schema/relationship knowledge | Business labels, related field selection and create/edit/run UI | Implemented |
 | DB-01 | Sample database with multiple related tables | SQL scripts recreated related Employees/Departments tables and Rules storage | Verified |
@@ -31,7 +31,7 @@ Submission verification: 2026-11-16. Deliverables checked against the original a
 | EXEC-02 | Support complex conditions and relationships between tables | Nested groups, field comparisons, cross-table and missing-relation checks passed | Verified |
 | EXEC-03 | Separate rule definition from query implementation | Distinct definition, validator, compiler, executor and shared draft/saved orchestration | Implemented |
 | EXEC-04 | Prevent dangerous commands or data modification | Typed parameters, allowlisted/quoted identifiers, real SQL write-denial and no privileged fallback verified | Verified |
-| EXEC-05 | Handle errors and display appropriate messages | API error tests and UI error/retry/save-failure checks; full live submission review pending | Implemented |
+| EXEC-05 | Handle errors and display appropriate messages | Shared safe API error handling; frontend error/retry tests and live AI upstream error checks passed on 2026-11-16. | Verified |
 | EXEC-06 | Return records violating the control | Expected sample counts/records, dates, NULL and joins verified via execution tests | Verified |
 | RESULTS-01 | Show list of defined controls | Angular list implemented; 10 UI/HTTP tests and live proxy + Edge checks | Implemented |
 | RESULTS-02 | Execute a control from the list | Run action opens dedicated results route; executes displayed saved snapshot without saving | Implemented |
@@ -39,7 +39,7 @@ Submission verification: 2026-11-16. Deliverables checked against the original a
 | RESULTS-04 | Show violating records in a table | Generic table uses server columns, IDs and typed values; live desktop Edge check | Implemented |
 | RESULTS-05 | Explain why each record failed | Per-row Hebrew failureReason displayed; structured explanation remains available in response | Implemented |
 | RESULTS-06 | Search and filter results | Server-backed search and typed filters in saved/draft results, including age; matching/evaluated counts | Implemented |
-| UX-01 | Clear, convenient, responsive UI | Saved-list desktop/mobile Edge review completed; other screens pending | In progress |
+| UX-01 | Clear, convenient, responsive UI | Desktop/mobile workflow regression passed for manual creation, editing, AI approval and results/filtering; final human usability review remains open. | Implemented |
 
 ## Stage B — AI readiness (mock)
 
@@ -47,10 +47,10 @@ Submission verification: 2026-11-16. Deliverables checked against the original a
 |---|---|---|---|
 | AI-01 | Free-text control description input | Dedicated Angular page with description input and five selectable examples; docs/AI_SERVICE.md | Implemented |
 | AI-02 | Infrastructure to supply schema and business semantics to future AI model | Server supplies public business metadata; Pydantic contract and reference checks; docs/AI_SERVICE.md | Implemented |
-| AI-03 | Define expected AI response structure | Pydantic models/OpenAPI and existing RuleDefinition contract; python-ai/models.py | Implemented |
+| AI-03 | Define expected AI response structure | Python/.NET share 39 contract fixtures: eight operators, optional description, strict properties/types and tree limits; both suites passed. | Verified |
 | AI-04 | Demonstrate receiving AI response using mock | Five Python mock examples checked over live HTTP; docs/AI_SERVICE.md | Implemented |
 | AI-05 | Translate AI response to Stage A control definition | Typed RuleDefinition and shared RuleValidator; live integration checks | Implemented |
-| AI-06 | Show proposed control for user approval before execution | Shared editor review, approval reset on edits; 115 frontend tests and fixture-based browser checks; full live browser demo pending | Implemented |
+| AI-06 | Show proposed control for user approval before execution | Live walkthrough recorded on 2026-11-16; current 179 frontend tests and desktop/mobile browser regression cover approval and reset after editing. | Verified |
 | AI-07 | Decouple AI mechanism from rule execution, enabling model replacement | IAiRuleProposalProvider, separate Angular API service and same executor | Implemented |
 | AI-OPTIONAL | Optional: proactively propose controls based on schema | docs/AI_RULE_SUGGESTIONS_PLAN.md describes scope, contracts, integration, validation, user approval and acceptance checks; design only, no implementation | Implemented |
 
@@ -64,15 +64,15 @@ Submission verification: 2026-11-16. Deliverables checked against the original a
 | TECH-04 | Secure dynamic SQL mechanisms | Parameterization/identifier quoting and real restricted-SQL-identity tests passed | Verified |
 | TECH-05 | Angular | Angular 22 builds and runs against local API | Implemented |
 | TECH-06 | Hebrew UI and RTL | Hebrew/RTL list, manual editor, AI review and results; desktop/mobile browser checks, final submission walkthrough pending | Implemented |
-| TECH-07 | Reusable frontend components | Shared recursive condition editor, full-page editor, summary, result table and pagination | Implemented |
-| TECH-08 | Organized architecture and separation of responsibilities | docs/ARCHITECTURE.md and docs/CODE_GUIDE.md; final human review pending | Implemented |
+| TECH-07 | Reusable frontend components | Shared recursive editor/results; typed comparison operators, labels and field-type compatibility centralized in core/rules/comparison-operators.ts. | Verified |
+| TECH-08 | Organized architecture and separation of responsibilities | docs/ARCHITECTURE.md and docs/UI_COMPONENTS.md describe the implemented structure; docs/ARCHITECTURE_AUDIT.md records review findings and current disposition. | Implemented |
 
 ## Mandatory submission artifacts
 
 | ID | Explicit requirement | Deliverable | Status |
 |---|---|---|---|
 | SUB-01 | Complete frontend and backend source | frontend/, backend/ and python-ai/ present; .NET and Angular builds passed | Verified |
-| SUB-02 | Scripts to create DB and load sample data | Scripts 01-06 executed on recreated DataControlsDb: 20 employees, 5 departments, 0 saved rules; read-only permissions tested | Verified |
+| SUB-02 | Scripts to create DB and load sample data | Test-SubmissionSetup.ps1: 47 checks against a unique disposable DB, scripts 01-07, 20 employees, 5 departments, 10 controls, reader permissions, validation/execution and repeated seed preserving edits. | Verified |
 | SUB-03 | Installation and run instructions | README.md commands checked; npm ci and fresh Python environment installation passed; all three services started | Verified |
 | SUB-04 | Short architecture and rule engine description | docs/ARCHITECTURE.md reviewed against the submission requirement | Verified |
 | SUB-05 | Examples of definable/runnable controls | docs/EXAMPLE_RULES.md and five JSON examples validated/executed against the rebuilt DB | Verified |
