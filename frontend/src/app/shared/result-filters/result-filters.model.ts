@@ -5,7 +5,12 @@ import {
   RuleExecutionOptions,
   RuleResultColumn,
 } from '../../core/api/api.models';
-import { comparisonOperators, editableFields } from '../condition-editor/condition-editor.model';
+import { editableFields } from '../condition-editor/condition-editor.model';
+import {
+  ComparisonOperator,
+  isComparisonOperator,
+  operatorsForType,
+} from '../../core/rules/comparison-operators';
 import { parseNumericInput } from '../numeric-input';
 
 export interface FilterColumn extends RuleResultColumn {
@@ -13,7 +18,7 @@ export interface FilterColumn extends RuleResultColumn {
 }
 export interface ColumnFilter {
   readonly columnId: string;
-  readonly operator: string;
+  readonly operator: ComparisonOperator;
   readonly value?: string | number | boolean;
 }
 export interface ResultFilterSelection {
@@ -41,20 +46,15 @@ export function filterColumns(
   });
 }
 
-export function filterOperators(type: string) {
-  return comparisonOperators.filter(
-    (op) =>
-      ['number', 'date'].includes(type) ||
-      ['equals', 'notEquals', 'isNull', 'isNotNull'].includes(op.id),
-  );
-}
-
 export function parseColumnFilter(
   column: FilterColumn,
   operator: string,
   raw: string,
 ): { filter: ColumnFilter } | { error: string } {
-  if (!filterOperators(column.type).some((op) => op.id === operator))
+  if (
+    !isComparisonOperator(operator) ||
+    !operatorsForType(column.type).some((op) => op.id === operator)
+  )
     return { error: 'יש לבחור השוואה המתאימה לסוג העמודה.' };
   if (operator === 'isNull' || operator === 'isNotNull')
     return { filter: { columnId: column.id, operator } };

@@ -1,3 +1,5 @@
+import { ComparisonOperator } from '../rules/comparison-operators';
+
 export interface RuleSummary {
   readonly createdWithAi?: boolean;
   readonly id: number;
@@ -54,7 +56,7 @@ export type RuleCondition =
   | {
       readonly kind: 'comparison';
       readonly left: FieldReference;
-      readonly operator: string;
+      readonly operator: ComparisonOperator;
       readonly right?: RuleOperand | null;
     };
 

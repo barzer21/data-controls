@@ -3,13 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { UiIconComponent } from '../ui-icon/ui-icon.component';
 import { numericConstantError, NUMERIC_INPUT_LIMITS, parseNumericInput } from '../numeric-input';
 import { MetadataResponse, RuleCondition } from '../../core/api/api.models';
-import {
-  comparisonOperators,
-  constantFor,
-  editableFields,
-  fieldKey,
-  newComparison,
-} from './condition-editor.model';
+import { ComparisonOperator, operatorsForType } from '../../core/rules/comparison-operators';
+import { constantFor, editableFields, fieldKey, newComparison } from './condition-editor.model';
 
 @Component({
   selector: 'app-condition-editor',
@@ -36,15 +31,7 @@ export class ConditionEditorComponent {
       (f) => f.type === this.leftField()?.type && f.key !== this.leftField()?.key,
     ),
   );
-  readonly operators = computed(() => {
-    const type = this.leftField()?.type;
-    if (!['number', 'date', 'text', 'boolean'].includes(type ?? '')) return [];
-    return comparisonOperators.filter(
-      (op) =>
-        ['number', 'date'].includes(type ?? '') ||
-        ['equals', 'notEquals', 'isNull', 'isNotNull'].includes(op.id),
-    );
-  });
+  readonly operators = computed(() => operatorsForType(this.leftField()?.type));
   readonly fieldKey = fieldKey;
   readonly numericLimits = NUMERIC_INPUT_LIMITS;
   readonly numericError = computed(() => {
@@ -57,7 +44,7 @@ export class ConditionEditorComponent {
       ? numericConstantError(node.right.value)
       : null;
   });
-  operatorAvailable(operator: string): boolean {
+  operatorAvailable(operator: string): operator is ComparisonOperator {
     return this.operators().some((op) => op.id === operator);
   }
   rightFieldAvailable(key: string): boolean {

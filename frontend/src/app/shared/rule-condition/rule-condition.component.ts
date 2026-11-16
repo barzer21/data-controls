@@ -1,3 +1,4 @@
+import { comparisonOperatorLabel } from '../../core/rules/comparison-operators';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FieldReference, MetadataResponse, RuleCondition } from '../../core/api/api.models';
 import { BusinessValuePipe } from '../business-value.pipe';
@@ -35,16 +36,6 @@ export class RuleConditionComponent {
   }
 
   operatorLabel(operator: string): string {
-    const labels: Record<string, string> = {
-      equals: 'שווה ל־',
-      notEquals: 'שונה מ־',
-      greaterThan: 'גדול מ־',
-      greaterThanOrEqual: 'גדול או שווה ל־',
-      lessThan: 'קטן מ־',
-      lessThanOrEqual: 'קטן או שווה ל־',
-      isNull: 'חסר',
-      isNotNull: 'אינו חסר',
-    };
-    return labels[operator] ?? 'השוואה שאינה נתמכת בתצוגה';
+    return comparisonOperatorLabel(operator) ?? 'השוואה שאינה נתמכת בתצוגה';
   }
 }

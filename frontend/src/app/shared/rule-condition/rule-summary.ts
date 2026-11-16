@@ -1,10 +1,7 @@
+import { comparisonOperatorLabel } from '../../core/rules/comparison-operators';
 import { MetadataResponse, RuleCondition } from '../../core/api/api.models';
 import { BusinessValuePipe } from '../business-value.pipe';
-import {
-  comparisonOperators,
-  editableFields,
-  fieldKey,
-} from '../condition-editor/condition-editor.model';
+import { editableFields, fieldKey } from '../condition-editor/condition-editor.model';
 
 // Explicit group boundaries preserve the meaning of arbitrary nested AND/OR trees.
 export function ruleSummary(
@@ -20,8 +17,7 @@ export function ruleSummary(
       return `${label}: (${node.children.map(describe).join(node.operator === 'and' ? '; וגם ' : '; או ')})`;
     }
     const left = fields.find((field) => field.key === fieldKey(node.left));
-    const operator =
-      comparisonOperators.find((op) => op.id === node.operator)?.label ?? 'השוואה שאינה זמינה';
+    const operator = comparisonOperatorLabel(node.operator) ?? 'השוואה שאינה זמינה';
     const label = left?.label ?? 'שדה שאינו זמין';
     if (node.operator === 'isNull' || node.operator === 'isNotNull') return `${label} ${operator}`;
     const right = node.right;

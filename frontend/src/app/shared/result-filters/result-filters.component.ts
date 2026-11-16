@@ -14,11 +14,11 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BusinessValuePipe } from '../business-value.pipe';
+import { operatorsForType } from '../../core/rules/comparison-operators';
 import {
   ColumnFilter,
   emptySelection,
   FilterColumn,
-  filterOperators,
   parseColumnFilter,
   ResultFilterSelection,
 } from './result-filters.model';
@@ -43,7 +43,7 @@ export class ResultFiltersComponent {
     this.columns().find((column) => column.id === this.selectedColumnId()),
   );
   readonly searchable = computed(() => this.columns().some((column) => column.type === 'text'));
-  readonly operators = computed(() => filterOperators(this.column()?.type ?? 'text'));
+  readonly operators = computed(() => operatorsForType(this.column()?.type));
   private readonly injector = inject(Injector);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
@@ -110,7 +110,7 @@ export class ResultFiltersComponent {
   }
   operatorLabel(filter: ColumnFilter): string {
     return (
-      filterOperators(this.columnType(filter.columnId) ?? 'text').find(
+      operatorsForType(this.columnType(filter.columnId)).find(
         (operator) => operator.id === filter.operator,
       )?.label ?? 'השוואה'
     );

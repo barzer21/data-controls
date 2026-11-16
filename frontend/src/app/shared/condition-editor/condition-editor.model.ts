@@ -94,14 +94,3 @@ export function numericConditionErrors(
   visit(condition);
   return errors;
 }
-
-export const comparisonOperators = [
-  { id: 'equals', label: 'שווה ל־' },
-  { id: 'notEquals', label: 'שונה מ־' },
-  { id: 'greaterThan', label: 'גדול מ־' },
-  { id: 'greaterThanOrEqual', label: 'גדול או שווה ל־' },
-  { id: 'lessThan', label: 'קטן מ־' },
-  { id: 'lessThanOrEqual', label: 'קטן או שווה ל־' },
-  { id: 'isNull', label: 'חסר' },
-  { id: 'isNotNull', label: 'אינו חסר' },
-];
