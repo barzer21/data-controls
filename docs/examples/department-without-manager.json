@@ -1,0 +1,13 @@
+{
+  "name": "מחלקות פעילות ללא מנהל",
+  "description": "איתור מחלקות פעילות שחסר בהן שם מנהל.",
+  "rootEntityId": "department",
+  "condition": {
+    "kind": "group",
+    "operator": "and",
+    "children": [
+      { "kind": "comparison", "left": { "fieldId": "isActive" }, "operator": "equals", "right": { "kind": "constant", "value": true } },
+      { "kind": "comparison", "left": { "fieldId": "managerName" }, "operator": "isNull" }
+    ]
+  }
+}

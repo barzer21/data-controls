@@ -1,0 +1,11 @@
+{
+  "name": "תקינות תאריכי העסקה",
+  "description": "איתור עובדים שסיום העסקתם מוקדם מתחילת העסקתם.",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "comparison",
+    "left": { "fieldId": "endDate" },
+    "operator": "lessThan",
+    "right": { "kind": "field", "field": { "fieldId": "startDate" } }
+  }
+}

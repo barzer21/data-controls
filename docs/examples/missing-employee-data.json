@@ -1,0 +1,13 @@
+{
+  "name": "פרטי עובד חסרים",
+  "description": "איתור עובדים שחסר להם שם פרטי או שכר.",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "group",
+    "operator": "or",
+    "children": [
+      { "kind": "comparison", "left": { "fieldId": "firstName" }, "operator": "isNull" },
+      { "kind": "comparison", "left": { "fieldId": "salary" }, "operator": "isNull" }
+    ]
+  }
+}

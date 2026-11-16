@@ -1,0 +1,13 @@
+{
+  "name": "עובדים פעילים במחלקה לא פעילה",
+  "description": "איתור עובדים פעילים המשויכים למחלקה שאינה פעילה.",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "group",
+    "operator": "and",
+    "children": [
+      { "kind": "comparison", "left": { "fieldId": "isActive" }, "operator": "equals", "right": { "kind": "constant", "value": true } },
+      { "kind": "comparison", "left": { "fieldId": "isActive", "relationshipPath": ["employeeDepartment"] }, "operator": "equals", "right": { "kind": "constant", "value": false } }
+    ]
+  }
+}

@@ -22,7 +22,7 @@
 | 4 | Rule persistence and CRUD | DB-04, RULE-04 | Implemented and tested |
 | 5 | SQL compiler and read-only executor | EXEC-01..06, TECH-04 | Draft/saved execution with full employee and department name |
 | 6 | Explanations, counts, search and filtering | RESULTS-03..06 | Implemented via API; UI pending |
-| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | First increment: Angular setup + saved list with server pagination; 10 tests, live proxy and Edge checks (docs/FRONTEND_LIST.md) |
+| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | First increment: Angular setup + saved list with server pagination; 10 tests, live proxy and Edge checks |
 | 8 | Python AI mock and approval flow | AI-01..07, TECH-02 | Implemented: five mock examples, metadata contract, validated .NET adapter and Angular approval flow; 69 UI tests and live backend/Python checks; browser demo pending |
 | 9 | Documentation and clean setup verification | SUB-01..08 | In progress |
 
@@ -62,4 +62,4 @@
 
 ## First next action
 
-Review the AI flow in a browser with Angular, .NET and Python running (docs/AI_SERVICE.md). Five mock examples, business metadata, shared server validation, editable proposal review and explicit approval before save/run are implemented. Saved-rule editing now uses a guarded full-page route, and related boolean comparisons enforce type-compatible options; 84 frontend tests and live backend/Python checks pass. Native Edge UI checks cover full-page editing, branding, boolean controls and dialog close behavior. The full live three-service browser demo remains pending. Future increments include true backend result pagination, rule deletion in the UI. Calculated age is implemented; see docs/CALCULATED_FIELDS.md.
+Review the submission documentation against a clean checkout and complete a live browser demonstration with Angular, .NET and Python running together. The README, architecture, runnable rule examples, limitations and AI-tool disclosure are now present; their existence does not complete the final verification gates. Calculated age, evaluated record counts and full-page manual/AI editing are implemented. Latest targeted verification: 115 Angular tests, 49 compiler checks, 55 SQL age/count checks and API/browser checks. Remaining functional extensions include true result pagination, UI deletion and a real AI model; these are distinguished from mandatory submission review.

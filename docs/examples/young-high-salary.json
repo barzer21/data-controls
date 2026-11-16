@@ -1,0 +1,13 @@
+{
+  "name": "עובדים צעירים עם שכר גבוה",
+  "description": "איתור עובדים שטרם מלאו להם 18 ושכרם גבוה מ־15,000.",
+  "rootEntityId": "employee",
+  "condition": {
+    "kind": "group",
+    "operator": "and",
+    "children": [
+      { "kind": "comparison", "left": { "fieldId": "age" }, "operator": "lessThan", "right": { "kind": "constant", "value": 18 } },
+      { "kind": "comparison", "left": { "fieldId": "salary" }, "operator": "greaterThan", "right": { "kind": "constant", "value": 15000 } }
+    ]
+  }
+}
