@@ -4,6 +4,11 @@
     >{{ filtered() ? 'חריגות התואמות לחיפוש ולסינון:' : 'מספר החריגות:' }}
     {{ data.totalCount | businessValue }}</strong
   >
+  @if (data.evaluatedCount !== undefined) {
+    <span class="evaluated-count"
+      >מתוך {{ data.evaluatedCount | businessValue }} רשומות שנבדקו בסך הכול.</span
+    >
+  }
   @if (data.truncated) {
     <span
       >מוצגות {{ data.returnedCount | businessValue }} מתוך

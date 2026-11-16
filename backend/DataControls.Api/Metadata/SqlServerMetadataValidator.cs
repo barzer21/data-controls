@@ -55,7 +55,9 @@ public sealed class SqlServerMetadataValidator(IConfiguration configuration)
                 throw new InvalidOperationException($"Metadata entity {entity.Id}: table or single-column primary key not found.");
             foreach (var field in entity.Fields)
             {
-                if (!columns.TryGetValue((entity.Schema, entity.Table, field.Column), out var sqlType))
+                // Calculation sources are validated as ordinary physical fields in this same loop.
+                if (field.Calculation is not null) continue;
+                if (!columns.TryGetValue((entity.Schema, entity.Table, field.Column!), out var sqlType))
                     throw new InvalidOperationException($"Metadata field {entity.Id}.{field.Id}: column {field.Column} not found.");
                 if (!Compatible(field.Type, sqlType))
                     throw new InvalidOperationException($"Metadata field {entity.Id}.{field.Id}: {field.Type} is incompatible with SQL type {sqlType}.");

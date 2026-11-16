@@ -46,6 +46,11 @@
             "id": "departmentId",
             "label": "מזהה מחלקה",
             "type": "number"
+          },
+          {
+            "id": "age",
+            "label": "גיל",
+            "type": "number"
           }
         ]
       },

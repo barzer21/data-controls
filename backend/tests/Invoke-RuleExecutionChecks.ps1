@@ -51,14 +51,14 @@ Assert-Test ((Send-Request 'POST' '/execute' $missingManager).Body.totalCount -e
 
 $selectedRule = Execution-Rule (Execution-Comparison 'isActive' 'equals' $true)
 $selectedResult = (Send-Request 'POST' '/execute' $selectedRule).Body
-Assert-Test ($selectedResult.totalCount -eq 19 -and $selectedResult.columns.Count -eq 9 -and
+Assert-Test ($selectedResult.totalCount -eq 19 -and $selectedResult.columns.Count -eq 10 -and
     'departmentId' -in $selectedResult.columns.id -and 'employeeDepartment.name' -in $selectedResult.columns.id) 'allEmployeeFieldsAndDepartmentName'
 $noga = @($selectedResult.records | Where-Object { $_.values.firstName -eq 'Noga' })
 $yael = @($selectedResult.records | Where-Object { $_.values.firstName -eq 'Yael' })
 Assert-Test ($noga.Count -eq 1 -and $null -eq $noga[0].values.'employeeDepartment.name' -and
     $null -eq $noga[0].values.departmentId) 'missingDepartmentKeepsEmployeeAndNullFields'
 Assert-Test ($yael.Count -eq 1 -and $yael[0].values.'employeeDepartment.name' -eq 'Sales' -and
-    @($yael[0].values.PSObject.Properties).Count -eq 9 -and $yael[0].values.departmentId -gt 0) 'fullEmployeeReturnedWithoutSelectingColumns'
+    @($yael[0].values.PSObject.Properties).Count -eq 10 -and $yael[0].values.departmentId -gt 0) 'fullEmployeeReturnedWithoutSelectingColumns'
 $selectedSaved = (Send-Request 'POST' '' $selectedRule 201).Body
 try {
     Stop-TestApi
@@ -68,7 +68,7 @@ try {
     $savedSelectedResult = (Send-Request 'POST' "/$($selectedSaved.id)/execute").Body
     Assert-Test (($savedSelectedResult | ConvertTo-Json -Depth 100 -Compress) -eq ($selectedResult | ConvertTo-Json -Depth 100 -Compress)) 'savedProjectionMatchesDraft'
     Send-Request 'PUT' "/$($selectedSaved.id)" $selectedRule | Out-Null
-    Assert-Test ((Send-Request 'POST' "/$($selectedSaved.id)/execute").Body.columns.Count -eq 9) 'updatedRuleReturnsFullRecord'
+    Assert-Test ((Send-Request 'POST' "/$($selectedSaved.id)/execute").Body.columns.Count -eq 10) 'updatedRuleReturnsFullRecord'
 } finally { Send-Request 'DELETE' "/$($selectedSaved.id)" $null 204 | Out-Null }
 
 # Fixtures only in this new isolated test database. Preserve row counts, change test values.

@@ -220,7 +220,7 @@ form[hidden] {
   margin-top: 1.5rem;
 }
 .preview-table {
-  height: 560px;
+  height: clamp(680px, 80dvh, 960px);
   margin-top: 1rem;
   border: 1px solid var(--border);
   border-radius: 10px;

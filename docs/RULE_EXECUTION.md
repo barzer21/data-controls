@@ -4,7 +4,9 @@ Requirements: EXEC-01..06, TECH-04; decisions D-003, D-005, D-015 and D-016.
 
 ## Two entry points, one engine
 
-Every employee result contains firstName, lastName, birthDate, salary, startDate, endDate, isActive, departmentId and employeeDepartment.name; record.id is the employee ID. The server-owned catalog supplies these columns and validates relatedColumns. LEFT JOIN preserves employees without a department. No output-column choice is part of a rule or execution request.
+Responses include `evaluatedCount`: the total number of root-entity records before the rule predicate, temporary search/filters and display limit. `totalCount` remains the matching violation count; `returnedCount` is the number actually returned. The compiler emits a second result set counting the root table without joins or predicates, so the denominator is available even with zero matches or an empty table. Both statements run on the existing read-only connection in the same batch; they do not add transactional snapshot isolation against concurrent changes.
+
+Every employee result contains firstName, lastName, birthDate, salary, startDate, endDate, isActive, departmentId, calculated age and employeeDepartment.name; record.id is the employee ID. The server-owned catalog supplies these columns and validates relatedColumns. LEFT JOIN preserves employees without a department. No output-column choice is part of a rule or execution request. [CALCULATED_FIELDS.md](CALCULATED_FIELDS.md) documents age calculation and filtering semantics.
 
 - `POST /api/rules/execute?limit=100` accepts `{ "definition": { ... }, "options": { ... } }`, validates and executes the draft without saving it or changing another control. Options are optional; the definition envelope is required.
 - `POST /api/rules/{id}/execute?limit=100` loads the current saved definition, revalidates it against the current metadata, then uses the same execution service. It accepts an optional `{ "options": { ... } }` body; no body means no options. A missing ID returns 404.
@@ -16,6 +18,7 @@ Both return HTTP 200 with the same shape (abridged below; actual employee respon
 ```json
 {
   "totalCount": 2,
+  "evaluatedCount": 30,
   "returnedCount": 2,
   "truncated": false,
   "columns": [

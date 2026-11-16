@@ -4,6 +4,8 @@ Implemented 2026-11-12. Assignment scope: RESULTS-06, with count/empty/error beh
 
 ## Behavior
 
+- Execution summaries also show the matching violation count out of `evaluatedCount`, the full root-entity record count. The denominator ignores search, filters and the display cap, and remains visible for zero matches. This applies to saved-rule results and editor draft previews. Older API responses without the added field omit the denominator instead of guessing it.
+
 - The dedicated results page offers an explicit search button/Enter action across displayed text fields (up to 200 characters). Search is literal and may match part of text; per-column text equality/inequality is exact, following the existing API. There are no client-side row scans.
 - Filter icons appear in metadata-backed data column headers; the same columns are selectable in the toolbar. A selected column opens a typed panel above the table: numeric/date ordering, equality/inequality, boolean yes/no and missing/not-missing checks. One active comparison is supported per column; different columns combine with AND. The API also supports more complex trees, but that is not exposed by this simple column-filter UI.
 - Active criteria appear as removable chips; Clear All restores the unfiltered request. Filtering is temporary and distinct from the displayed business violation conditions. Search/filter submission re-executes the same loaded definition snapshot, not a newly fetched/possibly edited saved rule. No definition is saved or mutated.

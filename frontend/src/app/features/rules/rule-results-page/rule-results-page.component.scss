@@ -2,10 +2,10 @@
   display: block;
 }
 .results-page {
-  height: calc(100dvh - 65px);
+  min-height: calc(100dvh - 65px);
   padding: 1.8rem 2.4rem;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
   gap: 1.25rem;
   max-width: 1680px;
   margin: auto;
@@ -50,6 +50,7 @@ h2 {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: max(680px, 80dvh);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -79,6 +80,6 @@ h2 {
     min-height: 400px;
   }
   .results-content {
-    max-height: 65dvh;
+    max-height: none;
   }
 }

@@ -9,7 +9,10 @@ public sealed record MetadataEntity(string Id, string Label, string Schema, stri
 
 public sealed record MetadataRelatedColumn(string FieldId, IReadOnlyList<string> RelationshipPath);
 
-public sealed record MetadataField(string Id, string Label, string Column, string Type);
+public sealed record MetadataField(string Id, string Label, string? Column, string Type,
+    MetadataCalculation? Calculation = null);
+
+public sealed record MetadataCalculation(string Kind, string SourceFieldId);
 
 public sealed record MetadataRelationship(string Id, string Label, string FromEntity,
     string FromColumn, string ToEntity, string ToColumn, string Cardinality);

@@ -23,9 +23,23 @@ public static class MetadataValidator
                 Text(field!.Id, "Field ID");
                 Require(fields.Add(field.Id), $"Duplicate field ID: {entity.Id}.{field.Id}.");
                 Text(field.Label, $"Label for {entity.Id}.{field.Id}");
-                Identifier(field.Column);
+                if (field.Calculation is null) Identifier(field.Column);
+                else
+                {
+                    Require(field.Column is null, $"Calculated field {entity.Id}.{field.Id} cannot have a SQL column.");
+                    Require(field.Calculation.Kind == "age", $"Unsupported calculation: {entity.Id}.{field.Id}.");
+                    Require(field.Type == "number", $"Age calculation must have type number: {entity.Id}.{field.Id}.");
+                    Text(field.Calculation.SourceFieldId, "Calculation source field ID");
+                }
                 Require(field.Type is "text" or "number" or "date" or "boolean",
                     $"Unsupported field type: {entity.Id}.{field.Id} ({field.Type}).");
+            }
+            foreach (var field in entity.Fields.Where(f => f.Calculation is not null))
+            {
+                var source = entity.Fields.SingleOrDefault(f =>
+                    string.Equals(f.Id, field.Calculation!.SourceFieldId, StringComparison.OrdinalIgnoreCase));
+                Require(source is { Type: "date", Calculation: null },
+                    $"Age calculation {entity.Id}.{field.Id} must reference a physical date field in the same entity.");
             }
         }
         var relationships = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

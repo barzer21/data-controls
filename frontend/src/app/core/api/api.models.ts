@@ -113,6 +113,8 @@ export interface RuleExplanationOperand {
 
 export interface RuleExecutionResponse {
   readonly totalCount: number;
+  /** All root-entity records, before rule conditions, result filters and the row limit. */
+  readonly evaluatedCount?: number;
   readonly returnedCount: number;
   readonly truncated: boolean;
   readonly columns: readonly RuleResultColumn[];

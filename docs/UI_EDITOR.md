@@ -53,6 +53,6 @@ Original 2026-11-12 verification:
 
 ## Remaining work
 
-Search/filter UI is available on the dedicated results page and in draft execution (docs/UI_RESULT_FILTERS.md), and the Python AI mock and approval flow are implemented (docs/AI_SERVICE.md). Backend result pagination, deletion in the UI and calculated age remain separate tasks. Results retain the current 100-row cap. Concurrent edit conflict detection is not provided by the existing PUT contract. Navigation within the application is guarded by in-page confirmation. Drafts are not persisted after departure, reload or tab closure; reload and tab closure have no warning. Deeply nested responsive authoring remains part of the final assignment review.
+Search/filter UI is available on the dedicated results page and in draft execution (docs/UI_RESULT_FILTERS.md), and the Python AI mock and approval flow are implemented (docs/AI_SERVICE.md). Backend result pagination and deletion in the UI remain separate tasks. Calculated age is implemented (CALCULATED_FIELDS.md). Results retain the current 100-row cap. Concurrent edit conflict detection is not provided by the existing PUT contract. Navigation within the application is guarded by in-page confirmation. Drafts are not persisted after departure, reload or tab closure; reload and tab closure have no warning. Deeply nested responsive authoring remains part of the final assignment review.
 
 Codex assisted with design, implementation, automated tests, browser QA and documentation; this supplements the previous increment disclosures.

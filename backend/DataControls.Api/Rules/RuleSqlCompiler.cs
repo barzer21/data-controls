@@ -10,7 +10,7 @@ public sealed record CompiledRule(string Sql, IReadOnlyList<RuleSqlParameter> Pa
     IReadOnlyList<RuleResultColumn> Columns, CompiledExplanationNode Explanation, int EvidenceColumnCount);
 public sealed record RuleCompilationResult(RuleValidationResult Validation, CompiledRule? Query);
 
-public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator validator)
+public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator validator, TimeProvider? clock = null)
 {
     public RuleCompilationResult Compile(RuleDefinition definition, RuleExecutionOptions? options = null)
     {
@@ -18,11 +18,12 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
         if (!validation.IsValid) return new(validation, null);
         options ??= new();
         validation = RuleExecutionOptionsValidator.Validate(definition, options, metadata.Catalog, validator);
-        return new(validation, validation.IsValid ? new Compilation(metadata.Catalog, definition, options).Build() : null);
+        var today = DateOnly.FromDateTime((clock ?? TimeProvider.System).GetUtcNow().UtcDateTime);
+        return new(validation, validation.IsValid ? new Compilation(metadata.Catalog, definition, options, today).Build() : null);
     }
 
     // Every compilation owns its aliases/parameters. No SQL fragment comes from a request.
-    private sealed class Compilation(MetadataCatalog catalog, RuleDefinition definition, RuleExecutionOptions options)
+    private sealed class Compilation(MetadataCatalog catalog, RuleDefinition definition, RuleExecutionOptions options, DateOnly today)
     {
         private readonly Dictionary<string, MetadataEntity> entities =
             catalog.Entities.ToDictionary(e => e.Id, StringComparer.OrdinalIgnoreCase);
@@ -32,6 +33,7 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
         private readonly List<string> joins = [];
         private readonly List<RuleSqlParameter> parameters = [];
         private readonly List<string> evidenceColumns = [];
+        private bool usesAge;
 
         public CompiledRule Build()
         {
@@ -56,7 +58,11 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
             var sql = $"SELECT TOP (@__limit) COUNT_BIG(*) OVER() AS [__count], " +
                 $"[t0].{Quote(root.KeyColumn)} AS [__id], {string.Join(", ", fields)}, {string.Join(", ", evidenceColumns)} " +
                 $"FROM {Table(root)} AS [t0] {string.Join(" ", joins)} " +
-                $"WHERE {string.Join(" AND ", predicates)} ORDER BY [t0].{Quote(root.KeyColumn)};";
+                $"WHERE {string.Join(" AND ", predicates)} ORDER BY [t0].{Quote(root.KeyColumn)}; " +
+                // Separate result set also returns the denominator when there are zero violations.
+                $"SELECT COUNT_BIG(*) AS [__evaluatedCount] FROM {Table(root)} AS [t0];";
+            // Append once, after normal parameter allocation, so all uses share one execution date.
+            if (usesAge) parameters.Add(new("@__asOfDate", SqlDbType.Date, today.ToDateTime(TimeOnly.MinValue)));
             return new(sql, parameters.ToArray(), projections.Select(p => p.Column).ToArray(),
                 condition.Explanation!, evidenceColumns.Count);
         }
@@ -150,6 +156,19 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
                 entity = target;
             }
             var field = entity.Fields.Single(f => string.Equals(f.Id, reference.FieldId, StringComparison.OrdinalIgnoreCase));
+            if (field.Calculation is { } calculation)
+            {
+                if (calculation.Kind != "age") throw new InvalidOperationException("Unsupported field calculation.");
+                var source = entity.Fields.Single(f => string.Equals(f.Id, calculation.SourceFieldId, StringComparison.OrdinalIgnoreCase));
+                usesAge = true;
+                var birthDate = Column(alias, source);
+                // SQL DATEADD treats a Feb 29 birthday as Feb 28 in non-leap years.
+                // Missing/future birth dates have no usable age and remain filterable with IS NULL.
+                var years = $"DATEDIFF(year, {birthDate}, @__asOfDate)";
+                var birthday = $"DATEADD(year, {years}, {birthDate})";
+                return ($"(CASE WHEN {birthDate} IS NULL OR {birthDate} > @__asOfDate THEN NULL " +
+                    $"ELSE {years} - CASE WHEN {birthday} > @__asOfDate THEN 1 ELSE 0 END END)", field);
+            }
             return (Column(alias, field), field);
         }
 
@@ -173,7 +192,7 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
 
         private static string Column(string alias, MetadataField field)
         {
-            var column = $"{Quote(alias)}.{Quote(field.Column)}";
+            var column = $"{Quote(alias)}.{Quote(field.Column!)}";
             return field.Type == "date" ? $"CONVERT(date, {column})" : column;
         }
         private static string Table(MetadataEntity entity) => $"{Quote(entity.Schema)}.{Quote(entity.Table)}";

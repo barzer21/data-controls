@@ -15,7 +15,9 @@
         { "id": "startDate", "label": "תחילת העסקה", "column": "StartDate", "type": "date" },
         { "id": "endDate", "label": "סיום העסקה", "column": "EndDate", "type": "date" },
         { "id": "isActive", "label": "עובד פעיל", "column": "IsActive", "type": "boolean" },
-        { "id": "departmentId", "label": "מזהה מחלקה", "column": "DepartmentId", "type": "number" }
+        { "id": "departmentId", "label": "מזהה מחלקה", "column": "DepartmentId", "type": "number" },
+        { "id": "age", "label": "גיל", "column": null, "type": "number",
+          "calculation": { "kind": "age", "sourceFieldId": "birthDate" } }
       ],
       "relatedColumns": [
         { "fieldId": "name", "relationshipPath": ["employeeDepartment"] }

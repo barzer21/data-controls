@@ -6,7 +6,7 @@ namespace DataControls.Api.Rules;
 public sealed record RuleViolation(object Id, IReadOnlyDictionary<string, object?> Values,
     string FailureReason, RuleExplanationNode Explanation);
 public sealed record RuleExecutionResponse(long TotalCount, int ReturnedCount, bool Truncated,
-    IReadOnlyList<RuleResultColumn> Columns, IReadOnlyList<RuleViolation> Records);
+    IReadOnlyList<RuleResultColumn> Columns, IReadOnlyList<RuleViolation> Records, long EvaluatedCount);
 public sealed class RuleExecutionTimeoutException : TimeoutException;
 
 public sealed class RuleExecutor(IConfiguration configuration, RuleExplanationService explanations)
@@ -63,7 +63,10 @@ public sealed class RuleExecutor(IConfiguration configuration, RuleExplanationSe
                 var reason = explanations.Explain(query.Explanation, evidence);
                 records.Add(new(reader.GetValue(1), values, reason.FailureReason, reason.Explanation));
             }
-            return new(totalCount, records.Count, totalCount > records.Count, query.Columns, records);
+            if (!await reader.NextResultAsync(deadline.Token) || !await reader.ReadAsync(deadline.Token))
+                throw new InvalidOperationException("The execution query did not return the evaluated record count.");
+            var evaluatedCount = reader.GetInt64(0);
+            return new(totalCount, records.Count, totalCount > records.Count, query.Columns, records, evaluatedCount);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

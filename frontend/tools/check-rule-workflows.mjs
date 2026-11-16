@@ -56,6 +56,7 @@ let rejectNextSave = false;
 const resultColumns = [
   { id: 'firstName', label: 'שם פרטי', type: 'text' },
   { id: 'salary', label: 'שכר', type: 'number' },
+  { id: 'age', label: 'גיל', type: 'number' },
   { id: 'isActive', label: 'עובד פעיל', type: 'boolean' },
   { id: 'startDate', label: 'תחילת העסקה', type: 'date' },
   { id: 'employeeDepartment.name', label: 'שם מחלקה', type: 'text' },
@@ -66,6 +67,7 @@ const resultRecords = [
     values: {
       firstName: 'דנה',
       salary: 20000,
+      age: 26,
       isActive: true,
       startDate: '2026-01-01',
       'employeeDepartment.name': 'תפעול',
@@ -77,6 +79,7 @@ const resultRecords = [
     values: {
       firstName: 'מיה',
       salary: 25000,
+      age: 33,
       isActive: false,
       startDate: '2026-02-01',
       'employeeDepartment.name': 'כספים',
@@ -167,6 +170,7 @@ const server = http.createServer(async (req, res) => {
         return res.end(
           JSON.stringify({
             totalCount: records.length,
+            evaluatedCount: 30,
             returnedCount: records.length,
             truncated: false,
             columns: resultColumns,
@@ -473,6 +477,33 @@ try {
     2,
     'Clear restores all draft results',
   );
+  await click('app-filtered-execution-results button[aria-label="סינון לפי גיל"]');
+  await evaluate(
+    `(()=>{const s=document.querySelector('.column-panel select[name="operator"]');s.value='greaterThan';s.dispatchEvent(new Event('change',{bubbles:true}));const e=document.querySelector('.column-panel input[name="value"]');e.value='30';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
+  );
+  await click('.column-panel button[type="submit"]');
+  assert.equal(
+    executionRequests.at(-1).options.filter.left.fieldId,
+    'age',
+    'Age uses the business field ID',
+  );
+  assert.equal(
+    executionRequests.at(-1).options.filter.right.value,
+    30,
+    'Age filter is a JSON number',
+  );
+  assert.equal(
+    await evaluate(`document.querySelectorAll('app-filtered-execution-results tbody tr').length`),
+    1,
+    'Age filter displays matching rows',
+  );
+  assert.equal(
+    await evaluate(`document.querySelector('.evaluated-count').textContent.includes('30')`),
+    true,
+    'Filtered results keep the full entity count',
+  );
+  await screenshot('age-filtered-draft-results');
+  await click('app-filtered-execution-results .filter-toolbar > button');
   await evaluate(
     `(()=>{const s=document.querySelector('.comparison select');s.value=Array.from(s.options).find(o=>o.textContent.includes('מחלקת העובד')&&o.textContent.includes('מחלקה פעילה')).value;s.dispatchEvent(new Event('change',{bubbles:true}))})()`,
   );

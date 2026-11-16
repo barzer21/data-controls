@@ -26,6 +26,7 @@ var query = compiler.Compile(Rule(Compare("firstName", "equals", Constant(malici
 Check(!query.Sql.Contains(malicious) && query.Sql.Contains("@p0") && Equals(query.Parameters[0].Value, malicious), "textIsParameter");
 Check(query.Parameters[0].Type == SqlDbType.NVarChar, "typedText");
 Check(query.Sql.StartsWith("SELECT TOP (@__limit)") && query.Sql.Contains("COUNT_BIG(*) OVER()"), "boundedRowsWithExactCount");
+Check(query.Sql.EndsWith("SELECT COUNT_BIG(*) AS [__evaluatedCount] FROM [dbo].[Employees] AS [t0];"), "unfilteredRootCountInSeparateResultSet");
 Check(query.Columns.Any(c => c.Id == "salary" && c.Label == "שכר"), "businessColumns");
 
 query = compiler.Compile(Rule(new RuleGroup("and", [
@@ -65,9 +66,9 @@ Check(compiler.Compile(Rule(Compare("salary", "drop", Constant(1)))).Query is nu
 
 var projectionRule = Rule(Compare("salary", "greaterThan", Constant(100)));
 query = compiler.Compile(projectionRule).Query!;
-Check(query.Columns.Count == 9 && query.Columns.Any(c => c.Id == "departmentId") &&
+Check(query.Columns.Count == 10 && query.Columns.Any(c => c.Id == "departmentId") &&
     query.Columns[^1].Id == "employeeDepartment.name", "fullEmployeeAndDepartmentName");
-Check(query.Sql.Contains("[t1].[Name] AS [c8]") && query.Sql.Split("LEFT JOIN").Length == 2,
+Check(query.Sql.Contains("[t1].[Name] AS [c9]") && query.Sql.Split("LEFT JOIN").Length == 2,
     "catalogRelatedFieldAddsJoinWithoutCondition");
 Check(query.Columns[^1].Label.Contains("מחלקת העובד") && query.Columns[^1].Label.Contains("שם המחלקה"), "relatedBusinessLabel");
 void InvalidMetadata(MetadataRelatedColumn reference, string name)
@@ -108,7 +109,7 @@ query = compiler.Compile(Rule(Compare("salary", "greaterThan", Constant(15000)))
 var reason = explanations.Explain(query.Explanation, EvidenceFor(query, new Dictionary<string, object?> { ["salary"] = 18000m }));
 Check(reason.FailureReason == "התנאי שהתקיים:\n• שכר: גדול מ־15,000. הערך שנמצא: 18,000.", "readableHebrewNumericReason");
 Check(query.Sql.Contains("CASE WHEN ([t0].[Salary] > @p0) THEN 1 ELSE 0 END") &&
-    query.Parameters.Count == 1, "sqlTruthAndWhereShareParameterizedPredicate");
+    query.Parameters.Count(p => p.Name != "@__asOfDate") == 1, "sqlTruthAndWhereShareParameterizedPredicate");
 Check(reason.Explanation.Left!.Value is decimal && Equals(reason.Explanation.Right!.Value, 15000m), "structuredActualAndExpected");
 query = compiler.Compile(Rule(Compare("isActive", "equals", Constant(false), "employeeDepartment"))).Query!;
 reason = explanations.Explain(query.Explanation, EvidenceFor(query,
