@@ -7,7 +7,7 @@ import {
   OnChanges,
   signal,
 } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { apiErrorMessages } from '../../core/api/api-error-messages';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, EMPTY, map, of, startWith, Subject, switchMap } from 'rxjs';
 import {
@@ -118,15 +118,10 @@ export class RuleResultsComponent implements OnChanges {
   }
 
   private errorMessage(error: unknown): string {
-    if (error instanceof HttpErrorResponse) {
-      if (error.status === 400 && Array.isArray(error.error?.errors)) {
-        const messages = error.error.errors
-          .filter((item: { message?: unknown }) => typeof item?.message === 'string')
-          .map((item: { message: string }) => item.message);
-        if (messages.length) return messages.join(' ');
-      }
-      if (error.status === 504) return 'ההרצה חרגה מזמן ההמתנה. ניתן לנסות שוב.';
-    }
-    return 'לא ניתן לעדכן את תוצאות ההרצה. בדקו את החיבור ונסו שוב.';
+    return apiErrorMessages(error, {
+      fallback: 'לא ניתן לעדכן את תוצאות ההרצה. בדקו את החיבור ונסו שוב.',
+      statusMessages: { 504: 'ההרצה חרגה מזמן ההמתנה. ניתן לנסות שוב.' },
+      useProblemTitle: true,
+    }).join(' ');
   }
 }

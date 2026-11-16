@@ -96,6 +96,44 @@ describe('Rule editor with API transport', () => {
     http.expectNone(() => true);
   });
 
+  it('shows safe validation messages from mixed error arrays and preserves condition paths', () => {
+    open();
+    fill();
+    editor.perform('save');
+    http
+      .expectOne('/api/rules/validate')
+      .flush(
+        { errors: [null, { path: 'condition.children[1].left', message: 'Invalid field' }] },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    fixture.detectChanges();
+    expect(editor.errors()).toEqual(['תנאי 2: Invalid field']);
+    expect(editor.busy()).toBeNull();
+    expect(editor.dirty()).toBe(true);
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+      'Invalid field',
+    );
+    http.expectNone('/api/rules');
+  });
+
+  it('shows ModelState validation messages when saving fails without losing the draft', () => {
+    open();
+    fill();
+    editor.perform('save');
+    validate();
+    http.expectOne('/api/rules').flush(
+      {
+        title: 'Validation failed',
+        errors: { Name: ['Invalid name'] },
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    expect(editor.errors()).toEqual(['Invalid name']);
+    expect(editor.draft()).toEqual(definition);
+    expect(editor.dirty()).toBe(true);
+    expect(editor.busy()).toBeNull();
+  });
+
   it('validates then explicitly creates without executing', () => {
     open();
     fill();

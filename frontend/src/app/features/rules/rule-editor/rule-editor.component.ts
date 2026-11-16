@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { apiErrorMessages } from '../../../core/api/api-error-messages';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -244,27 +244,17 @@ export class RuleEditorComponent implements OnInit {
   }
 
   private showError(error: unknown): void {
-    const body = error instanceof HttpErrorResponse ? error.error : error;
-    const semanticErrors = body?.errors ?? body?.validationErrors;
-    if (
-      Array.isArray(semanticErrors) &&
-      semanticErrors.every((item) => typeof item.message === 'string')
-    ) {
-      this.showErrors(
-        semanticErrors.map((item) => {
-          const indices = [...String(item.path ?? '').matchAll(/children\[(\d+)\]/g)].map(
-            (match) => `תנאי ${Number(match[1]) + 1}`,
-          );
-          return `${indices.length ? indices.join(' › ') + ': ' : ''}${item.message}`;
-        }),
-      );
-    } else if (error instanceof HttpErrorResponse && error.status === 404) {
-      this.showErrors(['הבקרה לא נמצאה. ייתכן שנמחקה. ניתן לסגור ולרענן את הרשימה.']);
-    } else if (error instanceof HttpErrorResponse && error.status === 504) {
-      this.showErrors(['הפעולה חרגה מזמן ההמתנה. ניתן לנסות שוב.']);
-    } else {
-      this.showErrors(['לא ניתן להשלים את הפעולה. בדקו את החיבור לשרת ונסו שוב.']);
-    }
+    this.showErrors(
+      apiErrorMessages(error, {
+        fallback: 'לא ניתן להשלים את הפעולה. בדקו את החיבור לשרת ונסו שוב.',
+        statusMessages: {
+          404: 'הבקרה לא נמצאה. ייתכן שנמחקה. ניתן לסגור ולרענן את הרשימה.',
+          504: 'הפעולה חרגה מזמן ההמתנה. ניתן לנסות שוב.',
+        },
+        includeConditionPath: true,
+        useProblemTitle: true,
+      }),
+    );
   }
 
   private showErrors(messages: readonly string[]): void {

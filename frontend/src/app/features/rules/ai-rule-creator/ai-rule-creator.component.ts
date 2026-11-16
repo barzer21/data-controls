@@ -10,7 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { apiErrorMessages } from '../../../core/api/api-error-messages';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
@@ -98,14 +98,18 @@ export class AiRuleCreatorComponent {
       .subscribe({
         next: (proposal) => this.proposed.emit(proposal),
         error: (error: unknown) => {
-          const status = error instanceof HttpErrorResponse ? error.status : 0;
           const messages: Record<number, string> = {
             400: 'התיאור אינו נתמך בהדגמה. בחרו אחת מהדוגמאות ונסו שוב.',
             502: 'התקבלה הצעה לא תקינה. אפשר לנסות שוב; לא נשמרה או הורצה בקרה.',
             503: 'שירות יצירת ההצעות אינו זמין כרגע. נסו שוב לאחר הפעלת השירות.',
             504: 'יצירת ההצעה חרגה מזמן ההמתנה. אפשר לנסות שוב.',
           };
-          this.error.set(messages[status] ?? 'לא ניתן ליצור הצעה כרגע. בדקו את החיבור ונסו שוב.');
+          this.error.set(
+            apiErrorMessages(error, {
+              statusMessages: messages,
+              fallback: 'לא ניתן ליצור הצעה כרגע. בדקו את החיבור ונסו שוב.',
+            }).join(' '),
+          );
         },
       });
   }
