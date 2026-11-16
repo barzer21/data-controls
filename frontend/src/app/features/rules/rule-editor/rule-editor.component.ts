@@ -32,7 +32,7 @@ import {
   newComparison,
 } from '../../../shared/condition-editor/condition-editor.model';
 import { EntityPickerComponent } from '../../../shared/entity-picker/entity-picker.component';
-import { FilteredExecutionResultsComponent } from '../../../shared/filtered-execution-results/filtered-execution-results.component';
+import { RuleResultsComponent } from '../../../shared/rule-results/rule-results.component';
 import { RuleConditionComponent } from '../../../shared/rule-condition/rule-condition.component';
 import { RuleOverviewComponent } from '../../../shared/rule-overview/rule-overview.component';
 import { RuleSummaryComponent } from '../../../shared/rule-summary/rule-summary.component';
@@ -43,7 +43,7 @@ import { UiIconComponent } from '../../../shared/ui-icon/ui-icon.component';
   imports: [
     FormsModule,
     ConditionEditorComponent,
-    FilteredExecutionResultsComponent,
+    RuleResultsComponent,
     RuleConditionComponent,
     UiIconComponent,
     EntityPickerComponent,

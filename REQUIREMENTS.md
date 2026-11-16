@@ -52,7 +52,7 @@ Submission verification: 2026-11-16. Deliverables checked against the original a
 | AI-05 | Translate AI response to Stage A control definition | Typed RuleDefinition and shared RuleValidator; live integration checks | Implemented |
 | AI-06 | Show proposed control for user approval before execution | Shared editor review, approval reset on edits; 115 frontend tests and fixture-based browser checks; full live browser demo pending | Implemented |
 | AI-07 | Decouple AI mechanism from rule execution, enabling model replacement | IAiRuleProposalProvider, separate Angular API service and same executor | Implemented |
-| AI-OPTIONAL | Optional: proactively propose controls based on schema | Design only if time permits | Not started |
+| AI-OPTIONAL | Optional: proactively propose controls based on schema | docs/AI_RULE_SUGGESTIONS_PLAN.md describes scope, contracts, integration, validation, user approval and acceptance checks; design only, no implementation | Implemented |
 
 ## Mandatory technology
 

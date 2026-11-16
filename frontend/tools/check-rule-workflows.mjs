@@ -425,18 +425,18 @@ try {
     `(()=>{const e=document.querySelector('input[name="name"]');e.value='Unsaved salary rule';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
   );
   await click('.footer-actions button:nth-child(2)');
-  await waitFor('app-filtered-execution-results input[type="search"]');
+  await waitFor('app-rule-results input[type="search"]');
   await evaluate('new Promise(resolve=>setTimeout(resolve,400))');
   await evaluate(
-    `(()=>{const e=document.querySelector('app-filtered-execution-results input[type="search"]');e.value='דנה';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
+    `(()=>{const e=document.querySelector('app-rule-results input[type="search"]');e.value='דנה';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
   );
-  await click('app-filtered-execution-results .search-form button[type="submit"]');
+  await click('app-rule-results .search-form button[type="submit"]');
   assert.equal(
-    await evaluate(`document.querySelectorAll('app-filtered-execution-results tbody tr').length`),
+    await evaluate(`document.querySelectorAll('app-rule-results tbody tr').length`),
     1,
     'Search filters draft rows',
   );
-  await click('app-filtered-execution-results button[aria-label="סינון לפי שכר"]');
+  await click('app-rule-results button[aria-label="סינון לפי שכר"]');
   await evaluate(
     `(()=>{const s=document.querySelector('.column-panel select[name="operator"]');s.value='greaterThan';s.dispatchEvent(new Event('change',{bubbles:true}));const e=document.querySelector('.column-panel input[name="value"]');e.value='18000';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
   );
@@ -462,22 +462,22 @@ try {
   );
   await screenshot('filtered-draft-results');
   await evaluate(
-    `(()=>{const e=document.querySelector('app-filtered-execution-results input[type="search"]');e.value='no matches';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
+    `(()=>{const e=document.querySelector('app-rule-results input[type="search"]');e.value='no matches';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
   );
-  await click('app-filtered-execution-results .search-form button[type="submit"]');
+  await click('app-rule-results .search-form button[type="submit"]');
   assert.ok(
     await evaluate(
-      `document.querySelector('app-filtered-execution-results').innerText.includes('לא נמצאו תוצאות התואמות')`,
+      `document.querySelector('app-rule-results').innerText.includes('לא נמצאו תוצאות התואמות')`,
     ),
     'No-match state preserves filters',
   );
-  await click('app-filtered-execution-results .filter-toolbar > button');
+  await click('app-rule-results .filter-toolbar > button');
   assert.equal(
-    await evaluate(`document.querySelectorAll('app-filtered-execution-results tbody tr').length`),
+    await evaluate(`document.querySelectorAll('app-rule-results tbody tr').length`),
     2,
     'Clear restores all draft results',
   );
-  await click('app-filtered-execution-results button[aria-label="סינון לפי גיל"]');
+  await click('app-rule-results button[aria-label="סינון לפי גיל"]');
   await evaluate(
     `(()=>{const s=document.querySelector('.column-panel select[name="operator"]');s.value='greaterThan';s.dispatchEvent(new Event('change',{bubbles:true}));const e=document.querySelector('.column-panel input[name="value"]');e.value='30';e.dispatchEvent(new Event('input',{bubbles:true}))})()`,
   );
@@ -493,7 +493,7 @@ try {
     'Age filter is a JSON number',
   );
   assert.equal(
-    await evaluate(`document.querySelectorAll('app-filtered-execution-results tbody tr').length`),
+    await evaluate(`document.querySelectorAll('app-rule-results tbody tr').length`),
     1,
     'Age filter displays matching rows',
   );
@@ -503,7 +503,7 @@ try {
     'Filtered results keep the full entity count',
   );
   await screenshot('age-filtered-draft-results');
-  await click('app-filtered-execution-results .filter-toolbar > button');
+  await click('app-rule-results .filter-toolbar > button');
   await evaluate(
     `(()=>{const s=document.querySelector('.comparison select');s.value=Array.from(s.options).find(o=>o.textContent.includes('מחלקת העובד')&&o.textContent.includes('מחלקה פעילה')).value;s.dispatchEvent(new Event('change',{bubbles:true}))})()`,
   );

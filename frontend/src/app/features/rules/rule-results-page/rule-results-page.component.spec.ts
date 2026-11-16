@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { RuleResultsComponent } from '../../../shared/rule-results/rule-results.component';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -121,7 +123,10 @@ describe('Rule results route', () => {
     http.expectOne('/api/rules/7').flush(saved);
     http.expectOne('/api/metadata').flush(metadata);
     harness.detectChanges();
-    return component;
+    return results();
+  }
+  function results(): RuleResultsComponent {
+    return harness.fixture.debugElement.query(By.directive(RuleResultsComponent)).componentInstance;
   }
   function execution() {
     const request = http.expectOne('/api/rules/execute?limit=100');
@@ -136,7 +141,7 @@ describe('Rule results route', () => {
   it('runs the displayed saved snapshot without saving and preserves the summary during execution', async () => {
     await open();
     expect(text()).toContain('בקרת דוגמה');
-    expect(text()).toContain('הבקרה מתבצעת');
+    expect(text()).toContain('מעדכנים את תוצאות ההרצה');
     expect(text()).toContain('כל התנאים');
     expect(text()).toContain('לפחות אחד');
     expect(text()).toContain('מחלקת העובד › מחלקה פעילה');
@@ -202,7 +207,7 @@ describe('Rule results route', () => {
     http.expectNone('/api/rules/execute?limit=100');
   });
 
-  it('keeps conditions visible on execution errors and retries with a freshly loaded snapshot', async () => {
+  it('keeps conditions visible on execution errors and retries the displayed snapshot', async () => {
     const component = await open();
     execution().flush({ title: 'private SQL details' }, { status: 504, statusText: 'Timeout' });
     harness.detectChanges();
@@ -210,7 +215,7 @@ describe('Rule results route', () => {
     expect(text()).toContain('בקרת דוגמה');
     expect(text()).not.toContain('private SQL');
     component.retry();
-    http.expectOne('/api/rules/7').flush(saved);
+    http.expectNone('/api/rules/7');
     http.expectNone('/api/metadata');
     execution().flush(emptyResult);
     harness.detectChanges();
@@ -342,7 +347,7 @@ describe('Rule results route', () => {
     expect(second.request.body.options.search).toBe('שני');
     second.flush({ ...filterResult, totalCount: 2 });
     harness.detectChanges();
-    expect(component.filterSelection().search).toBe('שני');
+    expect(component.selection().search).toBe('שני');
     expect(text()).toContain('סיבת החריגה המקורית');
   });
 
@@ -372,11 +377,11 @@ describe('Rule results route', () => {
       .expectOne('/api/rules/execute?limit=100')
       .flush({}, { status: 504, statusText: 'Timeout' });
     component.retry();
-    http.expectOne('/api/rules/7').flush(saved);
+    http.expectNone('/api/rules/7');
     const request = http.expectOne('/api/rules/execute?limit=100');
     expect(request.request.body.options.search).toBe('דנה');
     request.flush(filterResult);
-    expect(component.filterSelection().search).toBe('דנה');
+    expect(component.selection().search).toBe('דנה');
   });
 
   it('resets filters and cancels pending work when navigating to another rule', async () => {
@@ -387,7 +392,8 @@ describe('Rule results route', () => {
     const next = await harness.navigateByUrl('/rules/8/results?page=2', RuleResultsPageComponent);
     expect(old.cancelled).toBe(true);
     http.expectOne('/api/rules/8').flush({ ...saved, id: 8 });
+    harness.detectChanges();
     execution().flush(filterResult);
-    expect(next.filterSelection()).toEqual({ search: '', filters: [] });
+    expect(results().selection()).toEqual({ search: '', filters: [] });
   });
 });

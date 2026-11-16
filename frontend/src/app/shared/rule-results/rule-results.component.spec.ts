@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { MetadataResponse, RuleDefinition, RuleExecutionResponse } from '../../core/api/api.models';
 import { ResultFiltersComponent } from '../result-filters/result-filters.component';
-import { FilteredExecutionResultsComponent } from './filtered-execution-results.component';
+import { RuleResultsComponent } from './rule-results.component';
 
 const metadata: MetadataResponse = {
   version: 1,
@@ -81,17 +81,17 @@ const result: RuleExecutionResponse = {
   ],
 };
 
-describe('Filtering an executed draft snapshot', () => {
-  let fixture: ComponentFixture<FilteredExecutionResultsComponent>;
-  let component: FilteredExecutionResultsComponent;
+describe('Shared rule results', () => {
+  let fixture: ComponentFixture<RuleResultsComponent>;
+  let component: RuleResultsComponent;
   let http: HttpTestingController;
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [FilteredExecutionResultsComponent],
+      imports: [RuleResultsComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
-    fixture = TestBed.createComponent(FilteredExecutionResultsComponent);
+    fixture = TestBed.createComponent(RuleResultsComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('definition', structuredClone(definition));
     fixture.componentRef.setInput('metadata', metadata);
@@ -234,6 +234,79 @@ describe('Filtering an executed draft snapshot', () => {
     });
     expect(component.state().status).toBe('error');
     http.expectNone(() => true);
+  });
+
+  it('keeps simultaneous result views isolated when one view is filtered or removed', () => {
+    const other = TestBed.createComponent(RuleResultsComponent);
+    other.componentRef.setInput('definition', { ...definition, name: 'Another draft' });
+    other.componentRef.setInput('metadata', metadata);
+    other.componentRef.setInput('initialResult', result);
+    other.detectChanges();
+    try {
+      component.applyFilters({ search: 'first view', filters: [] });
+      const first = http.expectOne('/api/rules/execute?limit=100');
+      other.componentInstance.applyFilters({ search: 'second view', filters: [] });
+      const second = http.expectOne('/api/rules/execute?limit=100');
+      expect(first.cancelled).toBe(false);
+      expect(second.request.body.definition.name).toBe('Another draft');
+      expect(component.selection().search).toBe('first view');
+      expect(other.componentInstance.selection().search).toBe('second view');
+      other.destroy();
+      expect(second.cancelled).toBe(true);
+      expect(first.cancelled).toBe(false);
+      first.flush(result);
+      expect(component.state().status).toBe('ready');
+    } finally {
+      other.destroy();
+    }
+  });
+
+  it('keeps the executed definition unchanged if its input object is later mutated', () => {
+    const input = structuredClone(definition);
+    fixture.componentRef.setInput('definition', input);
+    fixture.detectChanges();
+    Object.assign(input, {
+      name: 'Changed after execution',
+      condition: { kind: 'comparison', left: { fieldId: 'salary' }, operator: 'isNull' },
+    });
+    component.applyFilters({ search: 'snapshot', filters: [] });
+    const request = http.expectOne('/api/rules/execute?limit=100');
+    expect(request.request.body.definition).toEqual(definition);
+    request.flush(result);
+  });
+
+  it('executes automatically without an initial result and resets filters for a new definition', () => {
+    fixture.componentRef.setInput('initialResult', undefined);
+    fixture.detectChanges();
+    const initial = http.expectOne('/api/rules/execute?limit=100');
+    expect(initial.request.body).toEqual({ definition });
+    initial.flush(result);
+    component.applyFilters({ search: 'previous search', filters: [] });
+    const pending = http.expectOne('/api/rules/execute?limit=100');
+    const nextDefinition = { ...definition, name: 'New rule' };
+    fixture.componentRef.setInput('definition', nextDefinition);
+    fixture.detectChanges();
+    expect(pending.cancelled).toBe(true);
+    expect(component.selection()).toEqual({ search: '', filters: [] });
+    const next = http.expectOne('/api/rules/execute?limit=100');
+    expect(next.request.body).toEqual({ definition: nextDefinition });
+    next.flush(result);
+  });
+
+  it('starts with empty filters after closing and reopening results', () => {
+    component.applyFilters({ search: 'previous opening', filters: [] });
+    const pending = http.expectOne('/api/rules/execute?limit=100');
+    fixture.destroy();
+    expect(pending.cancelled).toBe(true);
+    fixture = TestBed.createComponent(RuleResultsComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('definition', definition);
+    fixture.componentRef.setInput('metadata', metadata);
+    fixture.detectChanges();
+    expect(component.selection()).toEqual({ search: '', filters: [] });
+    const request = http.expectOne('/api/rules/execute?limit=100');
+    expect(request.request.body).toEqual({ definition });
+    request.flush(result);
   });
 
   it('aborts filtering when the results component is removed', () => {

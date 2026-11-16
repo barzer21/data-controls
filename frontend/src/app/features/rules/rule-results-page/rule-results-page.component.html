@@ -29,34 +29,10 @@
   <section
     class="results-panel"
     aria-label="תוצאות הבקרה"
-    [attr.aria-busy]="current.status === 'loading' || current.status === 'running'"
+    [attr.aria-busy]="current.status === 'loading'"
   >
-    @if (current.status !== 'loading' && current.status !== 'loadError') {
-      <app-result-filters
-        #filters
-        [columns]="filterColumns()"
-        [selection]="filterSelection()"
-        (selectionChange)="applyFilters($event)"
-      />
-      <div class="results-content">
-        @if (current.status === 'ready') {
-          <app-execution-results
-            [result]="current.result"
-            [enableFilters]="true"
-            [filtered]="filtered()"
-            [filterableColumnIds]="filterableColumnIds()"
-            [filteredColumnIds]="filteredColumnIds()"
-            (filterColumn)="filters.openColumn($event)"
-          />
-        } @else if (current.status === 'executionError') {
-          <div class="state">
-            <p role="alert">{{ current.message }}</p>
-            <button type="button" class="primary" (click)="retry()">ניסיון חוזר</button>
-          </div>
-        } @else {
-          <div class="state" role="status">הבקרה מתבצעת. התוצאות יוצגו כאן בסיום…</div>
-        }
-      </div>
+    @if (current.status === 'loaded') {
+      <app-rule-results [definition]="current.saved.definition" [metadata]="current.metadata" />
     } @else if (current.status === 'loadError') {
       <div class="state">
         <p role="alert">{{ current.message }}</p>

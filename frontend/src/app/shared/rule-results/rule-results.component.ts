@@ -32,22 +32,30 @@ type ResultsState =
   | { status: 'error'; message: string };
 
 @Component({
-  selector: 'app-filtered-execution-results',
+  selector: 'app-rule-results',
   imports: [ExecutionResultsComponent, ResultFiltersComponent],
-  templateUrl: './filtered-execution-results.component.html',
-  styleUrl: './filtered-execution-results.component.scss',
+  templateUrl: './rule-results.component.html',
+  styleUrl: './rule-results.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FilteredExecutionResultsComponent implements OnChanges {
+export class RuleResultsComponent implements OnChanges {
   readonly definition = input.required<RuleDefinition>();
-  readonly initialResult = input.required<RuleExecutionResponse>();
+  readonly initialResult = input<RuleExecutionResponse>();
   readonly metadata = input.required<MetadataResponse>();
-  readonly selection = signal<ResultFilterSelection>(emptySelection());
-  readonly state = signal<ResultsState>({ status: 'running' });
+  private readonly api = inject(RulesApiService);
+  private readonly requests = new Subject<ResultFilterSelection | null>();
+  private readonly snapshot = signal<RuleDefinition | null>(null);
   private readonly columns = signal<readonly RuleResultColumn[]>([]);
-  readonly filterColumns = computed(() =>
-    filterColumns(this.columns(), this.metadata(), this.definition().rootEntityId),
-  );
+  private readonly currentState = signal<ResultsState>({ status: 'running' });
+  private readonly currentSelection = signal<ResultFilterSelection>(emptySelection());
+  readonly state = this.currentState.asReadonly();
+  readonly selection = this.currentSelection.asReadonly();
+  readonly filterColumns = computed(() => {
+    const definition = this.snapshot();
+    return definition
+      ? filterColumns(this.columns(), this.metadata(), definition.rootEntityId)
+      : [];
+  });
   readonly filterableColumnIds = computed(() => this.filterColumns().map((column) => column.id));
   readonly filteredColumnIds = computed(() =>
     this.selection().filters.map((filter) => filter.columnId),
@@ -55,9 +63,6 @@ export class FilteredExecutionResultsComponent implements OnChanges {
   readonly filtered = computed(
     () => !!this.selection().search.trim() || this.selection().filters.length > 0,
   );
-  private readonly api = inject(RulesApiService);
-  private readonly requests = new Subject<ResultFilterSelection | null>();
-  private snapshot: RuleDefinition | null = null;
 
   constructor() {
     this.requests
@@ -65,31 +70,36 @@ export class FilteredExecutionResultsComponent implements OnChanges {
         switchMap((selection) => (selection === null ? EMPTY : this.execute(selection))),
         takeUntilDestroyed(),
       )
-      .subscribe((state) => this.state.set(state));
+      .subscribe((state) => this.currentState.set(state));
   }
 
   ngOnChanges(): void {
+    // Each new definition/result cancels old work and starts with no active filters.
     this.requests.next(null);
-    this.snapshot = structuredClone(this.definition());
-    this.columns.set(this.initialResult().columns);
-    this.selection.set(emptySelection());
-    this.state.set({ status: 'ready', result: this.initialResult() });
+    this.snapshot.set(structuredClone(this.definition()));
+    this.columns.set([]);
+    this.currentSelection.set(emptySelection());
+    this.currentState.set({ status: 'running' });
+    const initial = this.initialResult();
+    if (initial) {
+      this.columns.set(initial.columns);
+      this.currentState.set({ status: 'ready', result: initial });
+    } else this.retry();
   }
 
   applyFilters(selection: ResultFilterSelection): void {
-    const copy = structuredClone(selection);
-    this.selection.set(copy);
-    this.requests.next(copy);
+    this.currentSelection.set(structuredClone(selection));
+    this.retry();
   }
 
   retry(): void {
-    this.requests.next(this.selection());
+    if (this.snapshot()) this.requests.next(this.selection());
   }
 
   private execute(selection: ResultFilterSelection) {
     try {
       const options = executionOptions(selection, this.filterColumns());
-      return this.api.execute(this.snapshot!, options).pipe(
+      return this.api.execute(this.snapshot()!, options).pipe(
         map((result): ResultsState => {
           this.columns.set(result.columns);
           return { status: 'ready', result };
@@ -102,7 +112,7 @@ export class FilteredExecutionResultsComponent implements OnChanges {
     } catch (error) {
       return of<ResultsState>({
         status: 'error',
-        message: error instanceof Error ? error.message : 'לא ניתן להפעיל את הסינון.',
+        message: error instanceof Error ? error.message : this.errorMessage(error),
       });
     }
   }

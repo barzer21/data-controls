@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { FilteredExecutionResultsComponent } from '../../../shared/filtered-execution-results/filtered-execution-results.component';
+import { RuleResultsComponent } from '../../../shared/rule-results/rule-results.component';
 import { MetadataResponse, RuleDefinition, SavedRuleResponse } from '../../../core/api/api.models';
 import { RuleEditorComponent } from './rule-editor.component';
 
@@ -418,8 +418,8 @@ describe('Rule editor with API transport', () => {
       records: [],
     });
     fixture.detectChanges();
-    const results = fixture.debugElement.query(By.directive(FilteredExecutionResultsComponent))
-      .componentInstance as FilteredExecutionResultsComponent;
+    const results = fixture.debugElement.query(By.directive(RuleResultsComponent))
+      .componentInstance as RuleResultsComponent;
     results.applyFilters({
       search: '',
       filters: [{ columnId: 'amount', operator: 'greaterThan', value: 20000 }],
@@ -433,7 +433,7 @@ describe('Rule editor with API transport', () => {
     fixture.detectChanges();
     expect(filtered.cancelled).toBe(true);
     expect(editor.preview()).toBeNull();
-    expect(fixture.debugElement.query(By.directive(FilteredExecutionResultsComponent))).toBeNull();
+    expect(fixture.debugElement.query(By.directive(RuleResultsComponent))).toBeNull();
     http.expectNone(
       (req) => req.method === 'GET' || req.method === 'PUT' || req.url === '/api/rules',
     );
