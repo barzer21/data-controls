@@ -15,8 +15,6 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.4rem 1.5rem;
-  max-height: 43dvh;
-  overflow: auto;
 }
 a {
   color: var(--accent);
@@ -73,7 +71,6 @@ h2 {
     grid-template-rows: auto auto;
   }
   .context {
-    max-height: none;
     padding: 1.1rem;
   }
   .results-panel {
