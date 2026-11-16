@@ -7,7 +7,7 @@
 | עובדים צעירים עם שכר גבוה | עובדים | גיל קטן מ־18 וגם שכר גדול מ־15,000 | [young-high-salary.json](examples/young-high-salary.json) |
 | תאריכי העסקה לא תקינים | עובדים | סיום העסקה מוקדם מתחילת העסקה | [employment-dates.json](examples/employment-dates.json) |
 | עובד פעיל במחלקה לא פעילה | עובדים | עובד פעיל וגם המחלקה המשויכת אינה פעילה | [inactive-department.json](examples/inactive-department.json) |
-| פרטי עובד חסרים | עובדים | שם פרטי חסר או שכר חסר | [missing-employee-data.json](examples/missing-employee-data.json) |
+| פרטי עובד חסרים | עובדים | תאריך תחילת העסקה חסר או שיוך למחלקה חסר | [missing-employee-data.json](examples/missing-employee-data.json) |
 | מחלקה פעילה ללא מנהל | מחלקות | המחלקה פעילה ושם המנהל חסר | [department-without-manager.json](examples/department-without-manager.json) |
 
 גיל מחושב ביחס למועד ההרצה, ולכן מספר התוצאות בדוגמה הראשונה יכול להשתנות עם הזמן. אין להסיק שתמיד יוחזר מספר קבוע. תאריך חסר אינו מקיים השוואת סדר רגילה.

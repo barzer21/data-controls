@@ -1,13 +1,13 @@
 {
   "name": "פרטי עובד חסרים",
-  "description": "איתור עובדים שחסר להם שם פרטי או שכר.",
+  "description": "איתור עובדים שחסר להם תאריך תחילת העסקה או שיוך למחלקה.",
   "rootEntityId": "employee",
   "condition": {
     "kind": "group",
     "operator": "or",
     "children": [
-      { "kind": "comparison", "left": { "fieldId": "firstName" }, "operator": "isNull" },
-      { "kind": "comparison", "left": { "fieldId": "salary" }, "operator": "isNull" }
+      { "kind": "comparison", "left": { "fieldId": "startDate" }, "operator": "isNull" },
+      { "kind": "comparison", "left": { "fieldId": "departmentId" }, "operator": "isNull" }
     ]
   }
 }

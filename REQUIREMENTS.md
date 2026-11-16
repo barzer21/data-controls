@@ -4,7 +4,7 @@
 > This document distinguishes **explicit assignment requirements** from implementation choices. Statuses: `Not started`, `In progress`, `Implemented`, `Verified`.
 > Do not mark `Verified` until an observable test/demo and relevant deliverable have been checked.
 
-Documentation review: 2026-11-16. Implemented describes existing code and deliverables; it does not certify a clean installation or final live browser demonstration. Historical evidence retains its original scope.
+Submission verification: 2026-11-16. Deliverables checked against the original assignment DOCX. SQL scripts 01-06 passed after recreating DataControlsDb; frontend dependencies reinstalled; Python dependencies installed in a fresh virtual environment. Live Angular/.NET/Python browser flow passed. Verification used the existing working tree, not a fresh clone or another machine. Historical evidence below retains its original scope; current results are recorded in README.md.
 
 ## General and data
 
@@ -13,8 +13,8 @@ Documentation review: 2026-11-16. Implemented describes existing code and delive
 | GEN-01 | Build a web application with frontend, backend and database | Implemented Angular/API/SQL flow and HTTP checks; full clean-checkout/browser submission walkthrough pending | Implemented |
 | GEN-02 | Generic controls: add/change controls without dedicated code per rule | Metadata-driven full-page editor, generic comparisons/groups | Implemented |
 | GEN-03 | Business users need no SQL/schema/relationship knowledge | Business labels, related field selection and create/edit/run UI | Implemented |
-| DB-01 | Sample database with multiple related tables | SQL schema and FK relationship(s) | In progress |
-| DB-02 | Sample valid and invalid business data | Seed script and verified sample cases | In progress |
+| DB-01 | Sample database with multiple related tables | SQL scripts recreated related Employees/Departments tables and Rules storage | Verified |
+| DB-02 | Sample valid and invalid business data | 20 employees and 5 departments seeded; executable examples demonstrate valid/invalid cases | Verified |
 | DB-03 | Rule engine works generically, not based on table/field names hardcoded in code | New table + catalog entity/field executed without code changes | Verified |
 | DB-04 | Store control definitions | 23 persistence checks passed, including persist/restart/reload on isolated SQL DB | Verified |
 
@@ -60,7 +60,7 @@ Documentation review: 2026-11-16. Implemented describes existing code and delive
 |---|---|---|---|
 | TECH-01 | .NET Web API | Running backend | Implemented |
 | TECH-02 | Python | Local FastAPI mock service, pinned dependencies and documented startup; python-ai/README.md | Implemented |
-| TECH-03 | SQL Server | Running DB and scripts | In progress |
+| TECH-03 | SQL Server | SQL Server setup, API execution and permission checks passed | Verified |
 | TECH-04 | Secure dynamic SQL mechanisms | Parameterization/identifier quoting and real restricted-SQL-identity tests passed | Verified |
 | TECH-05 | Angular | Angular 22 builds and runs against local API | Implemented |
 | TECH-06 | Hebrew UI and RTL | Hebrew/RTL list, manual editor, AI review and results; desktop/mobile browser checks, final submission walkthrough pending | Implemented |
@@ -71,14 +71,14 @@ Documentation review: 2026-11-16. Implemented describes existing code and delive
 
 | ID | Explicit requirement | Deliverable | Status |
 |---|---|---|---|
-| SUB-01 | Complete frontend and backend source | `frontend/`, `backend/`, Python component | In progress |
-| SUB-02 | Scripts to create DB and load sample data | SQL scripts 01-06, persistence and read-only permissions; final clean-checkout validation pending | In progress |
-| SUB-03 | Installation and run instructions | README.md covers database, dependencies and three services; clean-checkout validation pending | Implemented |
-| SUB-04 | Short architecture and rule engine description | docs/ARCHITECTURE.md | Implemented |
-| SUB-05 | Examples of definable/runnable controls | docs/EXAMPLE_RULES.md and docs/examples/*.json; final browser demonstration pending | Implemented |
-| SUB-06 | Stage B demonstration using mock | Three-process flow implemented; live backend/Python and Angular approval tests pass; full browser demo pending | In progress |
-| SUB-07 | Assumptions, limitations and possible extensions | DECISIONS.md | Implemented |
-| SUB-08 | AI tools used and purpose of each | docs/AI_USAGE.md; author review before submission pending | Implemented |
+| SUB-01 | Complete frontend and backend source | frontend/, backend/ and python-ai/ present; .NET and Angular builds passed | Verified |
+| SUB-02 | Scripts to create DB and load sample data | Scripts 01-06 executed on recreated DataControlsDb: 20 employees, 5 departments, 0 saved rules; read-only permissions tested | Verified |
+| SUB-03 | Installation and run instructions | README.md commands checked; npm ci and fresh Python environment installation passed; all three services started | Verified |
+| SUB-04 | Short architecture and rule engine description | docs/ARCHITECTURE.md reviewed against the submission requirement | Verified |
+| SUB-05 | Examples of definable/runnable controls | docs/EXAMPLE_RULES.md and five JSON examples validated/executed against the rebuilt DB | Verified |
+| SUB-06 | Stage B demonstration using mock | Live Edge flow: Python mock proposal, approval, draft, save, edit and saved execution passed | Verified |
+| SUB-07 | Assumptions, limitations and possible extensions | DECISIONS.md combines design choices, assumptions, limitations and possible extensions | Verified |
+| SUB-08 | AI tools used and purpose of each | docs/AI_USAGE.md describes GPT planning and Codex development purposes; author remains responsible for understanding the solution | Verified |
 
 ## Evaluation criteria (review gates, not extra functional requirements)
 
