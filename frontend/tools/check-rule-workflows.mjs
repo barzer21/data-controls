@@ -798,6 +798,30 @@ try {
     'Created rule appears after list refresh',
   );
   assert.equal(saveRequests.length, 3, 'One failed PUT, one successful PUT and one POST');
+  for (const [route, selector] of [
+    ['/rules/new', 'main.editor-page'],
+    ['/rules/ai/new?page=2', 'main.ai-page'],
+    ['/rules/1/edit', 'main.editor-page'],
+    ['/rules/1/results', 'main.results-page'],
+    ['/rules', '.rule-mark'],
+  ]) {
+    await send('Page.navigate', { url: base + route });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await waitFor(selector);
+    assert.equal(
+      await evaluate(route === '/rules' ? 'location.pathname' : 'location.pathname + location.search'),
+      route,
+      'Direct links still work',
+    );
+    await send('Page.reload');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await waitFor('.rule-mark');
+    assert.equal(await evaluate('location.pathname'), '/rules', 'Refresh returns to library');
+    assert.ok(
+      await evaluate("[null, '1'].includes(new URL(location.href).searchParams.get('page'))"),
+      'Refresh starts on first library page',
+    );
+  }
   assert.deepEqual(errors, [], 'No browser runtime errors');
   assert.equal(writes, 0, 'No unexpected API requests');
   assert.equal(validationRequests, 0, 'No redundant pre-validation requests');
