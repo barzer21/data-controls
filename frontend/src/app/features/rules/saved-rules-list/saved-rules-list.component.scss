@@ -81,6 +81,47 @@ p {
   font-size: 0.8rem;
   overflow-wrap: anywhere;
 }
+.delete-rule,
+.delete-error {
+  color: var(--danger);
+}
+.delete-rule {
+  border-color: var(--danger);
+}
+.delete-rule:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+.delete-rule:focus-visible {
+  outline-color: var(--danger);
+}
+.delete-confirmation {
+  grid-column: 2 / -1;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--danger);
+  border-radius: 10px;
+  background: white;
+  overflow-wrap: anywhere;
+}
+.delete-confirmation h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.delete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.delete-actions .delete-rule {
+  background: var(--danger-soft);
+}
+.delete-actions .delete-rule:hover:not(:disabled) {
+  background: var(--danger);
+  color: white;
+}
 @media (max-width: 1100px) {
   .rule {
     grid-template-columns: 45px minmax(0, 1fr);

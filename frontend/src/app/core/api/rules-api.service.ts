@@ -21,6 +21,10 @@ export class RulesApiService {
     return this.http.get<SavedRuleResponse>(`/api/rules/${id}`);
   }
 
+  delete(id: number) {
+    return this.http.delete<void>(`/api/rules/${id}`);
+  }
+
   validate(definition: RuleDefinition) {
     return this.http.post<RuleValidationResult>('/api/rules/validate', definition);
   }

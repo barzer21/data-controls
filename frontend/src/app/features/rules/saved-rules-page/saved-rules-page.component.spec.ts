@@ -190,6 +190,98 @@ describe('Saved rules page with API services', () => {
     expect(fixture.nativeElement.textContent).not.toContain('customEntity');
   });
 
+  it('requires confirmation, focuses cancel and cancels with Escape without deleting', async () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)]);
+    button('מחיקה').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.delete-confirmation').textContent).toContain(
+      rule(1).name,
+    );
+    expect(document.activeElement).toBe(button('ביטול'));
+    http.expectNone((req) => req.method === 'DELETE');
+    button('ביטול').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.delete-confirmation')).toBeNull();
+    expect(document.activeElement).toBe(button('מחיקה'));
+    http.expectNone((req) => req.method === 'DELETE');
+  });
+
+  it('deletes once after confirmation and reloads counts from the server', async () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1), rule(2)]);
+    button('מחיקה').click();
+    fixture.detectChanges();
+    button('מחיקת הבקרה').click();
+    fixture.componentInstance.confirmDelete(1);
+    fixture.componentInstance.cancelDelete();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(button('ביטול').disabled).toBe(true);
+    expect(button('מוחקים…').disabled).toBe(true);
+    const request = http.expectOne('/api/rules/1');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    finishList([rule(2)]);
+    expect(fixture.nativeElement.querySelectorAll('.rule').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain(
+      rule(1).name,
+    );
+  });
+
+  it('returns to the previous page after deleting its last rule', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)], 21);
+    fixture.componentInstance.loadPage(2);
+    finishList([rule(21)], 21, 2);
+    fixture.componentInstance.requestDelete(21);
+    fixture.componentInstance.confirmDelete(21);
+    http.expectOne('/api/rules/21').flush(null, { status: 204, statusText: 'No Content' });
+    finishList([], 20, 2);
+    finishList([rule(1)], 20);
+    expect(fixture.componentInstance.state().page).toBe(1);
+  });
+
+  it('keeps a failed deletion visible with safe errors and supports retry', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)]);
+    fixture.componentInstance.requestDelete(1);
+    fixture.componentInstance.confirmDelete(1);
+    http
+      .expectOne('/api/rules/1')
+      .flush({ title: 'INTERNAL_DETAILS' }, { status: 503, statusText: 'Unavailable' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.rule').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).not.toContain(
+      'INTERNAL_DETAILS',
+    );
+    expect(fixture.componentInstance.deletingId()).toBeNull();
+    fixture.componentInstance.confirmDelete(1);
+    http.expectOne('/api/rules/1').flush(null, { status: 204, statusText: 'No Content' });
+    finishList([]);
+    expect(fixture.nativeElement.querySelector('.rule')).toBeNull();
+  });
+
+  it('refreshes the list when the rule was already deleted by another client', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)]);
+    fixture.componentInstance.requestDelete(1);
+    fixture.componentInstance.confirmDelete(1);
+    http.expectOne('/api/rules/1').flush({}, { status: 404, statusText: 'Not Found' });
+    finishList([]);
+    expect(fixture.componentInstance.saveNotice()).toContain('כבר אינה קיימת');
+  });
+
+  it('does not delete without a matching confirmation', () => {
+    http.expectOne('/api/metadata').flush(metadata);
+    finishList([rule(1)]);
+    fixture.componentInstance.confirmDelete(1);
+    fixture.componentInstance.requestDelete(999);
+    http.expectNone((req) => req.method === 'DELETE');
+  });
+
   it('cancels in-flight requests when the page is destroyed', () => {
     const rules = listRequest();
     const catalog = http.expectOne('/api/metadata');

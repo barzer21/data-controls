@@ -1,8 +1,9 @@
 import { Location } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, forkJoin, map, of, startWith, Subject, switchMap } from 'rxjs';
+import { catchError, finalize, forkJoin, map, of, startWith, Subject, switchMap } from 'rxjs';
+import { apiErrorMessages } from '../../../core/api/api-error-messages';
 import { MetadataResponse, RuleListResponse } from '../../../core/api/api.models';
 import { MetadataApiService } from '../../../core/api/metadata-api.service';
 import { RulesApiService } from '../../../core/api/rules-api.service';
@@ -27,11 +28,15 @@ export class SavedRulesPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly location = inject(Location);
   private readonly rulesApi = inject(RulesApiService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly metadataApi = inject(MetadataApiService);
   private readonly pageRequests = new Subject<number>();
   readonly state = signal<PageState>({ status: 'loading', page: 1 });
   readonly pageSize = RULE_LIST_PAGE_SIZE;
   readonly saveNotice = signal('');
+  readonly pendingDeleteId = signal<number | null>(null);
+  readonly deletingId = signal<number | null>(null);
+  readonly deleteError = signal('');
 
   constructor() {
     const navigationState = this.location.getState() as { saveNotice?: unknown } | null;
@@ -75,16 +80,82 @@ export class SavedRulesPageComponent {
   }
 
   loadPage(page: number): void {
+    if (this.deletingId() !== null) return;
+    this.pendingDeleteId.set(null);
+    this.deleteError.set('');
     if (Number.isInteger(page) && page > 0) this.pageRequests.next(page);
   }
 
+  requestDelete(id: number): void {
+    const state = this.state();
+    if (
+      this.deletingId() !== null ||
+      state.status !== 'loaded' ||
+      !state.result.items.some((rule) => rule.id === id)
+    )
+      return;
+    this.pendingDeleteId.set(id);
+    this.deleteError.set('');
+  }
+
+  cancelDelete(): void {
+    if (this.deletingId() !== null) return;
+    this.pendingDeleteId.set(null);
+    this.deleteError.set('');
+  }
+
+  confirmDelete(id: number): void {
+    const state = this.state();
+    if (this.deletingId() !== null || this.pendingDeleteId() !== id || state.status !== 'loaded')
+      return;
+    const rule = state.result.items.find((rule) => rule.id === id);
+    if (!rule) return;
+    this.deletingId.set(id);
+    this.deleteError.set('');
+    this.saveNotice.set('');
+    const finish = (alreadyDeleted: boolean) => {
+      this.deletingId.set(null);
+      this.saveNotice.set(
+        alreadyDeleted ? 'הבקרה כבר אינה קיימת. הרשימה עודכנה.' : `הבקרה „${rule.name}” נמחקה.`,
+      );
+      this.loadPage(state.page);
+    };
+    this.rulesApi
+      .delete(id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.deletingId.set(null)),
+      )
+      .subscribe({
+        next: () => finish(false),
+        error: (error: unknown) => {
+          if (
+            typeof error === 'object' &&
+            error !== null &&
+            'status' in error &&
+            error.status === 404
+          ) {
+            finish(true);
+            return;
+          }
+          this.deleteError.set(
+            apiErrorMessages(error, {
+              fallback: 'לא ניתן למחוק את הבקרה כרגע. אפשר לנסות שוב.',
+            }).join(' '),
+          );
+        },
+      });
+  }
+
   runRule(id: number): void {
+    if (this.deletingId() !== null) return;
     void this.router.navigate(['/rules', id, 'results'], {
       queryParams: { page: this.state().page },
     });
   }
 
   openEditor(id: number): void {
+    if (this.deletingId() !== null) return;
     void this.router.navigate(['/rules', id, 'edit'], {
       queryParams: { page: this.state().page },
     });

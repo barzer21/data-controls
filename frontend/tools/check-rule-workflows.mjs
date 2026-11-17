@@ -54,6 +54,9 @@ const executionRequests = [];
 const saveRequests = [];
 const createdRules = [];
 let rejectNextSave = false;
+let rejectNextDelete = false;
+const deletedIds = new Set();
+const deleteRequests = [];
 const resultColumns = [
   { id: 'firstName', label: 'שם פרטי', type: 'text' },
   { id: 'salary', label: 'שכר', type: 'number' },
@@ -138,6 +141,18 @@ const server = http.createServer(async (req, res) => {
         createdRules.push(created);
         return res.end(JSON.stringify(created));
       }
+      if (req.method === 'DELETE' && /^\/api\/rules\/\d+$/.test(url.pathname)) {
+        const id = Number(url.pathname.split('/').at(-1));
+        deleteRequests.push(id);
+        if (rejectNextDelete) {
+          rejectNextDelete = false;
+          res.writeHead(503);
+          return res.end(JSON.stringify({ title: 'INTERNAL_DELETE_ERROR' }));
+        }
+        deletedIds.add(id);
+        res.writeHead(204);
+        return res.end();
+      }
       if (url.pathname === '/api/rules' && req.method === 'GET') {
         return res.end(
           JSON.stringify({
@@ -145,8 +160,8 @@ const server = http.createServer(async (req, res) => {
               { ...saved, ...saved.definition, createdWithAi: false },
               { ...saved, ...definition, id: 7, name: 'בקרת שכר בעזרת AI', createdWithAi: true },
               ...createdRules.map((rule) => ({ ...rule, ...rule.definition })),
-            ],
-            totalCount: 2 + createdRules.length,
+            ].filter((rule) => !deletedIds.has(rule.id)),
+            totalCount: 2 + createdRules.length - deletedIds.size,
             page: 1,
             pageSize: 20,
           }),
@@ -809,7 +824,9 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await waitFor(selector);
     assert.equal(
-      await evaluate(route === '/rules' ? 'location.pathname' : 'location.pathname + location.search'),
+      await evaluate(
+        route === '/rules' ? 'location.pathname' : 'location.pathname + location.search',
+      ),
       route,
       'Direct links still work',
     );
@@ -822,6 +839,45 @@ try {
       'Refresh starts on first library page',
     );
   }
+  await send('Emulation.setDeviceMetricsOverride', {
+    width: 1280,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await click('[data-delete-rule="1"]');
+  await waitFor('.delete-confirmation');
+  assert.equal(await evaluate('document.activeElement.hasAttribute("data-cancel-delete")'), true);
+  await screenshot('delete-confirmation-desktop');
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
+  assert.equal(deleteRequests.length, 0, 'Escape does not delete');
+  await click('[data-delete-rule="1"]');
+  rejectNextDelete = true;
+  await click('.delete-confirmation .delete-rule');
+  await waitFor('.delete-error');
+  assert.equal(
+    await evaluate(
+      'document.querySelector(".delete-error").textContent.includes("INTERNAL_DELETE_ERROR")',
+    ),
+    false,
+  );
+  await send('Emulation.setDeviceMetricsOverride', {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true,
+  });
+  await screenshot('delete-confirmation-mobile');
+  assert.ok(
+    await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'),
+    'Delete confirmation fits mobile',
+  );
+  await click('.delete-confirmation .delete-rule');
+  await waitFor('.save-notice');
+  await evaluate(
+    `new Promise((resolve,reject)=>{let n=0;const poll=()=>{if(!document.querySelector('[data-delete-rule="1"]'))resolve(true);else if(++n>100)reject("Deleted rule still visible");else setTimeout(poll,50)};poll()})`,
+  );
+  assert.deepEqual(deleteRequests, [1, 1], 'Failed deletion followed by one explicit retry');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   assert.equal(writes, 0, 'No unexpected API requests');
   assert.equal(validationRequests, 0, 'No redundant pre-validation requests');

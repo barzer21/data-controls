@@ -20,19 +20,64 @@
         <button
           type="button"
           [attr.aria-label]="'עריכה: ' + rule.name"
+          [disabled]="deletingId() !== null"
           (click)="editRule.emit(rule.id)"
         >
           עריכה
         </button>
         <button
           type="button"
+          class="delete-rule"
+          [attr.data-delete-rule]="rule.id"
+          [disabled]="deletingId() !== null"
+          [attr.aria-label]="'מחיקה: ' + rule.name"
+          [attr.aria-expanded]="pendingDeleteId() === rule.id"
+          (click)="deleteRule.emit(rule.id)"
+        >
+          מחיקה
+        </button>
+        <button
+          type="button"
           class="primary"
+          [disabled]="deletingId() !== null"
           [attr.aria-label]="'הרץ בקרה: ' + rule.name"
           (click)="runRule.emit(rule.id)"
         >
           הרץ בקרה
         </button>
       </div>
+      @if (pendingDeleteId() === rule.id) {
+        <section
+          class="delete-confirmation"
+          [attr.aria-labelledby]="'delete-title-' + rule.id"
+          [attr.aria-busy]="deletingId() === rule.id"
+          (keydown.escape)="cancelDelete(rule.id, $event)"
+        >
+          <h3 [id]="'delete-title-' + rule.id">למחוק את הבקרה „{{ rule.name }}”?</h3>
+          <p>לא ניתן לשחזר את הבקרה לאחר המחיקה.</p>
+          @if (deleteError()) {
+            <p class="delete-error" role="alert">{{ deleteError() }}</p>
+          }
+          <div class="delete-actions">
+            <button
+              type="button"
+              [attr.data-cancel-delete]="rule.id"
+              [disabled]="deletingId() !== null"
+              (click)="cancelDelete(rule.id)"
+            >
+              ביטול
+            </button>
+            <button
+              type="button"
+              class="delete-rule"
+              [disabled]="deletingId() !== null"
+              (click)="deleteConfirmed.emit(rule.id)"
+            >
+              {{ deletingId() === rule.id ? 'מוחקים…' : 'מחיקת הבקרה' }}
+            </button>
+          </div>
+        </section>
+      }
     </li>
   }
 </ol>
