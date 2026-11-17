@@ -134,7 +134,7 @@ def propose_rule(description, metadata):
     description = description.strip()
     example = MOCK_RULES.get(description)
     if example is None:
-        raise ValueError("This description is not supported by the mock. See README.md for examples.")
+        raise ValueError("This description is not supported by the mock. Choose an example returned by GET /examples.")
     proposal = {
         **deepcopy(example),
         "description": description,
