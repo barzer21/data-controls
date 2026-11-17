@@ -86,15 +86,6 @@ export interface RuleResultColumn {
   readonly type: string;
 }
 
-export interface RuleValidationResult {
-  readonly isValid: boolean;
-  readonly errors: readonly {
-    readonly path: string;
-    readonly code: string;
-    readonly message: string;
-  }[];
-}
-
 export interface RuleExplanationNode {
   readonly path: string;
   readonly kind: string;

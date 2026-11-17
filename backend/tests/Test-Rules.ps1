@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Net.Http
 $apiDirectory = Join-Path $PSScriptRoot '../DataControls.Api'
 $apiDll = if ($ApiAssemblyPath) { (Resolve-Path -LiteralPath $ApiAssemblyPath).Path }
-    else { (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path }
+    else { (Resolve-Path (Join-Path $apiDirectory 'bin/Release/net10.0/DataControls.Api.dll')).Path }
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('DataControls-Rules-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path (Join-Path $testRoot 'Metadata') -Force | Out-Null
 Copy-Item (Join-Path $apiDirectory 'Metadata/metadata.json') (Join-Path $testRoot 'Metadata/metadata.json')

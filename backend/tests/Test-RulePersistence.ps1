@@ -1,4 +1,5 @@
 param([string]$Server = 'localhost', [int]$Port = 5200, [switch]$IncludeExecution,
+    [switch]$VerifyConnectionIsolation,
     [string]$ApiAssemblyPath = '')
 
 $ErrorActionPreference = 'Stop'
@@ -6,7 +7,7 @@ Add-Type -AssemblyName System.Net.Http
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $apiDirectory = Join-Path $repositoryRoot 'backend/DataControls.Api'
 $apiDll = if ($ApiAssemblyPath) { (Resolve-Path -LiteralPath $ApiAssemblyPath).Path }
-    else { (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path }
+    else { (Resolve-Path (Join-Path $apiDirectory 'bin/Release/net10.0/DataControls.Api.dll')).Path }
 $testDatabase = 'DataControlsPersistenceTest_' + [guid]::NewGuid().ToString('N').Substring(0, 8)
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) $testDatabase
 New-Item -ItemType Directory -Path (Join-Path $testRoot 'Metadata') -Force | Out-Null
@@ -47,12 +48,27 @@ function Start-TestApi {
     $script:startCount++
     $stdout = Join-Path $testRoot "api-$script:startCount.out.log"
     $stderr = Join-Path $testRoot "api-$script:startCount.err.log"
-    $script:process = Start-Process dotnet -ArgumentList @(
-        ('"' + $apiDll + '"'), '--contentRoot', ('"' + $testRoot + '"'), '--urls', "http://localhost:$Port"
-    ) -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    $previousConnection = $env:ConnectionStrings__DefaultConnection
+    try {
+        if ($VerifyConnectionIsolation) {
+            # A wrong inherited connection must not override the isolated DB argument.
+            $env:ConnectionStrings__DefaultConnection = "Server=$Server;Database=DataControlsMustNotBeUsed_$([guid]::NewGuid().ToString('N'));Integrated Security=True;TrustServerCertificate=True;Connect Timeout=1"
+        }
+        $script:process = Start-Process dotnet -ArgumentList @(
+            ('"' + $apiDll + '"'), '--contentRoot', ('"' + $testRoot + '"'), '--urls', "http://localhost:$Port",
+            '--ConnectionStrings:DefaultConnection', ('"' + $connection.ConnectionString + '"')
+        ) -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    } finally {
+        $env:ConnectionStrings__DefaultConnection = $previousConnection
+    }
     $deadline = [DateTime]::UtcNow.AddSeconds(20)
     while ([DateTime]::UtcNow -lt $deadline -and !$script:process.HasExited) {
         try {
+            # Do not accidentally accept a different API already listening on this port.
+            if ((Get-Content -LiteralPath $stdout -Raw -ErrorAction SilentlyContinue) -notmatch 'Now listening on:') {
+                Start-Sleep -Milliseconds 150
+                continue
+            }
             Invoke-RestMethod "http://localhost:$Port/api/metadata" -TimeoutSec 1 | Out-Null
             return
         } catch { Start-Sleep -Milliseconds 150 }
@@ -103,6 +119,7 @@ try {
     }
     Assert-Test $true 'freshSqlSetup'
     Start-TestApi
+    if ($VerifyConnectionIsolation) { Assert-Test $true 'explicitConnectionOverridesInheritedEnvironment' }
     $list = (Send-Request 'GET' '').Body
     Assert-Test ($list.totalCount -eq 0 -and $list.items.Count -eq 0) 'emptyList'
 

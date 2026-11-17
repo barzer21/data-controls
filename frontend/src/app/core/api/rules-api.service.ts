@@ -6,7 +6,6 @@ import {
   RuleExecutionOptions,
   RuleListResponse,
   SavedRuleResponse,
-  RuleValidationResult,
 } from './api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -23,10 +22,6 @@ export class RulesApiService {
 
   delete(id: number) {
     return this.http.delete<void>(`/api/rules/${id}`);
-  }
-
-  validate(definition: RuleDefinition) {
-    return this.http.post<RuleValidationResult>('/api/rules/validate', definition);
   }
 
   save(id: number | null, definition: RuleDefinition, createdWithAi = false) {

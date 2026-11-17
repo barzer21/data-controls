@@ -183,7 +183,17 @@ npm.cmd --prefix frontend test -- --watch=false
 - ‏`backend/tests/Test-SubmissionSetup.ps1`: בדיקת הקמה מלאה מסקריפטים 01–07, כולל אימות והרצת עשר בקרות הדוגמה, הרשאות קריאה והרצות חוזרות של סקריפט 07 ללא כפילויות או דריסת עריכות. דורשת SQL Server, ‏`sqlcmd`, הרשאת יצירה והסרה של DB ובניית Release של ה־API. נוצרים DB ייעודי עם שם אקראי ו־API זמני; ה־DB הייעודי מוסר גם במקרה של כישלון. נתוני ה־DB הרגיל אינם משתנים. קובצי האבחון נשמרים בתיקיית Temp שהבדיקה מדפיסה.
 - ‏`frontend/tools/check-rule-workflows.mjs`: בדיקות דפדפן מול build ותגובות API מדומות. דורש Edge מותקן, או כתובת לדפדפן מתאים במשתנה `BROWSER_TEST_EXECUTABLE`.
 - ‏`backend/tests/check_age_api.py`: API זמני מול דאטה בייס הפיתוח, לקריאה בלבד; דורש build של Release ונתוני דוגמה.
-- ‏`backend/tests/Test-RulePersistence.ps1`: יוצר דאטה בייס בדיקה נפרד.
+- ‏`backend/tests/Test-RulePersistence.ps1`: יוצר DB בדיקה נפרד וכופה את החיבור אליו על ה־API, גם כשמוגדר משתנה סביבה אחר. ברירת המחדל היא בניית Release; אפשר להעביר `-ApiAssemblyPath` עבור DLL אחר. ה־DB נשאר בסיום לצורך בדיקה ידנית, ושמו מודפס.
 - ‏בדיקת חיבור חי ל־Python: לאחר בניית Release והתקנת תלויות Python, הריצו `.\python-ai\.venv\Scripts\python.exe backend/tests/check_ai_integration.py --api-dll backend/DataControls.Api/bin/Release/net10.0/DataControls.Api.dll`. הבדיקה מפעילה שרתים זמניים, דורשת SQL Server זמין וקוראת את הקטלוג ורשימת הבקרות ללא שינוי ב־DB.
+
+‏לאחר בניית Release, להרצת בדיקות השמירה וההרצה יחד עם בדיקת בידוד חיבור ה־DB:
+
+<div dir="ltr">
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-RulePersistence.ps1 -IncludeExecution -VerifyConnectionIsolation
+```
+
+</div>
 
 </div>

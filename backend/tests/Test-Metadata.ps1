@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $apiDirectory = Join-Path $PSScriptRoot '../DataControls.Api'
-$apiDll = (Resolve-Path (Join-Path $apiDirectory 'bin/Debug/net10.0/DataControls.Api.dll')).Path
+$apiDll = (Resolve-Path (Join-Path $apiDirectory 'bin/Release/net10.0/DataControls.Api.dll')).Path
 $sourceJson = Get-Content (Join-Path $apiDirectory 'Metadata/metadata.json') -Raw -Encoding UTF8
 $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('DataControls-Metadata-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path (Join-Path $testRoot 'Metadata') -Force | Out-Null
