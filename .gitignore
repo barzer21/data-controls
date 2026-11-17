@@ -40,3 +40,6 @@ python-ai/proposal.json
 # Local environment files
 .env
 .env.*
+
+# Generated submission packages
+/submission/

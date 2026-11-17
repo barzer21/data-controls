@@ -1,6 +1,6 @@
 # Data Controls - Implementation Plan
 
-> Current state reviewed on 2026-11-16 against the repository and recorded test evidence. Requirement IDs refer to `REQUIREMENTS.md`. Historical verification reports retain their original scope; they are not current test counts.
+> Current state reviewed on 2026-11-17 against the repository and recorded test evidence. Requirement IDs refer to `REQUIREMENTS.md`. Historical verification reports retain their original scope; they are not current test counts.
 
 ## Current baseline
 
@@ -22,9 +22,9 @@
 | 4 | Control storage and CRUD | DB-04, RULE-04 | Implemented; isolated persistence tests recorded; deletion is API-only |
 | 5 | SQL compiler and read-only executor | EXEC-01..06, TECH-04 | Implemented; all ten seeded controls validate and execute in the new setup regression |
 | 6 | Explanations, counts, search and filtering | RESULTS-03..06 | Implemented in API and shared draft/saved UI; browser regression passes |
-| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | Build and 179 tests pass; desktop/mobile workflow regression passes; final human usability review remains open |
+| 7 | Angular Hebrew RTL UI | TECH-05..07, RULE-01..05, RESULTS-01..06, UX-01 | Build and 180 tests pass; desktop/mobile workflow regression passes; final human usability review remains open |
 | 8 | Python AI mock and approval flow | AI-01..07, TECH-02 | Five live mock proposals and upstream error checks pass; 39 shared contract cases pass in both languages; approval flow checked in browser |
-| 9 | Documentation and clean setup verification | SUB-01..08 | Documentation synchronized; isolated SQL setup verified; fresh-clone / other-machine installation remains untested |
+| 9 | Documentation and clean setup verification | SUB-01..08 | Documentation synchronized; isolated SQL setup verified; fresh-clone installation passed on the same machine; another-machine installation remains untested |
 
 ## Implemented architecture choices
 
@@ -55,9 +55,10 @@ It needs SQL Server and `sqlcmd`, creates a unique DB, starts a temporary API an
 - [x] Manual authoring/editing, draft/saved execution, results filtering and AI approval have browser evidence.
 - [x] Compiler, execution and SQL permission checks have recorded evidence; no raw SQL is accepted from users or AI.
 - [x] Architecture, examples, limitations and AI-tool disclosure are present; stale document links and current-state contradictions addressed.
-- [ ] Repeat installation from a fresh clone; another-machine installation has not been tested.
+- [x] Fresh clone of 5e3e488 installed and checked on 2026-11-17: builds, 180 Angular tests, Python/.NET contract tests, isolated SQL setup and execution, browser regression and live Python integration.
+- [ ] Another-machine installation has not been tested.
 - [ ] Complete final human review of usability, requirements and submitted files. `Implemented` rows are not automatically promoted to `Verified`.
 
 ## Next work
 
-Remaining findings are tracked in `docs/ARCHITECTURE_AUDIT.md`: navigation-confirmation handling, metadata reference resolution and redundant pre-validation requests. Handle each separately with targeted regression checks. True result pagination, UI deletion and a real AI model are extensions, not completed features.
+Remaining findings are tracked in `docs/ARCHITECTURE_AUDIT.md`: metadata reference resolution and other optional maintenance changes. Redundant pre-validation was removed. Navigation-confirmation handling remains unchanged at the user's request. Handle each separately with targeted regression checks. True result pagination, UI deletion and a real AI model are extensions, not completed features.

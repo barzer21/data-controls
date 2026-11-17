@@ -4,13 +4,13 @@
 > This document distinguishes **explicit assignment requirements** from implementation choices. Statuses: `Not started`, `In progress`, `Implemented`, `Verified`.
 > Do not mark `Verified` until an observable test/demo and relevant deliverable have been checked.
 
-Submission verification: 2026-11-16. Deliverables checked against the original assignment DOCX. SQL scripts 01-07 now also pass an automated isolated-DB regression (47 checks, including all ten seeded controls and repeated seeding); frontend dependencies reinstalled; Python dependencies installed in a fresh virtual environment. Live Angular/.NET/Python browser flow passed. Verification used the existing working tree, not a fresh clone or another machine. Historical evidence below retains its original scope; current results are recorded in README.md.
+Submission verification updated: 2026-11-17. Deliverables checked against the original assignment DOCX. SQL scripts 01-07 now also pass an automated isolated-DB regression (47 checks, including all ten seeded controls and repeated seeding); frontend dependencies reinstalled; Python dependencies installed in a fresh virtual environment. Live Angular/.NET/Python browser flow passed. A fresh GitHub clone of 5e3e488 was installed and checked on 2026-11-17 on the same machine: builds, automated frontend/Python/.NET tests, isolated SQL setup and persistence/execution, browser regression against a simulated API and separate live Python integration. Another-machine installation remains untested. Historical evidence below retains its original scope; current results are recorded in README.md.
 
 ## General and data
 
 | ID | Explicit requirement from assignment | Acceptance evidence | Status |
 |---|---|---|---|
-| GEN-01 | Build a web application with frontend, backend and database | Live Angular/.NET/Python walkthrough recorded on 2026-11-16; current fixture-based browser regression passed. Fresh clone / other-machine installation not tested. | Verified |
+| GEN-01 | Build a web application with frontend, backend and database | Live Angular/.NET/Python walkthrough recorded on 2026-11-16; current fixture-based browser regression passed. Fresh-clone checks passed on 2026-11-17; another-machine installation not tested. | Verified |
 | GEN-02 | Generic controls: add/change controls without dedicated code per rule | Metadata-driven full-page editor, generic comparisons/groups | Implemented |
 | GEN-03 | Business users need no SQL/schema/relationship knowledge | Business labels, related field selection and create/edit/run UI | Implemented |
 | DB-01 | Sample database with multiple related tables | SQL scripts recreated related Employees/Departments tables and Rules storage | Verified |
@@ -50,7 +50,7 @@ Submission verification: 2026-11-16. Deliverables checked against the original a
 | AI-03 | Define expected AI response structure | Python/.NET share 39 contract fixtures: eight operators, optional description, strict properties/types and tree limits; both suites passed. | Verified |
 | AI-04 | Demonstrate receiving AI response using mock | Five Python mock examples checked over live HTTP; docs/AI_SERVICE.md | Implemented |
 | AI-05 | Translate AI response to Stage A control definition | Typed RuleDefinition and shared RuleValidator; live integration checks | Implemented |
-| AI-06 | Show proposed control for user approval before execution | Live walkthrough recorded on 2026-11-16; current 179 frontend tests and desktop/mobile browser regression cover approval and reset after editing. | Verified |
+| AI-06 | Show proposed control for user approval before execution | Live walkthrough recorded on 2026-11-16; current 180 frontend tests and desktop/mobile browser regression cover approval and reset after editing. | Verified |
 | AI-07 | Decouple AI mechanism from rule execution, enabling model replacement | IAiRuleProposalProvider, separate Angular API service and same executor | Implemented |
 | AI-OPTIONAL | Optional: proactively propose controls based on schema | docs/AI_RULE_SUGGESTIONS_PLAN.md describes scope, contracts, integration, validation, user approval and acceptance checks; design only, no implementation | Implemented |
 
