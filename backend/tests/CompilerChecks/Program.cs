@@ -144,7 +144,7 @@ var plain = compiler.Compile(searchableRule).Query!;
 var options = new RuleExecutionOptions(" %_[~ ", Compare("salary", "greaterThan", Constant(15000)));
 query = compiler.Compile(searchableRule, options).Query!;
 Check(query.Sql.Contains("LIKE @p1 ESCAPE N'~'") && query.Sql.Contains("[t1].[Name] LIKE @p1") &&
-    !query.Sql.Contains("[t0].[Salary] LIKE"), "searchOnlyProjectedTextFields");
+    query.Sql.Contains("FORMAT([t0].[Salary],"), "searchAcrossProjectedTypedFields");
 Check(Equals(query.Parameters[1].Value, "%~%~_~[~~%") && query.Parameters[0].Type == SqlDbType.Decimal,
     "literalLikeEscapingAndTypedFilterParameter");
 Check(query.Parameters.Select(p => p.Name).Distinct().Count() == query.Parameters.Count &&
@@ -155,9 +155,9 @@ Check(query.EvidenceColumnCount == plain.EvidenceColumnCount &&
 Check(compiler.Compile(searchableRule, new("   ")).Query!.Sql == plain.Sql, "blankSearchIgnored");
 Check(compiler.Compile(searchableRule, new(new string('x', 201))).Validation.Errors.Any(e =>
     e.Path == "options.search" && e.Code == "searchTooLong"), "searchLengthValidation");
-Check(!new RuleSqlCompiler(otherProvider, new RuleValidator(otherProvider)).Compile(
+Check(new RuleSqlCompiler(otherProvider, new RuleValidator(otherProvider)).Compile(
     new("Numeric", null, "account", Compare("amount", "isNotNull")), new("Noam")).Validation.IsValid,
-    "searchNeedsDisplayedTextField");
+    "searchSupportsNumericOnlyResults");
 Check(compiler.Compile(searchableRule, new(Filter: Compare("isActive", "equals", Constant(true), "employeeDepartment")))
     .Validation.Errors.Any(e => e.Code == "filterFieldNotDisplayed"), "filterCannotUseUnreturnedRelatedField");
 Check(compiler.Compile(searchableRule, new(Filter: Compare("missing", "equals", Constant(1))))

@@ -16,8 +16,8 @@ public static class RuleExecutionOptionsValidator
         var allowed = selected.Select(f => Key(f!)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (options.Search?.Length > MaxSearchLength)
             errors.Add(new("options.search", "searchTooLong", $"טקסט החיפוש מוגבל ל־{MaxSearchLength} תווים."));
-        else if (!string.IsNullOrWhiteSpace(options.Search) && !selected.Any(f => Resolve(f!).Type == "text"))
-            errors.Add(new("options.search", "noSearchableFields", "אין בתוצאות שדות טקסט שניתן לחפש בהם."));
+        else if (!string.IsNullOrWhiteSpace(options.Search) && !selected.Any())
+            errors.Add(new("options.search", "noSearchableFields", "אין בתוצאות שדות שניתן לחפש בהם."));
 
         if (options.Filter is not null)
         {
@@ -31,17 +31,6 @@ public static class RuleExecutionOptionsValidator
             else Check(options.Filter, "options.filter");
         }
         return new(errors.Count == 0, errors.ToArray());
-
-        MetadataField Resolve(FieldReference reference)
-        {
-            var entity = root;
-            foreach (var id in reference.RelationshipPath ?? [])
-            {
-                var relationship = catalog.Relationships.Single(r => Same(r.Id, id));
-                entity = catalog.Entities.Single(e => Same(e.Id, relationship.ToEntity));
-            }
-            return entity.Fields.Single(f => Same(f.Id, reference.FieldId));
-        }
 
         void Check(RuleCondition condition, string path)
         {

@@ -1,11 +1,11 @@
 <div class="filter-toolbar">
   <form class="search-form" (ngSubmit)="applySearch()">
     <label
-      ><span class="sr-only">חיפוש בתוצאות</span
+      ><span class="sr-only">חיפוש בשדות הנתונים</span
       ><input
         type="search"
         name="search"
-        placeholder="חיפוש בשדות הטקסט…"
+        placeholder="חיפוש בתוצאות…"
         maxlength="200"
         [disabled]="!searchable()"
         [ngModel]="searchDraft()"
@@ -138,5 +138,5 @@
   <p class="filter-error" role="alert">{{ error() }}</p>
 }
 <p class="filter-hint">
-  החיפוש חל על שדות הטקסט; מסנני העמודות מחוברים ב„וגם”. הסינון אינו משנה את הבקרה.
+  החיפוש חל על כל שדות הנתונים המוצגים בטבלה. מסנני העמודות מחוברים ב„וגם”. החיפוש והסינון אינם משנים את הבקרה.
 </p>

@@ -1,5 +1,6 @@
 using System.Data;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using DataControls.Api.Metadata;
 
 namespace DataControls.Api.Rules;
@@ -47,12 +48,15 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
                 predicates.Add(Condition(options.Filter, "options.filter", false).Sql);
             if (!string.IsNullOrWhiteSpace(options.Search))
             {
-                var name = $"@p{parameters.Count}";
-                var literal = options.Search.Trim().Replace("~", "~~").Replace("%", "~%")
-                    .Replace("_", "~_").Replace("[", "~[");
-                parameters.Add(new(name, SqlDbType.NVarChar, "%" + literal + "%"));
-                predicates.Add("(" + string.Join(" OR ", projections.Where(p => p.Column.Type == "text")
-                    .Select(p => $"{p.Sql} LIKE {name} ESCAPE N'~'")) + ")");
+                var search = options.Search.Trim();
+                var name = SearchParameter(search);
+                // Normalize correctly grouped input only for numeric fields; text stays literal.
+                var numericName = name;
+                if (projections.Any(p => p.Column.Type == "number") &&
+                    Regex.IsMatch(search, @"^[+-]?[0-9]{1,3}(,[0-9]{3})+(\.[0-9]+)?$", RegexOptions.CultureInvariant))
+                    numericName = SearchParameter(search.Replace(",", ""));
+                predicates.Add("(" + string.Join(" OR ", projections.Select(p =>
+                    $"{SearchValue(p.Sql, p.Column.Type)} LIKE {(p.Column.Type == "number" ? numericName : name)} ESCAPE N'~'")) + ")");
             }
             var fields = projections.Select((projection, index) => $"{projection.Sql} AS [c{index}]");
             var sql = $"SELECT TOP (@__limit) COUNT_BIG(*) OVER() AS [__count], " +
@@ -65,6 +69,25 @@ public sealed class RuleSqlCompiler(IMetadataProvider metadata, RuleValidator va
             if (usesAge) parameters.Add(new("@__asOfDate", SqlDbType.Date, today.ToDateTime(TimeOnly.MinValue)));
             return new(sql, parameters.ToArray(), projections.Select(p => p.Column).ToArray(),
                 condition.Explanation!, evidenceColumns.Count);
+        }
+
+        private string SearchParameter(string search)
+        {
+            var name = $"@p{parameters.Count}";
+            var literal = search.Replace("~", "~~").Replace("%", "~%")
+                .Replace("_", "~_").Replace("[", "~[");
+            parameters.Add(new(name, SqlDbType.NVarChar, "%" + literal + "%"));
+            return name;
+        }
+
+        private static string SearchValue(string sql, string type)
+        {
+            if (type == "text") return sql;
+            if (type == "date") return $"CONVERT(nvarchar(10), {sql}, 103)";
+            if (type == "boolean") return $"(CASE WHEN {sql} = 1 THEN N'כן' WHEN {sql} = 0 THEN N'לא' END)";
+            // Fixed culture and optional fractional digits: no grouping, exponent or decimal padding.
+            // FORMAT also handles money and floating SQL types without truncating their fractions.
+            return $"FORMAT({sql}, N'0.############################', N'en-US')";
         }
 
         private (string Sql, RuleResultColumn Column) Projection(FieldReference reference)

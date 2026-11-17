@@ -1,8 +1,44 @@
-# Internal cases: run by the isolated execution/persistence harness.
+﻿# Internal cases: run by the isolated execution/persistence harness.
 $allRows = Execution-Rule (Execution-Comparison 'isActive' 'isNotNull' $null -NoRight)
 $plainRows = (Send-Request 'POST' '/execute?limit=500' $allRows).Body
 $savedBeforeFiltering = (Send-Request 'GET' "/$id").Body
 $countBeforeFiltering = (Send-Request 'GET' '').Body.totalCount
+
+# Compare real SQL search with values returned by the API, including calculated/related fields.
+function Assert-PartialSearch([string]$Text, $Rows) {
+    $expectedIds = @($Rows.records | Where-Object {
+        $record = $_
+        @($Rows.columns | Where-Object {
+            $value = $record.values.($_.id)
+            if ($null -eq $value) { return $false }
+            $display = switch ($_.type) {
+                'boolean' { if ($value) { 'כן' } else { 'לא' } }
+                'number' { ([decimal]$value).ToString('0.############################', [Globalization.CultureInfo]::InvariantCulture) }
+                'date' { ([datetime]$value).ToString('dd/MM/yyyy') }
+                default { [string]$value }
+            }
+            $display.IndexOf($Text, [StringComparison]::OrdinalIgnoreCase) -ge 0
+        }).Count -gt 0
+    } | ForEach-Object { $_.id } | Sort-Object)
+    $actual = (Send-Request 'POST' '/execute?limit=500' @{ definition = $allRows; options = @{ search = $Text } }).Body
+    $actualIds = @($actual.records | ForEach-Object { $_.id } | Sort-Object)
+    Assert-Test (($expectedIds -join ',') -eq ($actualIds -join ',') -and $actual.totalCount -eq $expectedIds.Count -and
+        $actual.evaluatedCount -eq $Rows.evaluatedCount) "typedPartialSearch-$Text"
+}
+foreach ($term in @('15', '01/', 'כן', 'לא', '00', 'Noam', 'Engineering')) {
+    Assert-PartialSearch $term $plainRows
+}
+$plainNumber = (Send-Request 'POST' '/execute' @{ definition = $allRows; options = @{ search = '18000' } }).Body
+$groupedNumber = (Send-Request 'POST' '/execute' @{ definition = $allRows; options = @{ search = '18,000' } }).Body
+Assert-Test ($plainNumber.totalCount -gt 0 -and ($plainNumber | ConvertTo-Json -Depth 100 -Compress) -eq
+    ($groupedNumber | ConvertTo-Json -Depth 100 -Compress)) 'groupedNumericSearchMatchesPlainNumber'
+Invoke-TestSql 'SELECT Id, Salary INTO dbo.SearchSalaryBackup FROM dbo.Employees; UPDATE dbo.Employees SET Salary = CASE Id % 5 WHEN 0 THEN -15000.5 WHEN 1 THEN 1.25 WHEN 2 THEN 0 WHEN 3 THEN NULL ELSE 15000 END;'
+try {
+    $fractionRows = (Send-Request 'POST' '/execute?limit=500' $allRows).Body
+    foreach ($term in @('-150', '1.25', '.50', '.5', '0000', '0')) { Assert-PartialSearch $term $fractionRows }
+} finally {
+    Invoke-TestSql 'UPDATE employee SET Salary = originalSalary.Salary FROM dbo.Employees employee JOIN dbo.SearchSalaryBackup originalSalary ON employee.Id = originalSalary.Id; DROP TABLE dbo.SearchSalaryBackup;'
+}
 $searched = (Send-Request 'POST' '/execute' @{ definition = $allRows; options = @{ search = ' Noam ' } }).Body
 Assert-Test ($searched.totalCount -eq 1 -and $searched.records[0].values.firstName -eq 'Noam') 'searchAcrossDisplayedTextWithTrim'
 $last = $plainRows.records[-1]

@@ -140,6 +140,26 @@ describe('Result filter controls', () => {
     );
     fixture.detectChanges();
   });
+  it('allows partial search when displayed columns have no text fields', async () => {
+    fixture.componentRef.setInput(
+      'columns',
+      columns.filter((column) => column.type !== 'text'),
+    );
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement.querySelector('input[type="search"]') as HTMLInputElement).disabled,
+    ).toBe(false);
+    component.searchDraft.set('15');
+    component.applySearch();
+    expect(component.selection().search).toBe('15');
+    fixture.componentRef.setInput('columns', []);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(
+      (fixture.nativeElement.querySelector('input[type="search"]') as HTMLInputElement).disabled,
+    ).toBe(true);
+  });
+
   it('combines search and per-column filters and replaces an existing column filter', () => {
     component.searchDraft.set('דנה');
     component.applySearch();

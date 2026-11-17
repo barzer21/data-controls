@@ -42,7 +42,7 @@ export class ResultFiltersComponent {
   readonly column = computed(() =>
     this.columns().find((column) => column.id === this.selectedColumnId()),
   );
-  readonly searchable = computed(() => this.columns().some((column) => column.type === 'text'));
+  readonly searchable = computed(() => this.columns().length > 0);
   readonly operators = computed(() => operatorsForType(this.column()?.type));
   private readonly injector = inject(Injector);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
