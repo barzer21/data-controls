@@ -43,9 +43,9 @@
 
 ‏סקריפט 07 מוסיף בקרות לעובדים ולמחלקות: השוואות מספריות, טקסט ותאריכים, בדיקות ערכים חסרים, קשרים בין טבלאות וקבוצות AND/OR מקוננות. לאחר הרצתו יופיעו בספרייה 10 בקרות שאפשר לערוך ולהריץ. אפשר להריץ אותו שוב: בקרה עם אותו שם וסוג נתונים אינה נוספת ואינה נדרסת. הבקרות אינן נטענות אוטומטית בהפעלת הפרויקט ואינן מסומנות כתוצר של AI.
 
-‏בדאטה בייס קיים שכבר הוקם בגרסה הקודמת, יש לבדוק אילו שדרוגים חסרים; אין להריץ מחדש את כל סקריפטי יצירת מבנה הדאטה בייס. הוספת גיל וספירת הרשומות אינה דורשת מיגרציה.
+‏אם הדאטה בייס כבר קיים, בדקו אילו סקריפטים כבר הוחלו ואילו נדרשים להשלמת ההקמה; אין להריץ מחדש את כל סקריפטי יצירת מבנה הדאטה בייס.
 
-‏הסקריפטים להקמת מבנה הדאטה בייס רושמים את המיגרציות בהיסטוריית EF. אפשר לבחור במקום זאת במסלול `dotnet ef database update`, אך אין להחיל את אותן מיגרציות בשני המסלולים. נתוני הדוגמה, הרשאות הקריאה והבקרות לדוגמה עדיין דורשים את סקריפטים 03, 05 ו־07. כלי EF CLI נדרש רק למסלול החלופי ואינו מותקן אוטומטית בהוראות האלה.
+‏הסקריפטים להקמת מבנה הדאטה בייס רושמים את המיגרציות בהיסטוריית EF. לחלופין, לאחר התקנת כלי EF CLI והתאמת חיבור ה־DB, אפשר להריץ משורש הפרויקט `dotnet ef database update --project backend/DataControls.Api -- --environment Development`. אין להחיל את אותן מיגרציות בשני המסלולים. נתוני הדוגמה, הרשאות הקריאה והבקרות לדוגמה עדיין דורשים את סקריפטים 03, 05 ו־07. כלי EF CLI נדרש רק למסלול החלופי ואינו מותקן אוטומטית בהוראות האלה.
 
 ‏משתמש החיבור של השרת צריך הרשאות CRUD לבקרות ויכולת `IMPERSONATE` על `DataControlsRuleReader`. סקריפט 05 מגדיר את משתמש הקריאה והרשאותיו, ואינו מעניק אוטומטית הרשאת impersonation למשתמש חיבור חדש של היישום.
 
@@ -124,7 +124,7 @@ npm.cmd --prefix frontend start
 
 ‏גיל מחושב בשנים מלאות מתאריך הלידה לפי תאריך UTC של ההרצה. המדיניות לתאריכים חסרים, עתידיים ו־29 בפברואר מפורטת ב־[החלטות ומגבלות](docs/DESIGN_AND_LIMITATIONS.md).
 
-‏בקלט מספרי יש להשתמש בנקודה עשרונית, ללא פסיקים או כתיב מעריכי. ערכים שחורגים ממגבלות הדיוק נדחים בהודעה; הפירוט נמצא ב־[החלטות תכנון ומגבלות](docs/DESIGN_AND_LIMITATIONS.md).
+‏בקלט מספרי יש להשתמש בנקודה עשרונית, ללא פסיקים או כתיב מעריכי.
 
 ## AI Demo
 
@@ -165,35 +165,25 @@ npm.cmd --prefix frontend start
 
 ```powershell
 dotnet build backend/DataControls.slnx -c Release
-dotnet run --project backend/tests/CompilerChecks -c Release -p:UseAppHost=false
-dotnet run --project backend/tests/AgeChecks -c Release -p:UseAppHost=false
-dotnet run --project backend/tests/AiProposalChecks -c Release -p:UseAppHost=false
-.\python-ai\.venv\Scripts\python.exe -B -m unittest discover -s python-ai -p "test_*.py"
-
 npm.cmd --prefix frontend run build
+
+dotnet run --project backend/tests/CompilerChecks -c Release -p:UseAppHost=false
+.\python-ai\.venv\Scripts\python.exe -B -m unittest discover -s python-ai -p "test_*.py"
 npm.cmd --prefix frontend test -- --watch=false
 ```
 
 </div>
 
-‏בדיקות הקומפיילר אינן מריצות SQL. בדיקות הגיל מריצות SQL לקריאה בלבד מול נתוני VALUES, ודורשות SQL Server; הן אינן יוצרות טבלאות ואינן משנות נתונים.
-
-‏בדיקות נוספות והדרישות שלהן:
-
-- ‏`backend/tests/Test-SubmissionSetup.ps1`: בדיקת הקמה מלאה מסקריפטים 01–07, כולל אימות והרצת עשר בקרות הדוגמה, הרשאות קריאה והרצות חוזרות של סקריפט 07 ללא כפילויות או דריסת עריכות. דורשת SQL Server, ‏`sqlcmd`, הרשאת יצירה והסרה של DB ובניית Release של ה־API. נוצרים DB ייעודי עם שם אקראי ו־API זמני; ה־DB הייעודי מוסר גם במקרה של כישלון. נתוני ה־DB הרגיל אינם משתנים. קובצי האבחון נשמרים בתיקיית Temp שהבדיקה מדפיסה.
-- ‏`frontend/tools/check-rule-workflows.mjs`: בדיקות דפדפן מול build ותגובות API מדומות. דורש Edge מותקן, או כתובת לדפדפן מתאים במשתנה `BROWSER_TEST_EXECUTABLE`.
-- ‏`backend/tests/check_age_api.py`: API זמני מול דאטה בייס הפיתוח, לקריאה בלבד; דורש build של Release ונתוני דוגמה.
-- ‏`backend/tests/Test-RulePersistence.ps1`: יוצר DB בדיקה נפרד וכופה את החיבור אליו על ה־API, גם כשמוגדר משתנה סביבה אחר. ברירת המחדל היא בניית Release; אפשר להעביר `-ApiAssemblyPath` עבור DLL אחר. ה־DB נשאר בסיום לצורך בדיקה ידנית, ושמו מודפס.
-- ‏בדיקת חיבור חי ל־Python: לאחר בניית Release והתקנת תלויות Python, הריצו `.\python-ai\.venv\Scripts\python.exe backend/tests/check_ai_integration.py --api-dll backend/DataControls.Api/bin/Release/net10.0/DataControls.Api.dll`. הבדיקה מפעילה שרתים זמניים, דורשת SQL Server זמין וקוראת את הקטלוג ורשימת הבקרות ללא שינוי ב־DB.
-
-‏לאחר בניית Release, להרצת בדיקות השמירה וההרצה יחד עם בדיקת בידוד חיבור ה־DB:
+‏הבדיקות לעיל אינן דורשות DB פעיל. לבדיקת הקמה מלאה מסקריפטי ה־SQL והרצת עשר בקרות הדוגמה, לאחר בניית Release:
 
 <div dir="ltr">
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-RulePersistence.ps1 -IncludeExecution -VerifyConnectionIsolation
+powershell -NoProfile -ExecutionPolicy Bypass -File backend/tests/Test-SubmissionSetup.ps1
 ```
 
 </div>
+
+‏בדיקת ההקמה דורשת SQL Server, ‏`sqlcmd` והרשאה ליצור ולהסיר DB. היא יוצרת DB זמני ומסירה אותו בסיום, ללא שינוי בנתוני ה־DB הרגיל.
 
 </div>
