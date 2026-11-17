@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { finalize, Observable, switchMap, throwError } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import {
   MetadataResponse,
   RuleCondition,
@@ -219,16 +219,12 @@ export class RuleEditorComponent implements OnInit {
     this.busy.set(action);
     this.errors.set([]);
     this.preview.set(null);
-    this.api
-      .validate(definition)
+    const request: Observable<SavedRuleResponse | RuleExecutionResponse> =
+      action === 'save'
+        ? this.api.save(this.ruleId(), definition, this.requiresApproval())
+        : this.api.execute(definition);
+    request
       .pipe(
-        switchMap((validation): Observable<SavedRuleResponse | RuleExecutionResponse> => {
-          if (!validation.isValid)
-            return throwError(() => ({ validationErrors: validation.errors }));
-          return action === 'save'
-            ? this.api.save(this.ruleId(), definition, this.requiresApproval())
-            : this.api.execute(definition);
-        }),
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.busy.set(null)),
       )

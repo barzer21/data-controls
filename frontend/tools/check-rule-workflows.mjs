@@ -49,6 +49,7 @@ const definition = {
 let saved = { id: 1, definition, definitionVersion: 1, createdAtUtc: '', updatedAtUtc: '' };
 let aiDelay = 0;
 let writes = 0;
+let validationRequests = 0;
 const executionRequests = [];
 const saveRequests = [];
 const createdRules = [];
@@ -152,8 +153,10 @@ const server = http.createServer(async (req, res) => {
         );
       }
       if (url.pathname === '/api/rules/1') return res.end(JSON.stringify(saved));
-      if (url.pathname === '/api/rules/validate')
+      if (url.pathname === '/api/rules/validate') {
+        validationRequests++;
         return res.end(JSON.stringify({ isValid: true, errors: [] }));
+      }
       if (url.pathname === '/api/rules/execute') {
         const chunks = [];
         for await (const chunk of req) chunks.push(chunk);
@@ -797,6 +800,7 @@ try {
   assert.equal(saveRequests.length, 3, 'One failed PUT, one successful PUT and one POST');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   assert.equal(writes, 0, 'No unexpected API requests');
+  assert.equal(validationRequests, 0, 'No redundant pre-validation requests');
   console.log(
     'PASS: full-page creation and editing, confirmation, focus, cancellation, draft filtering and AI flow on desktop/mobile. Artifacts:',
     artifacts,

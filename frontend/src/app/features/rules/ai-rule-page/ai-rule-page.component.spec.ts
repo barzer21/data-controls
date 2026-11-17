@@ -113,7 +113,6 @@ describe('AI creation page', () => {
     http.expectNone(() => true);
     editor().proposalApproved.set(true);
     editor().perform('run');
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const execution = http.expectOne('/api/rules/execute?limit=100');
     expect(execution.request.body).toEqual({ definition: proposal });
     execution.flush({
@@ -182,7 +181,6 @@ describe('AI creation page', () => {
     harness
       .routeNativeElement!.querySelector<HTMLButtonElement>('.footer-actions .primary')!
       .click();
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     http.expectOne('/api/rules?createdWithAi=true').flush(saved);
     http
       .expectOne((req) => req.url === '/api/rules' && req.params.get('page') === '1')

@@ -72,11 +72,6 @@ describe('Rule editor with API transport', () => {
     editor.update(structuredClone(definition));
     fixture.detectChanges();
   }
-  function validate() {
-    const request = http.expectOne('/api/rules/validate');
-    expect(request.request.body).toEqual(definition);
-    request.flush({ isValid: true, errors: [] });
-  }
 
   it('renders an accessible new-rule editor with business metadata and separate actions', () => {
     open();
@@ -101,7 +96,7 @@ describe('Rule editor with API transport', () => {
     fill();
     editor.perform('save');
     http
-      .expectOne('/api/rules/validate')
+      .expectOne('/api/rules')
       .flush(
         { errors: [null, { path: 'condition.children[1].left', message: 'Invalid field' }] },
         { status: 400, statusText: 'Bad Request' },
@@ -113,14 +108,13 @@ describe('Rule editor with API transport', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
       'Invalid field',
     );
-    http.expectNone('/api/rules');
+    http.expectNone('/api/rules/validate');
   });
 
   it('shows ModelState validation messages when saving fails without losing the draft', () => {
     open();
     fill();
     editor.perform('save');
-    validate();
     http.expectOne('/api/rules').flush(
       {
         title: 'Validation failed',
@@ -159,7 +153,6 @@ describe('Rule editor with API transport', () => {
       http.expectNone(() => true);
       editor.update(structuredClone(definition));
       editor.perform(action);
-      validate();
       if (action === 'save') http.expectOne('/api/rules').flush(saved);
       else
         http.expectOne('/api/rules/execute?limit=100').flush({
@@ -172,13 +165,12 @@ describe('Rule editor with API transport', () => {
     },
   );
 
-  it('validates then explicitly creates without executing', () => {
+  it('explicitly creates with one request without executing', () => {
     open();
     fill();
     const onSaved = vi.fn();
     editor.saved.subscribe(onSaved);
     fixture.nativeElement.querySelector('.footer-actions .primary').click();
-    validate();
     const request = http.expectOne('/api/rules');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(definition);
@@ -211,12 +203,11 @@ describe('Rule editor with API transport', () => {
     http.expectNone(() => true);
   });
 
-  it('saves the current draft from read mode through the existing validation and PUT flow', () => {
+  it('saves the current draft from read mode through one PUT request', () => {
     open(7);
     editor.mode.set('view');
     fixture.detectChanges();
     fixture.nativeElement.querySelector('.footer-actions .primary').click();
-    validate();
     const request = http.expectOne('/api/rules/7');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual(definition);
@@ -246,7 +237,6 @@ describe('Rule editor with API transport', () => {
     editor.update({ name: 'שם מעודכן' });
     expect(saved.definition.name).toBe('בקרה שמורה');
     editor.perform('save');
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const request = http.expectOne('/api/rules/7');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body.name).toBe('שם מעודכן');
@@ -257,7 +247,6 @@ describe('Rule editor with API transport', () => {
     open(7);
     fill();
     editor.perform('run');
-    validate();
     const request = http.expectOne('/api/rules/execute?limit=100');
     expect(request.request.body).toEqual({ definition });
     expect(editor.busy()).toBe('run');
@@ -273,31 +262,34 @@ describe('Rule editor with API transport', () => {
     expect(editor.preview()).toBeNull();
   });
 
-  it('shows semantic server errors in Hebrew and preserves all entered data', () => {
-    open();
-    fill();
-    editor.perform('save');
-    http.expectOne('/api/rules/validate').flush(
-      {
-        isValid: false,
-        errors: [
-          {
-            path: 'condition.children[1].right.value',
-            code: 'invalidValue',
-            message: 'יש להזין מספר תקין.',
-          },
-        ],
-      },
-      { status: 400, statusText: 'Bad Request' },
-    );
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
-      'תנאי 2: יש להזין מספר תקין',
-    );
-    expect(editor.draft()).toEqual(definition);
-    expect(editor.busy()).toBeNull();
-    http.expectNone('/api/rules');
-  });
+  it.each(['save', 'run'] as const)(
+    'shows semantic server errors from %s and preserves all entered data',
+    (action) => {
+      open();
+      fill();
+      editor.perform(action);
+      http.expectOne(action === 'save' ? '/api/rules' : '/api/rules/execute?limit=100').flush(
+        {
+          isValid: false,
+          errors: [
+            {
+              path: 'condition.children[1].right.value',
+              code: 'invalidValue',
+              message: 'יש להזין מספר תקין.',
+            },
+          ],
+        },
+        { status: 400, statusText: 'Bad Request' },
+      );
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+        'תנאי 2: יש להזין מספר תקין',
+      );
+      expect(editor.draft()).toEqual(definition);
+      expect(editor.busy()).toBeNull();
+      http.expectNone('/api/rules/validate');
+    },
+  );
 
   it('blocks duplicate operations and closing while an operation is in flight', () => {
     open();
@@ -308,7 +300,6 @@ describe('Rule editor with API transport', () => {
     editor.perform('save');
     editor.perform('run');
     editor.requestClose();
-    validate();
     expect(onClosed).not.toHaveBeenCalled();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('fieldset').disabled).toBe(true);
@@ -417,7 +408,7 @@ describe('Rule editor with API transport', () => {
     http.expectNone(() => true);
   });
 
-  it('runs only the approved AI draft through validation and never saves automatically', () => {
+  it('runs only the approved AI draft with one execution request and never saves automatically', () => {
     openProposal();
     const checkbox = fixture.nativeElement.querySelector('.ai-approval input') as HTMLInputElement;
     checkbox.checked = true;
@@ -425,7 +416,6 @@ describe('Rule editor with API transport', () => {
     fixture.detectChanges();
     expect(editor.proposalApproved()).toBe(true);
     editor.perform('run');
-    validate();
     http
       .expectOne('/api/rules/execute?limit=100')
       .flush({ totalCount: 0, returnedCount: 0, truncated: false, columns: [], records: [] });
@@ -444,9 +434,6 @@ describe('Rule editor with API transport', () => {
     http.expectNone(() => true);
     editor.proposalApproved.set(true);
     editor.perform('save');
-    const validation = http.expectOne('/api/rules/validate');
-    expect(validation.request.body.name).toBe('הצעה מעודכנת');
-    validation.flush({ isValid: true, errors: [] });
     const save = http.expectOne('/api/rules?createdWithAi=true');
     expect(save.request.body.name).toBe('הצעה מעודכנת');
     save.flush({ ...saved, definition: save.request.body });
@@ -471,7 +458,6 @@ describe('Rule editor with API transport', () => {
     fixture.detectChanges();
     editor.update({ name: 'בקרה שנערכה' });
     editor.perform('save');
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const request = http.expectOne('/api/rules/7');
     expect(request.request.method).toBe('PUT');
     expect(request.request.params.has('createdWithAi')).toBe(false);
@@ -483,7 +469,6 @@ describe('Rule editor with API transport', () => {
     open(7);
     editor.update({ name: 'טיוטה מעודכנת' });
     editor.perform('run');
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const initial = http.expectOne('/api/rules/execute?limit=100');
     const snapshot = initial.request.body.definition;
     initial.flush({

@@ -119,7 +119,6 @@ describe('Full-page rule editing', () => {
     harness
       .routeNativeElement!.querySelector<HTMLButtonElement>('.footer-actions .primary')!
       .click();
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const request = http.expectOne('/api/rules');
     expect(request.request.method).toBe('POST');
     expect(request.request.params.has('createdWithAi')).toBe(false);
@@ -143,7 +142,6 @@ describe('Full-page rule editing', () => {
     harness
       .routeNativeElement!.querySelector<HTMLButtonElement>('.footer-actions .primary')!
       .click();
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     http.expectOne('/api/rules').flush({ ...saved, createdWithAi: false });
     http
       .expectOne((req) => req.url === '/api/rules' && req.params.get('page') === '1')
@@ -201,7 +199,6 @@ describe('Full-page rule editing', () => {
     harness
       .routeNativeElement!.querySelector<HTMLButtonElement>('.footer-actions .primary')!
       .click();
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const request = http.expectOne('/api/rules/7');
     expect(request.request.method).toBe('PUT');
     expect(request.request.params.has('createdWithAi')).toBe(false);
@@ -219,7 +216,6 @@ describe('Full-page rule editing', () => {
     form.update({ name: 'טיוטה' });
     form.perform('run');
     expect(await router.navigateByUrl('/rules?page=3')).toBe(false);
-    http.expectOne('/api/rules/validate').flush({ isValid: true, errors: [] });
     const execution = http.expectOne('/api/rules/execute?limit=100');
     expect(execution.request.body.definition.name).toBe('טיוטה');
     execution.flush({
