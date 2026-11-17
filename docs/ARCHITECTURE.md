@@ -22,7 +22,7 @@
 
 ‏`RuleDefinition` כולל שם, תיאור אופציונלי, ישות שורש ועץ תנאים. צומת הוא קבוצה מסוג `and` / `or` או השוואה. הפניה לשדה משתמשת במזהה עסקי ובנתיב קשרים אופציונלי, ללא SQL.
 
-‏זהו עץ מותאם אישית ב־JSON, ולא `System.Linq.Expressions.Expression`. המגבלות מתוארות ב־[החלטות ומגבלות](DECISIONS.md).
+‏זהו עץ מותאם אישית ב־JSON, ולא `System.Linq.Expressions.Expression`. המגבלות מתוארות ב־[החלטות ומגבלות](DESIGN_AND_LIMITATIONS.md).
 
 ## ‏מטא־דאטה וגנריות
 

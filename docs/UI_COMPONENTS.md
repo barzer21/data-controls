@@ -4,6 +4,8 @@
 
 ‏התרשים מציג את 18 הקומפוננטות בפרויקט. חץ מציין שההורה מציג את הילד ב־HTML שלו. החצים מ־`AppComponent` לעמודים מייצגים הצגה דרך `router-outlet`. חלק מהרכיבים מוצגים רק בהתאם למצב המסך.
 
+<div dir="ltr">
+
 ```mermaid
 flowchart TB
     app["AppComponent — מעטפת וניווט"]
@@ -53,6 +55,8 @@ flowchart TB
     overview -.-> icon
     summary -.-> icon
 ```
+
+</div>
 
 ## ‏העמודים והאחריות שלהם
 
